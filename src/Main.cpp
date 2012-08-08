@@ -125,12 +125,13 @@ int main(int argc, const char* argv[]) {
 
 		cout<<project<<endl;
 
-		free(coordinates);
-		free(domainN);
-		free(friction);
-		free(master_els);
-		free(nodes2dofs);
-		free(slave_els);
+
+		delete coordinates;
+		delete domainN;
+		delete friction;
+		delete master_els;
+		delete nodes2dofs;
+		delete slave_els;
 	}
 
 	return 0;

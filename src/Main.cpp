@@ -133,7 +133,7 @@ int main(int argc, const char* argv[]) {
 		delete nodes2dofs;
 		delete slave_els;
 	}
-
+	return -1;
 	return 0;
 }
 

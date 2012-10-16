@@ -39,12 +39,12 @@ void Boundary::print(std::ostream& out) const {
 	}
 
 }
-Node* Boundary::get_unique_node_or_create_new(int index) {
+Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix &coordinates) {
 
 	if (nodes.count(index) > 0) {
 		return nodes[index];
 	} else {
-		Node* result = new Node(index);
+		Node* result = new Node(index, &coordinates);
 		nodes.insert(std::pair<int, Node*>(index, result));
 		return result;
 	}
@@ -56,10 +56,10 @@ std::ostream& operator<<(std::ostream& out, const Boundary & boundary) {
 	return out;
 }
 
-Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix &data) {
+Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix &data, Epetra_SerialDenseMatrix &coordinates) {
 	for (int i = 0; i < data.N(); i++) {
-		Node *start = get_unique_node_or_create_new(data(6, i));
-		Node *end = get_unique_node_or_create_new(data(7, i));
+		Node *start = get_unique_node_or_create_new(data(6, i), coordinates);
+		Node *end = get_unique_node_or_create_new(data(7, i), coordinates);
 		Element_line2 *line = new Element_line2(start, end);
 		//elements.push_back(line);
 		start->add_element(line);

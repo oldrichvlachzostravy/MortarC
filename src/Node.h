@@ -9,13 +9,14 @@
 #define NODE_H_
 #include <iostream>
 #include <vector>
+#include <Epetra_SerialDenseMatrix.h>
 
 class Element;
 
 class Node {
 public:
 	virtual ~Node();
-	Node(int coordinate_index);
+	Node(int coordinate_index, Epetra_SerialDenseMatrix *coordinates);
 	void add_element(Element* element) {elements.push_back(element);}
 	int get_coordinate_index() {return coordinate_index;}
 	void print(std::ostream& out) const;
@@ -24,6 +25,7 @@ public:
 
 protected:
 	int coordinate_index;
+	Epetra_SerialDenseMatrix *coordinates;
 	double normal[3];
 	std::vector<Element *> elements;
 };

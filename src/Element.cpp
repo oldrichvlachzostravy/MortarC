@@ -40,3 +40,9 @@ void Element_line2::swap_to_start_with(Node *new_start) {
 	}
 }
 
+Vec3 Element_line2::get_normal_in_point(double xi, double eta) {
+	Vec3 result(0,0,0);
+	return result;
+
+}
+

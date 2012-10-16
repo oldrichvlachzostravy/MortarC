@@ -8,6 +8,8 @@
 #ifndef ELEMENT_H_
 #define ELEMENT_H_
 #include <Epetra_IntSerialDenseMatrix.h>
+#include "Vec3.h"
+
 
 class Node;
 
@@ -15,6 +17,8 @@ class Element {
 public:
 	virtual ~Element();
 	virtual void print(std::ostream& out) const =0;
+	virtual Vec3 get_normal_in_point(double xi, double eta) =0;
+
 
 protected:
 	Node** nodes;
@@ -31,6 +35,7 @@ public:
 	Node* get_end() {return nodes[1];};
 	void swap_to_start_with(Node *node);
 	void print(std::ostream& out) const;
+	Vec3 get_normal_in_point(double xi, double eta);
 };
 
 #endif /* ELEMENT_H_ */

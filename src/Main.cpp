@@ -120,8 +120,8 @@ int main(int argc, const char* argv[]) {
 		//cout<<*friction;
 		//cout<<*master_els<<*nodes2dofs<<*slave_els;
 		Project project(coordinates,
-				new Boundary2D(*master_els),
-				new Boundary2D(*slave_els));
+				new Boundary2D(*master_els, *coordinates),
+				new Boundary2D(*slave_els, *coordinates));
 
 		cout<<project<<endl;
 

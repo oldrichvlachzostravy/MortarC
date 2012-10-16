@@ -12,8 +12,9 @@ Node::~Node() {
 	// TODO Auto-generated destructor stub
 }
 
-Node::Node(int coordinate_index) {
+Node::Node(int coordinate_index, Epetra_SerialDenseMatrix *coordinates) {
 	this->coordinate_index = coordinate_index;
+	this->coordinates = coordinates;
 
 }
 

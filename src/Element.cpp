@@ -12,7 +12,7 @@ Element::~Element() {
 	delete[] nodes;
 }
 
-std::ostream& operator<<(std::ostream& out, const Element & element) {
+std::ostream& operator<<(std::ostream &out, const Element &element) {
 	element.print(out);
 	return out;
 }
@@ -35,7 +35,7 @@ void Element_line2::print(std::ostream& out) const {
 
 void Element_line2::swap_to_start_with(Node *new_start) {
 	if (nodes[0]->get_coordinate_index()!=new_start->get_coordinate_index()) {
-		nodes[0]=nodes[1];
+		nodes[1]=nodes[0];
 		nodes[0]=new_start;
 	}
 }

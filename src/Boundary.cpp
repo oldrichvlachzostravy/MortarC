@@ -50,8 +50,7 @@ Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatri
 	}
 }
 
-std::ostream& operator<<(std::ostream& out, const Boundary & boundary) {
-	//p.print(out);
+std::ostream& operator<<(std::ostream &out, const Boundary &boundary) {
 	boundary.print(out);
 	return out;
 }

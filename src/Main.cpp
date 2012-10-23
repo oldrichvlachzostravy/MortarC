@@ -18,6 +18,7 @@
 #include <Epetra_SerialDenseMatrix.h>
 #include <Epetra_IntSerialDenseMatrix.h>
 #include <fstream>
+#include <unistd.h>
 
 #include "Project.h"
 
@@ -25,106 +26,98 @@ using namespace std;
 
 int load_Epetra_SerialDenseMatrix(const char* fileName,
 		Epetra_SerialDenseMatrix* &result) {
-	string line;
+
+	string str;
 	ifstream myfile(fileName);
+
 	if (myfile.is_open()) {
-		getline(myfile, line);
-		//cout << line;
+		getline(myfile, str);
 		int rows, columns;
-		if (sscanf(line.c_str(), "%d %d", &rows, &columns) != 2) {
+		if (sscanf(str.c_str(), "%d %d", &rows, &columns) != 2) {
 			myfile.close();
 			return -1;
 		}
-		//cout << "Rows: " << rows << " Columns: " << columns;
+
 		result = new Epetra_SerialDenseMatrix(rows, columns);
 		for (int i = 0; i < rows; i++) {
-			if (!myfile.good())
-				return -1;
-			getline(myfile, line);
-			//cout<<line<<"\n";
-			char * line_ptr = strdup(line.c_str());
-			char * tokenizer = strtok(line_ptr, " ");
 			for (int j = 0; j < columns; j++) {
-				//cout<<"element:"<<tokenizer<<"\n";
-				double element = atof(tokenizer);
-				//cout<<"Row "<<i<<" Column "<<j<<"= "<<element<<endl;
-				(*result)(i, j) = element;
-				tokenizer = strtok(NULL, " ");
-				if (tokenizer == NULL)
+				if (!myfile.good()) {
 					return -1;
+				}
+				getline(myfile, str, ' ');
+				(*result)(i, j) = atof(str.c_str());
 			}
 		}
 		myfile.close();
 		return 0;
-	}
-
-	else
+	} else {
 		return -1;
-
+	}
 }
 
 int load_Epetra_IntSerialDenseMatrix(const char* fileName,
 		Epetra_IntSerialDenseMatrix* &result) {
-	string line;
+
+	string str;
 	ifstream myfile(fileName);
+
 	if (myfile.is_open()) {
-		getline(myfile, line);
-		//cout << line;
+		getline(myfile, str);
 		int rows, columns;
-		if (sscanf(line.c_str(), "%d %d", &rows, &columns) != 2) {
+		if (sscanf(str.c_str(), "%d %d", &rows, &columns) != 2) {
 			myfile.close();
 			return -1;
 		}
-		//cout << "Rows: " << rows << " Columns: " << columns;
+
 		result = new Epetra_IntSerialDenseMatrix(rows, columns);
 		for (int i = 0; i < rows; i++) {
-			if (!myfile.good())
-				return -1;
-			getline(myfile, line);
-			char * line_ptr = strdup(line.c_str());
-			char * tokenizer = strtok(line_ptr, " ");
 			for (int j = 0; j < columns; j++) {
-				int element = atoi(tokenizer);
-				//cout<<"Row "<<i<<" Column "<<j<<"= "<<element<<endl;
-				(*result)(i, j) = element;
-				tokenizer = strtok(NULL, " ");
-				if (tokenizer == NULL)
+				if (!myfile.good()) {
 					return -1;
+				}
+				getline(myfile, str, ' ');
+				(*result)(i, j) = atoi(str.c_str());
+
 			}
 		}
 		myfile.close();
 		return 0;
-	}
-
-	else
+	} else {
 		return -1;
+	}
 
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, char** argv) {
 
 	Epetra_SerialDenseMatrix *coordinates, *friction;
 	Epetra_IntSerialDenseMatrix *domainN, *master_els, *nodes2dofs, *slave_els;
-	int result = load_Epetra_SerialDenseMatrix("coordinates.ascii",
-			coordinates);
-	result += load_Epetra_IntSerialDenseMatrix("domainN.ascii", domainN);
-	result += load_Epetra_SerialDenseMatrix("friction.ascii", friction);
-	result += load_Epetra_IntSerialDenseMatrix("master_els.ascii", master_els);
-	result += load_Epetra_IntSerialDenseMatrix("nodes2dofs.ascii", nodes2dofs);
-	result += load_Epetra_IntSerialDenseMatrix("slave_els.ascii", slave_els);
 
-	cout << "Load result:" << result << endl;
+	int c;
+	string path;
+	while ((c = getopt (argc, argv, "p:")) != -1) {
+		switch (c) {
+			case 'p': {
+				path = optarg;
+				break;
+			}
+		}
+	}
+	int result = 0;
+	result += load_Epetra_SerialDenseMatrix((path + "coordinates.ascii").c_str(), coordinates);
+	result += load_Epetra_IntSerialDenseMatrix((path + "domainN.ascii").c_str(), domainN);
+	result += load_Epetra_SerialDenseMatrix((path + "friction.ascii").c_str(), friction);
+	result += load_Epetra_IntSerialDenseMatrix((path + "master_els.ascii").c_str(), master_els);
+	result += load_Epetra_IntSerialDenseMatrix((path + "nodes2dofs.ascii").c_str(), nodes2dofs);
+	result += load_Epetra_IntSerialDenseMatrix((path + "slave_els.ascii").c_str(), slave_els);
+
 	if (result == 0) {
-		//cout<<*coordinates;
-		//cout<<*domainN;
-		//cout<<*friction;
-		//cout<<*master_els<<*nodes2dofs<<*slave_els;
-		Project project(coordinates,
-				new Boundary2D(*master_els, *coordinates),
-				new Boundary2D(*slave_els, *coordinates));
+		Boundary *master = new Boundary2D(*master_els, *coordinates);
+		Boundary *slave = new Boundary2D(*slave_els, *coordinates);
 
-		cout<<project<<endl;
+		Project project(coordinates, master, slave);
 
+		cout << project << endl;
 
 		delete coordinates;
 		delete domainN;
@@ -132,8 +125,11 @@ int main(int argc, const char* argv[]) {
 		delete master_els;
 		delete nodes2dofs;
 		delete slave_els;
+		delete master;
+		delete slave;
+	} else {
+		cout << "Load error!!\n";
 	}
-	return -1;
 	return 0;
 }
 

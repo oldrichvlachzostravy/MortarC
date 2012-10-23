@@ -16,7 +16,7 @@ class Node;
 class Element {
 public:
 	virtual ~Element();
-	virtual void print(std::ostream& out) const =0;
+	virtual void print(std::ostream &out) const =0;
 	virtual Vec3 get_normal_in_point(double xi, double eta) =0;
 
 

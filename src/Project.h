@@ -9,28 +9,28 @@
 #define PROJECT_H_
 
 #include "Boundary.h"
-
 #include <iostream>
-#include <Epetra_SerialDenseMatrix.h>
 
-class Project {
+#define MASTER 0
+#define SLAVE 1
 
-public:
-	Project(Epetra_SerialDenseMatrix *coordinates,
-			Boundary *master,
-			Boundary *slave);
-	virtual ~Project();
 
-	Boundary& get_master() { return *master; }
-	Boundary& get_slave() { return *slave; }
-	Epetra_SerialDenseMatrix& get_coordinates() { return *coordinates; }
+class Project
+{
+	public:
+		Project(Boundary *master, Boundary *slave);
+		~Project() { }
 
-	void print(std::ostream &out) const;
+		void calculate_normals_and_supports();
+		void save_normals_and_supports(const char* fileName);
 
-protected:
-	Epetra_SerialDenseMatrix *coordinates;
-	Boundary *master, *slave;
+		Boundary * get_master() { return master; }
+		Boundary * get_slave() { return slave; }
 
+		void print(std::ostream &out) const;
+
+	protected:
+		Boundary *master, *slave;
 };
 
 std::ostream& operator<<(std::ostream &out, const Project &p);

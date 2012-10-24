@@ -16,39 +16,45 @@
 #include "Element.h"
 #include "Node.h"
 
-class Boundary {
+class Boundary
+{
+	public:
+		virtual ~Boundary();
 
-public:
-	virtual ~Boundary();
-	virtual void print(std::ostream &out) const;
+		void calculate_normals_and_supprts();
 
-protected:
-	Node* get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix &coordinates);
+		virtual void print(std::ostream &out) const;
+		virtual void save_normals_and_support(const char* fileName) =0;
 
-	std::vector<Element* > elements;
-	std::map<int, Node* > nodes;
+	protected:
+		Node* get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coordinates);
+
+		std::vector<Element* > elements;
+		std::map<int, Node* > nodes;
 };
 
 std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
 
 
-class Boundary2D: public Boundary {
+class Boundary2D: public Boundary
+{
+	public:
+		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
+				Epetra_SerialDenseMatrix *coords,
+				bool master);
 
-public:
-	Boundary2D(Epetra_IntSerialDenseMatrix &data, Epetra_SerialDenseMatrix &coordinates);
-	Boundary2D();
+		void set_start(Node *start) { this->start = start; }
+		Node * get_start() { return this->start; }
 
-	void set_start(Node *start) { this->start = start; }
-	Node * get_start() { return this->start; }
+		void set_end(Node *end) { this->end = end; }
+		Node * get_end() { return this->end; }
 
-	void set_end(Node *end) { this->end = end; }
-	Node * get_end() { return this->end; }
+		void print(std::ostream& out) const;
+		void save_normals_and_support(const char* fileName);
 
-	void print(std::ostream& out) const;
-
-protected:
-	Node *start;
-	Node *end;
+	protected:
+		Node *start;
+		Node *end;
 };
 
 #endif /* BOUNDARY_H_ */

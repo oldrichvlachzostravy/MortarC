@@ -16,9 +16,8 @@ class Node;
 class Element {
 public:
 	virtual ~Element();
-	virtual void print(std::ostream &out) const =0;
-	virtual Vec3 get_normal_in_point(double xi, double eta) =0;
-
+	virtual void print(std::ostream& out) const =0;
+	virtual Vec3 get_normal_in_point(double s, double t) =0;
 
 protected:
 	Node** nodes;
@@ -35,7 +34,21 @@ public:
 	Node* get_end() {return nodes[1];};
 	void swap_to_start_with(Node *node);
 	void print(std::ostream& out) const;
-	Vec3 get_normal_in_point(double xi, double eta);
+	Vec3 get_normal_in_point(double s, double t);
+	Vec3 get_jacobi(double s);
+private:
+	Vec3* normal;
+
+};
+
+class Element_tria3: public Element {
+	Element_tria3(Node *first, Node *second, Node *third);
+	~Element_tria3();
+	Vec3 get_normal_in_point(double s, double t);
+	Vec3* get_jacobi(double s, double t);
+	void print(std::ostream& out) const;
+private:
+	Vec3* normal;
 };
 
 #endif /* ELEMENT_H_ */

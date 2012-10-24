@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <Epetra_SerialDenseMatrix.h>
+#include "Vec3.h"
 
 class Element;
 
@@ -22,11 +23,11 @@ public:
 	void print(std::ostream& out) const;
 	int get_number_of_elements() { return elements.size();}
 	Element* get_element(int index) {return elements[index];}
+	Vec3 get_coordinates();
 
 protected:
 	int coordinate_index;
 	Epetra_SerialDenseMatrix *coordinates;
-	double normal[3];
 	std::vector<Element *> elements;
 };
 

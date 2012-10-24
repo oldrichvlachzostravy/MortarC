@@ -28,6 +28,11 @@ void Node::print(std::ostream& out) const {
 	out << ")";
 }
 
+Vec3 Node::get_coordinates() {
+	return Vec3((*coordinates)(coordinate_index,0),
+			    (*coordinates)(coordinate_index,1),
+			    (*coordinates)(coordinate_index,2));
+}
 
 std::ostream& operator<<(std::ostream& out, const Node & node) {
 	node.print(out);

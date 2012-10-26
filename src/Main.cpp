@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "Project.h"
+#include "Boundary.h"
 
 using namespace std;
 
@@ -201,7 +202,6 @@ int main(int argc, char** argv)
 {
 
 	init(argc, argv);
-	print_master();
 	Project project(master, slave);
 
 	project.calculate_normals_and_supports();

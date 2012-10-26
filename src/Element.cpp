@@ -7,6 +7,7 @@
 
 #include "Element.h"
 #include "Node.h"
+#include "GaussianQuadrature.h"
 
 Element::~Element() {
 	delete[] nodes;
@@ -99,7 +100,8 @@ void Element_line3::calculate_normals_and_supports()
 	Vec3 jacobi = get_jacobi(-1);
 	Vec3 normal(jacobi.y, -jacobi.x, 0);
 	normal.normalize();
-	double support = 1;
+	Jacobi1DFunctor jacobiFunctor(this);
+	double support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, -1.0, -0.5, 2);
 	nodes[0]->add_normal_fraction(normal);
 	nodes[0]->add_support_fraction(support);
 
@@ -107,12 +109,16 @@ void Element_line3::calculate_normals_and_supports()
 	normal = Vec3(jacobi.y, -jacobi.x, 0);
 	normal.normalize();
 	nodes[1]->add_normal_fraction(normal);
+	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, -0.5, 0.0, 2);
+	nodes[1]->add_support_fraction(support);
+	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, 0.0, 0.5, 2);
 	nodes[1]->add_support_fraction(support);
 
 	jacobi = get_jacobi(0);
 	normal = Vec3(jacobi.y, -jacobi.x, 0);
 	normal.normalize();
 	nodes[2]->add_normal_fraction(normal);
+	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, 0.5, 1.0, 2);
 	nodes[2]->add_support_fraction(support);
 }
 

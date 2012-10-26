@@ -28,28 +28,31 @@ void Element_line2::print(std::ostream &out) const
 	out << ", end: " << nodes[1]->get_coordinate_index();
 }
 
-Vec3 Element_line2::get_jacobi(double s)
+Vec3 * Element_line2::get_jacobian(double s, double t)
 {
-	return (nodes[1]->get_coordinates()-nodes[0]->get_coordinates())*0.5;
+	Vec3 *v = new Vec3((nodes[1]->get_coordinates()-nodes[0]->get_coordinates())*0.5);
+	return v;
 }
 
 Vec3 Element_line2::get_normal_in_point(double s, double t)
 {
 	if (normal == NULL) {
-		Vec3 jacobi = get_jacobi(s);
-		normal = new Vec3(jacobi.y, -jacobi.x, 0);
+		Vec3 *jacobi = get_jacobian(s, t);
+		normal = new Vec3(jacobi->y, -jacobi->x, 0);
 		normal->normalize();
+		delete jacobi;
 	}
 	return *normal;
 }
 
 void Element_line2::calculate_normals_and_supports()
 {
-	Vec3 jacobi = get_jacobi(0);
-	Vec3 normal(jacobi.y, -jacobi.x, 0);
+	Vec3 *jacobi = get_jacobian(0, 0);
+	Vec3 normal(jacobi->y, -jacobi->x, 0);
+	delete jacobi;
 	normal.normalize();
 
-	double support = (nodes[0]->get_coordinates()-nodes[1]->get_coordinates()).length()/2.0;
+	double support = (nodes[0]->get_coordinates()-nodes[1]->get_coordinates()).length() / 2.0;
 
 	for(int i = 0; i < 2; i++) {
 		this->nodes[i]->add_normal_fraction(normal);
@@ -80,45 +83,48 @@ void Element_line3::print(std::ostream &out) const
 	out << ", end: " << nodes[1]->get_coordinate_index();
 }
 
-Vec3 Element_line3::get_jacobi(double s)
+Vec3 * Element_line3::get_jacobian(double s, double t)
 {
-	return (nodes[0]->get_coordinates() * (-0.5 - s) +
-			nodes[1]->get_coordinates() * (0.5 + s) +
-			nodes[2]->get_coordinates() * (-2 * s));
+	return new Vec3(nodes[0]->get_coordinates() * (-0.5 - s) +
+					nodes[1]->get_coordinates() * (0.5 + s) +
+					nodes[2]->get_coordinates() * (-2 * s));
 }
 
 Vec3 Element_line3::get_normal_in_point(double s, double t)
 {
-	Vec3 jacobi = get_jacobi(s);
-	Vec3 normal = Vec3(-jacobi.y, jacobi.x, 0);
+	Vec3 *jacobi = get_jacobian(s, t);
+	Vec3 normal = Vec3(-jacobi->y, jacobi->x, 0);
 	normal.normalize();
+	delete jacobi;
 	return normal;
 }
 
 void Element_line3::calculate_normals_and_supports()
 {
-	Vec3 jacobi = get_jacobi(-1);
-	Vec3 normal(jacobi.y, -jacobi.x, 0);
+	JacobiFunctor jacobiFunctor(this);
+
+	Vec3 *jacobi = get_jacobian(-1, 0);
+	Vec3 normal(jacobi->y, -jacobi->x, 0);
+	delete jacobi;
 	normal.normalize();
-	Jacobi1DFunctor jacobiFunctor(this);
-	double support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, -1.0, -0.5, 2);
 	nodes[0]->add_normal_fraction(normal);
+	double support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, -1.0, -0.5, 2);
 	nodes[0]->add_support_fraction(support);
 
-	jacobi = get_jacobi(1);
-	normal = Vec3(jacobi.y, -jacobi.x, 0);
+	jacobi = get_jacobian(1, 0);
+	normal = Vec3(jacobi->y, -jacobi->x, 0);
+	delete jacobi;
 	normal.normalize();
 	nodes[1]->add_normal_fraction(normal);
-	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, -0.5, 0.0, 2);
-	nodes[1]->add_support_fraction(support);
-	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, 0.0, 0.5, 2);
+	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, -0.5, 0.0, 2);
 	nodes[1]->add_support_fraction(support);
 
-	jacobi = get_jacobi(0);
-	normal = Vec3(jacobi.y, -jacobi.x, 0);
+	jacobi = get_jacobian(0, 0);
+	normal = Vec3(jacobi->y, -jacobi->x, 0);
+	delete jacobi;
 	normal.normalize();
 	nodes[2]->add_normal_fraction(normal);
-	support = GaussianQuadrature::numCurveIntegrationArea(jacobiFunctor, 0.5, 1.0, 2);
+	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, 0.5, 1.0, 2);
 	nodes[2]->add_support_fraction(support);
 }
 
@@ -140,7 +146,7 @@ void Element_tria3::print(std::ostream &out) const
 }
 
 
-Vec3* Element_tria3::get_jacobi(double s, double t)
+Vec3* Element_tria3::get_jacobian(double s, double t)
 {
 	Vec3* result = new Vec3[2];
 	result[0] = nodes[1]->get_coordinates()-nodes[0]->get_coordinates();
@@ -151,7 +157,7 @@ Vec3* Element_tria3::get_jacobi(double s, double t)
 Vec3 Element_tria3::get_normal_in_point(double s, double t)
 {
 	if (normal == NULL) {
-		Vec3* jacobi = get_jacobi(s, t);
+		Vec3* jacobi = get_jacobian(s, t);
 		normal = crossprod(jacobi[0], jacobi[1]);
 		delete jacobi;
 		normal->normalize();
@@ -162,7 +168,7 @@ Vec3 Element_tria3::get_normal_in_point(double s, double t)
 void Element_tria3::calculate_normals_and_supports()
 {
 	if (normal == NULL) {
-		Vec3* jacobi = get_jacobi(0, 0);
+		Vec3* jacobi = get_jacobian(0, 0);
 		normal = crossprod(jacobi[0], jacobi[1]);
 		delete jacobi;
 		normal->normalize();
@@ -198,7 +204,7 @@ void Element_tria6::print(std::ostream& out) const
 	out << "; (0,.5) " << nodes[5]->get_coordinate_index();
 }
 
-Vec3* Element_tria6::get_jacobi(double s, double t)
+Vec3* Element_tria6::get_jacobian(double s, double t)
 {
 	Vec3* result = new Vec3[2];
 	result[0] = nodes[0]->get_coordinates() * (-3 + 4*t + 4*s) +
@@ -216,7 +222,7 @@ Vec3* Element_tria6::get_jacobi(double s, double t)
 
 Vec3 Element_tria6::get_normal_in_point(double s, double t)
 {
-	Vec3 *jacobi = get_jacobi(s, t);
+	Vec3 *jacobi = get_jacobian(s, t);
 	Vec3 *normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	delete jacobi;
@@ -225,7 +231,7 @@ Vec3 Element_tria6::get_normal_in_point(double s, double t)
 
 void Element_tria6::calculate_normals_and_supports()
 {
-	Vec3 *jacobi = get_jacobi(0, 0);
+	Vec3 *jacobi = get_jacobian(0, 0);
 	Vec3 *normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	double support = 1;
@@ -234,7 +240,7 @@ void Element_tria6::calculate_normals_and_supports()
 	delete jacobi;
 	delete normal;
 
-	jacobi = get_jacobi(1, 0);
+	jacobi = get_jacobian(1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
@@ -242,7 +248,7 @@ void Element_tria6::calculate_normals_and_supports()
 	delete jacobi;
 	delete normal;
 
-	jacobi = get_jacobi(0, 1);
+	jacobi = get_jacobian(0, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
@@ -250,7 +256,7 @@ void Element_tria6::calculate_normals_and_supports()
 	delete jacobi;
 	delete normal;
 
-	jacobi = get_jacobi(.5, 0);
+	jacobi = get_jacobian(.5, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
@@ -258,7 +264,7 @@ void Element_tria6::calculate_normals_and_supports()
 	delete jacobi;
 	delete normal;
 
-	jacobi = get_jacobi(.5, .5);
+	jacobi = get_jacobian(.5, .5);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[4]->add_normal_fraction(*normal);
@@ -266,7 +272,7 @@ void Element_tria6::calculate_normals_and_supports()
 	delete jacobi;
 	delete normal;
 
-	jacobi = get_jacobi(0, .5);
+	jacobi = get_jacobian(0, .5);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[5]->add_normal_fraction(*normal);
@@ -294,7 +300,7 @@ void Element_quad4::print(std::ostream &out) const
 }
 
 
-Vec3* Element_quad4::get_jacobi(double s, double t)
+Vec3* Element_quad4::get_jacobian(double s, double t)
 {
 	Vec3* result = new Vec3[2];
 	result[0] = nodes[0]->get_coordinates() * (-1 + t) +
@@ -314,28 +320,28 @@ void Element_quad4::calculate_normals_and_supports()
 {
 	Vec3 *jacobi, *normal;
 
-	jacobi = get_jacobi(-1, -1);
+	jacobi = get_jacobian(-1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[0]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(1, -1);
+	jacobi = get_jacobian(1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(1, 1);
+	jacobi = get_jacobian(1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(-1, 1);
+	jacobi = get_jacobian(-1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
@@ -365,7 +371,7 @@ void Element_quad8::print(std::ostream& out) const
 	out << "; (-1,0) " << nodes[7]->get_coordinate_index();
 }
 
-Vec3* Element_quad8::get_jacobi(double s, double t)
+Vec3* Element_quad8::get_jacobian(double s, double t)
 {
 	Vec3* result = new Vec3[2];
 	result[0] = nodes[0]->get_coordinates() * (-t + 2*s*t + t*t - 2*s) +
@@ -391,56 +397,56 @@ void Element_quad8::calculate_normals_and_supports()
 {
 	Vec3 *jacobi, *normal;
 
-	jacobi = get_jacobi(-1, -1);
+	jacobi = get_jacobian(-1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[0]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(1, -1);
+	jacobi = get_jacobian(1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(1, 1);
+	jacobi = get_jacobian(1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(-1, 1);
+	jacobi = get_jacobian(-1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(0, -1);
+	jacobi = get_jacobian(0, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[4]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(1, 0);
+	jacobi = get_jacobian(1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[5]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(0, 1);
+	jacobi = get_jacobian(0, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[6]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
-	jacobi = get_jacobi(-1, 0);
+	jacobi = get_jacobian(-1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
 	normal->normalize();
 	nodes[7]->add_normal_fraction(*normal);

@@ -17,6 +17,7 @@ class Vec3
 		double x, y, z;
 
 		Vec3() { }
+		Vec3(const Vec3 &v): x(v.x), y(v.y), z(v.z) { }
 		Vec3(double xc, double yc, double zc):x(xc), y(yc), z(zc) { }
 
 		/*! Normalizes the vector to length 1. */

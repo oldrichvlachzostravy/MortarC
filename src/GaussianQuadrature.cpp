@@ -7,15 +7,6 @@
 
 #include "GaussianQuadrature.h"
 
-
-GaussianQuadrature::GaussianQuadrature() {
-	// TODO Auto-generated constructor stub
-
-}
-
-GaussianQuadrature::~GaussianQuadrature() {
-	// TODO Auto-generated destructor stub
-}
 /**
  *Nummerically computes the length of the curve using Gaussian quadrature
  *
@@ -27,7 +18,7 @@ GaussianQuadrature::~GaussianQuadrature() {
  *  I(1)                           -1                         i=1
  *where
  *
- *  df is the functor pointing at jacobi function
+ *  df is the functor pointing at jacobian function
  *  I   is the interval for integration <I(1) I(2)>, I(1) must be smaller then I(2).
  *  order - the number of used Gaussian points is 2*order -1
  *
@@ -36,16 +27,30 @@ GaussianQuadrature::~GaussianQuadrature() {
  *  h(x) = ----------- x + -----------
  *             2               2
  */
- double GaussianQuadrature::numCurveIntegrationArea(Jacobi1DFunctor df, double start, double end, int order) {
+ double GaussianQuadrature::numCurveIntegration(JacobiFunctor df, double start, double end, int points)
+ {
+	 double result = 0;
+	 double *G = getGaussPoints1D(points - 1);
+	 double *W = getGaussWeights1D(points - 1);
+	 double a = (end - start) / 2;
+	 double b = (end + start) / 2;
+	 for (int i = 0; i < points; i++) {
+	 	result += W[i] * ( df(a * G[i] + b, 0)->length() );
+	 }
+	 result *= a;
+	 return result;
+}
+
+ double GaussianQuadrature::numAreaIntegration(JacobiFunctor df, double start, double end, int points)
+ {
 	double result = 0;
-	double* G = getGaussPoints1D(order);
-	double* W = getGaussWeights1D(order);
-	int numberOfGP = 2 * order - 1;
-	double a=(end-start)/2;
-	double b=(end+start)/2;
-	for (int i = 0; i < numberOfGP; i++) {
-		result+=W[i]* (df(a*G[i]+b).length());
+	double *G = getGaussPoints1D(points - 1);
+	double *W = getGaussWeights1D(points - 1);
+	double a = (end - start) / 2;
+	double b = (end + start) / 2;
+	for (int i = 0; i < points; i++) {
+		result += W[i] * ( df(a * G[i] + b, 0)->length() );
 	}
-	result*=a;
+	result *= a;
 	return result;
 }

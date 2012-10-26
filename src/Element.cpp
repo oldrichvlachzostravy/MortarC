@@ -46,7 +46,9 @@ void Element_line2::calculate_normals_and_supports()
 {
 	Vec3 jacobi = get_jacobi(0);
 	Vec3 normal(jacobi.y, -jacobi.x, 0);
-	double support = 1;
+
+	double support = (nodes[0]->get_coordinates()-nodes[1]->get_coordinates()).length()/2.0;
+
 	for(int i = 0; i < 2; i++) {
 		this->nodes[i]->add_normal_fraction(normal);
 		this->nodes[i]->add_support_fraction(support);

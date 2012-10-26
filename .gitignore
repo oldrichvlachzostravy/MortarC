@@ -1,5 +1,6 @@
 .project
 .cproject
+*.ascii
 Debug
 Release
 *~

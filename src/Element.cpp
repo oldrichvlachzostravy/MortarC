@@ -46,6 +46,7 @@ void Element_line2::calculate_normals_and_supports()
 {
 	Vec3 jacobi = get_jacobi(0);
 	Vec3 normal(jacobi.y, -jacobi.x, 0);
+	normal.normalize();
 
 	double support = (nodes[0]->get_coordinates()-nodes[1]->get_coordinates()).length()/2.0;
 
@@ -97,17 +98,20 @@ void Element_line3::calculate_normals_and_supports()
 {
 	Vec3 jacobi = get_jacobi(-1);
 	Vec3 normal(jacobi.y, -jacobi.x, 0);
+	normal.normalize();
 	double support = 1;
 	nodes[0]->add_normal_fraction(normal);
 	nodes[0]->add_support_fraction(support);
 
 	jacobi = get_jacobi(1);
 	normal = Vec3(jacobi.y, -jacobi.x, 0);
+	normal.normalize();
 	nodes[1]->add_normal_fraction(normal);
 	nodes[1]->add_support_fraction(support);
 
 	jacobi = get_jacobi(0);
 	normal = Vec3(jacobi.y, -jacobi.x, 0);
+	normal.normalize();
 	nodes[2]->add_normal_fraction(normal);
 	nodes[2]->add_support_fraction(support);
 }
@@ -217,6 +221,7 @@ void Element_tria6::calculate_normals_and_supports()
 {
 	Vec3 *jacobi = get_jacobi(0, 0);
 	Vec3 *normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	double support = 1;
 	nodes[0]->add_normal_fraction(*normal);
 	nodes[0]->add_support_fraction(support);
@@ -225,6 +230,7 @@ void Element_tria6::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
 	nodes[1]->add_support_fraction(support);
 	delete jacobi;
@@ -232,6 +238,7 @@ void Element_tria6::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(0, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
 	nodes[2]->add_support_fraction(support);
 	delete jacobi;
@@ -239,6 +246,7 @@ void Element_tria6::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(.5, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
 	nodes[3]->add_support_fraction(support);
 	delete jacobi;
@@ -246,6 +254,7 @@ void Element_tria6::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(.5, .5);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[4]->add_normal_fraction(*normal);
 	nodes[4]->add_support_fraction(support);
 	delete jacobi;
@@ -253,6 +262,7 @@ void Element_tria6::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(0, .5);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[5]->add_normal_fraction(*normal);
 	nodes[5]->add_support_fraction(support);
 	delete jacobi;
@@ -300,24 +310,28 @@ void Element_quad4::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(-1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[0]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(-1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
@@ -373,48 +387,56 @@ void Element_quad8::calculate_normals_and_supports()
 
 	jacobi = get_jacobi(-1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[0]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(1, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[1]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[2]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(-1, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[3]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(0, -1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[4]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[5]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(0, 1);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[6]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;
 
 	jacobi = get_jacobi(-1, 0);
 	normal = crossprod(jacobi[0], jacobi[1]);
+	normal->normalize();
 	nodes[7]->add_normal_fraction(*normal);
 	delete normal;
 	delete jacobi;

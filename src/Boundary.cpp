@@ -69,11 +69,8 @@ std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
 	return out;
 }
 
-Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
-		Epetra_SerialDenseMatrix *coords,
-		bool master)
+Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords)
 {
-	// load all elements
 	int index;
 	Element *line;
 	for (int i = 0; i < mesh_desc->N(); i++) {
@@ -84,28 +81,15 @@ Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
 		index = (*mesh_desc)(8, i);
 		if(index) { //if the index is not zero we must create line3
 			Node *third = get_unique_node_or_create_new(index, coords);
-			if(master) {
-				line = new Element_line3(first, second, third);
-			} else {
-				line = new Element_line3(third, second, first);
-			}
+			line = new Element_line3(first, third, second);
 			third->add_element(line);
 		} else {
-			if(master) {
-				line = new Element_line2(first, second);
-			} else {
-				line = new Element_line2(second, first);
-			}
+			line = new Element_line2(first, second);
 		}
 		first->add_element(line);
 		second->add_element(line);
 		elements.push_back(line);
 	}
-
-	//set the first and the last Node
-	this->set_start(elements[0]->get_nodes()[0]);
-
-	this->set_end(elements[elements.size() - 1]->get_nodes()[1]);
 }
 
 void Boundary2D::save_normals_and_support(const char* fileName)
@@ -121,7 +105,4 @@ void Boundary2D::save_normals_and_support(const char* fileName)
 void Boundary2D::print(std::ostream& out) const
 {
 	Boundary::print(out);
-	out << "Boundary 2D:\n";
-	out << "Start: " << *start << "\n";
-	out << "End: " << *end << "\n";
 }

@@ -39,22 +39,10 @@ std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
 class Boundary2D: public Boundary
 {
 	public:
-		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
-				Epetra_SerialDenseMatrix *coords,
-				bool master);
-
-		void set_start(Node *start) { this->start = start; }
-		Node * get_start() { return this->start; }
-
-		void set_end(Node *end) { this->end = end; }
-		Node * get_end() { return this->end; }
+		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords);
 
 		void print(std::ostream& out) const;
 		void save_normals_and_support(const char* fileName);
-
-	protected:
-		Node *start;
-		Node *end;
 };
 
 #endif /* BOUNDARY_H_ */

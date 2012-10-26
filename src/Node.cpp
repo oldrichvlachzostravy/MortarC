@@ -59,7 +59,6 @@ void Node::add_support_fraction(double support)
 void Node::calculate_normal_and_support()
 {
 	this->normal /= elements.size();
-	this->normal.normalize();
 }
 
 std::ostream& operator<<(std::ostream &out, const Node &node)

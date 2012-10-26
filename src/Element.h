@@ -83,4 +83,28 @@ class Element_tria6: public Element
 		void print(std::ostream &out) const;
 };
 
+class Element_quad4: public Element
+{
+	public:
+		Element_quad4(Node *first, Node *second, Node *third, Node* fourth);
+		virtual ~Element_quad4() { };
+
+		Vec3 * get_jacobi(double s, double t);
+		void calculate_normals_and_supports();
+
+		void print(std::ostream& out) const;
+};
+
+class Element_quad8: public Element
+{
+	public:
+		Element_quad8(Node **nodes);
+		virtual ~Element_quad8() { }
+
+		Vec3 * get_jacobi(double s, double t);
+		void calculate_normals_and_supports();
+
+		void print(std::ostream &out) const;
+};
+
 #endif /* ELEMENT_H_ */

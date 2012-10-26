@@ -193,8 +193,8 @@ void init(int argc, char** argv)
 	}
 	load_matrices(path);
 
-	master = new Boundary2D(master_els, coordinates, true);
-	slave = new Boundary2D(slave_els, coordinates, true);
+	master = new Boundary2D(master_els, coordinates);
+	slave = new Boundary2D(slave_els, coordinates);
 }
 
 int main(int argc, char** argv)

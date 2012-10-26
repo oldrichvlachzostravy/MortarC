@@ -76,7 +76,7 @@ class Vec3
 			return *this;
 		}
 
-		Vec3 &operator+=(Vec3 &vec)
+		Vec3 &operator+=(const Vec3 &vec)
 		{
 			x += vec.x;
 			y += vec.y;

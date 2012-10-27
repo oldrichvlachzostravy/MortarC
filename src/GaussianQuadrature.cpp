@@ -34,8 +34,11 @@
 	 double *W = getGaussWeights1D(points - 1);
 	 double a = (end - start) / 2;
 	 double b = (end + start) / 2;
+	 Vec3 *j;
 	 for (int i = 0; i < points; i++) {
-	 	result += W[i] * ( df(a * G[i] + b, 0)->length() );
+		 j = df(a * G[i] + b, 0);
+		 result += W[i] * j->length();
+		 delete j;
 	 }
 	 result *= a;
 	 return result;
@@ -43,13 +46,16 @@
 
  double GaussianQuadrature::numAreaIntegration(JacobiFunctor df, double start, double end, int points)
  {
-	double result = 0;
+	 double result = 0;
 	double *G = getGaussPoints1D(points - 1);
 	double *W = getGaussWeights1D(points - 1);
 	double a = (end - start) / 2;
 	double b = (end + start) / 2;
-	for (int i = 0; i < points; i++) {
-		result += W[i] * ( df(a * G[i] + b, 0)->length() );
+	Vec3 *j;
+	for(int i = 0; i < points; i++) {
+		j = df(a * G[i] + b, 0);
+		result += W[i] * j->length();
+		delete j;
 	}
 	result *= a;
 	return result;

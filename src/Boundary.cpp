@@ -54,6 +54,9 @@ void Boundary::print(std::ostream &out) const
 }
 Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coords)
 {
+	// The first index in file is 1, but the first index in EPetra matrix is 0
+	index--;
+
 	if (nodes.count(index)) {
 		return nodes[index];
 	} else {
@@ -81,7 +84,7 @@ Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDens
 		index = (*mesh_desc)(8, i);
 		if(index) { //if the index is not zero we must create line3
 			Node *third = get_unique_node_or_create_new(index, coords);
-			line = new Element_line3(first, third, second);
+			line = new Element_line3(first, second, third);
 			third->add_element(line);
 		} else {
 			line = new Element_line2(first, second);
@@ -94,12 +97,10 @@ Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDens
 
 void Boundary2D::save_normals_and_support(const char* fileName)
 {
-	std::vector<Element*>::const_iterator it;
-	for (it = elements.begin(); it != elements.end(); it++) {
-		(*it)->get_nodes()[0]->save_normal_and_support(fileName);
+	std::map<int, Node*>::const_iterator it;
+	for(it = nodes.begin(); it != nodes.end(); it++) {
+		it->second->save_normal_and_support(fileName);
 	}
-	it--;
-	(*it)->get_nodes()[1]->save_normal_and_support(fileName);
 }
 
 void Boundary2D::print(std::ostream& out) const

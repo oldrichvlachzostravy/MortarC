@@ -33,7 +33,8 @@ void Node::save_normal_and_support(const char* fileName)
 	 * there will be save to file function, but this function print control
 	 * output now!!
 	 */
-	printf("(%.2f, %.2f) -> normal (%.2f, %.2f), support %.2f\n",
+	printf("%d (%.2f, %.2f) -> normal (%.2f, %.2f), support %.2f\n",
+			coord_index,
 			(*coords)(0, coord_index),
 			(*coords)(1, coord_index),
 			normal.x, normal.y, support);

@@ -131,10 +131,10 @@ void print_master()
 	cout << "MASTER IN FILE:\n";
 	for(int i = 0; i < master_els->N(); i++) {
 		printf("(%.2f, %.2f) -->> (%.2f, %.2f)\n",
-				(*coordinates)(0, (*master_els)(6, i)),
-				(*coordinates)(1, (*master_els)(6, i)),
-				(*coordinates)(0, (*master_els)(7, i)),
-				(*coordinates)(1, (*master_els)(7, i)));
+				(*coordinates)(0, (*master_els)(6, i) - 1),
+				(*coordinates)(1, (*master_els)(6, i) - 1),
+				(*coordinates)(0, (*master_els)(7, i) - 1),
+				(*coordinates)(1, (*master_els)(7, i) - 1));
 	}
 }
 
@@ -143,10 +143,10 @@ void print_slave()
 	cout << "SLAVE IN FILE:\n";
 	for(int i = 0; i < slave_els->N(); i++) {
 		printf("(%.2f, %.2f) -->> (%.2f, %.2f)\n",
-				(*coordinates)(0, (*slave_els)(6, i)),
-				(*coordinates)(1, (*slave_els)(6, i)),
-				(*coordinates)(0, (*slave_els)(7, i)),
-				(*coordinates)(1, (*slave_els)(7, i)));
+				(*coordinates)(0, (*slave_els)(6, i) - 1),
+				(*coordinates)(1, (*slave_els)(6, i) - 1),
+				(*coordinates)(0, (*slave_els)(7, i) - 1),
+				(*coordinates)(1, (*slave_els)(7, i) - 1));
 	}
 }
 
@@ -202,6 +202,7 @@ int main(int argc, char** argv)
 {
 
 	init(argc, argv);
+
 	Project project(master, slave);
 
 	project.calculate_normals_and_supports();

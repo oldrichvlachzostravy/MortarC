@@ -85,9 +85,10 @@ void Element_line3::print(std::ostream &out) const
 
 Vec3 * Element_line3::get_jacobian(double s, double t)
 {
-	return new Vec3(nodes[0]->get_coordinates() * (-0.5 - s) +
-					nodes[1]->get_coordinates() * (0.5 + s) +
-					nodes[2]->get_coordinates() * (-2 * s));
+	Vec3 *v = new Vec3(nodes[0]->get_coordinates() * (-0.5 + s) +
+			nodes[1]->get_coordinates() * (0.5 + s) +
+			nodes[2]->get_coordinates() * (-2 * s));
+	return v;
 }
 
 Vec3 Element_line3::get_normal_in_point(double s, double t)
@@ -116,7 +117,7 @@ void Element_line3::calculate_normals_and_supports()
 	delete jacobi;
 	normal.normalize();
 	nodes[1]->add_normal_fraction(normal);
-	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, -0.5, 0.0, 2);
+	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, 0.5, 1, 2);
 	nodes[1]->add_support_fraction(support);
 
 	jacobi = get_jacobian(0, 0);
@@ -124,7 +125,7 @@ void Element_line3::calculate_normals_and_supports()
 	delete jacobi;
 	normal.normalize();
 	nodes[2]->add_normal_fraction(normal);
-	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, 0.5, 1.0, 2);
+	support = GaussianQuadrature::numCurveIntegration(jacobiFunctor, -0.5, 0.5, 2);
 	nodes[2]->add_support_fraction(support);
 }
 

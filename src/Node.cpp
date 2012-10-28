@@ -18,7 +18,7 @@ Node::Node(int coordinate_index, Epetra_SerialDenseMatrix *coords)
 
 void Node::print(std::ostream &out) const
 {
-	out << "Node index " << coord_index << ", elements(";
+	out << "Node index " << coord_index + 1 << ", elements(";
 
 	std::vector<Element*>::const_iterator it;
 	for (it = elements.begin(); it != elements.end(); it++) {
@@ -33,11 +33,12 @@ void Node::save_normal_and_support(const char* fileName)
 	 * there will be save to file function, but this function print control
 	 * output now!!
 	 */
-	printf("%d (%.2f, %.2f) -> normal (%.2f, %.2f), support %.2f\n",
-			coord_index,
+	printf("%d (%.2f, %.2f, %.2f) -> normal (%.5f, %.5f, %.5f), support %.3f\n",
+			coord_index + 1,
 			(*coords)(0, coord_index),
 			(*coords)(1, coord_index),
-			normal.x, normal.y, support);
+			(*coords)(2, coord_index),
+			normal.x, normal.y, normal.z, support);
 }
 
 Vec3 Node::get_coordinates()

@@ -125,7 +125,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 		Epetra_SerialDenseMatrix *coords, int element_type)
 {
 	int index;
-	Element *line;
+	Element *face;
 	if(element_type == tria3) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
@@ -134,11 +134,11 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line2(n);
+			face = new Element_tria3(n);
 			for(int j = 0; j < 3; j++) {
-				n[j]->add_element(line);
+				n[j]->add_element(face);
 			}
-			elements.push_back(line);
+			elements.push_back(face);
 		}
 	}
 	if(element_type == tria6) {
@@ -149,11 +149,11 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line2(n);
+			face = new Element_tria6(n);
 			for(int j = 0; j < 6; j++) {
-				n[j]->add_element(line);
+				n[j]->add_element(face);
 			}
-			elements.push_back(line);
+			elements.push_back(face);
 		}
 	}
 	if(element_type == quad4) {
@@ -164,11 +164,11 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line2(n);
+			face = new Element_quad4(n);
 			for(int j = 0; j < 4; j++) {
-				n[j]->add_element(line);
+				n[j]->add_element(face);
 			}
-			elements.push_back(line);
+			elements.push_back(face);
 		}
 	}
 	if(element_type == quad8) {
@@ -179,11 +179,11 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line2(n);
+			face = new Element_quad8(n);
 			for(int j = 0; j < 8; j++) {
-				n[j]->add_element(line);
+				n[j]->add_element(face);
 			}
-			elements.push_back(line);
+			elements.push_back(face);
 		}
 	}
 }

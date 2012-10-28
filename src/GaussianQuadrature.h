@@ -46,7 +46,7 @@ class GaussianQuadrature
 		}
 
 		static double numCurveIntegration(JacobiFunctor df, double start, double end, int points);
-		static double numAreaIntegration(JacobiFunctor df, double start, double end, int points);
+		static double numAreaIntegration(JacobiFunctor df, double start_x, double end_x, double start_y, double end_y, int points);
 };
 
 #endif /* GAUSSIANQUADRATURE_H_ */

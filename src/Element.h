@@ -31,15 +31,12 @@ class Element_line2 : public Element
 {
 	public:
 		Element_line2(Node **nodes);
-		virtual ~Element_line2();
+		virtual ~Element_line2() { }
 
 		Vec3 * get_jacobian(double s, double t);
-		Vec3 get_normal_in_point(double s, double t);
 		void calculate_normals_and_supports();
 
 		void print(std::ostream &out) const;
-	private:
-		Vec3 *normal;
 };
 
 class Element_line3 : public Element
@@ -49,7 +46,6 @@ class Element_line3 : public Element
 		virtual ~Element_line3() { }
 
 		Vec3 * get_jacobian(double s, double t);
-		Vec3 get_normal_in_point(double s, double t);
 		void calculate_normals_and_supports();
 
 		void print(std::ostream& out) const;
@@ -59,15 +55,12 @@ class Element_tria3: public Element
 {
 	public:
 		Element_tria3(Node **nodes);
-		virtual ~Element_tria3();
+		virtual ~Element_tria3() { }
 
 		Vec3 * get_jacobian(double s, double t);
-		Vec3 get_normal_in_point(double s, double t);
 		void calculate_normals_and_supports();
 
 		void print(std::ostream& out) const;
-	private:
-		Vec3 *normal;
 };
 
 class Element_tria6: public Element
@@ -77,7 +70,6 @@ class Element_tria6: public Element
 		virtual ~Element_tria6() { }
 
 		Vec3 * get_jacobian(double s, double t);
-		Vec3 get_normal_in_point(double s, double t);
 		void calculate_normals_and_supports();
 
 		void print(std::ostream &out) const;
@@ -87,7 +79,7 @@ class Element_quad4: public Element
 {
 	public:
 		Element_quad4(Node **nodes);
-		virtual ~Element_quad4() { };
+		virtual ~Element_quad4() { }
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();

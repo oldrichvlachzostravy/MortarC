@@ -193,12 +193,12 @@ void init(int argc, char** argv)
 			}
 			case 'e': {
 				string e = optarg;
-				if(e.compare("line2")) { element_type = line2; }
-				if(e.compare("line3")) { element_type = line3; }
-				if(e.compare("tria3")) { element_type = tria3; }
-				if(e.compare("tria6")) { element_type = tria6; }
-				if(e.compare("quad4")) { element_type = quad4; }
-				if(e.compare("quad8")) { element_type = quad8; }
+				if(!e.compare("line2")) { element_type = line2; }
+				if(!e.compare("line3")) { element_type = line3; }
+				if(!e.compare("tria3")) { element_type = tria3; }
+				if(!e.compare("tria6")) { element_type = tria6; }
+				if(!e.compare("quad4")) { element_type = quad4; }
+				if(!e.compare("quad8")) { element_type = quad8; }
 				break;
 			}
 			default: {

@@ -44,19 +44,26 @@
 	 return result;
 }
 
- double GaussianQuadrature::numAreaIntegration(JacobiFunctor df, double start, double end, int points)
+ double GaussianQuadrature::numAreaIntegration(JacobiFunctor df, double start_x, double end_x, double start_y, double end_y, int points)
  {
-	 double result = 0;
+	double result = 0;
 	double *G = getGaussPoints1D(points - 1);
 	double *W = getGaussWeights1D(points - 1);
-	double a = (end - start) / 2;
-	double b = (end + start) / 2;
-	Vec3 *j;
+	double ax = (end_x - start_x) / 2;
+	double bx = (end_x + start_x) / 2;
+	double ay = (end_y - start_y) / 2;
+	double by = (end_y + start_y) / 2;
+	Vec3 *jacobi;
+	Vec3 *sup;
 	for(int i = 0; i < points; i++) {
-		j = df(a * G[i] + b, 0);
-		result += W[i] * j->length();
-		delete j;
+		for(int j = 0; j < points; j++) {
+			jacobi = df(ax * G[i] + bx, ay * G[j] + by);
+			sup = crossprod(jacobi[1], jacobi[0]);
+			result += W[i] * W[j] * sup->length();
+			delete[] jacobi;
+			delete sup;
+		}
 	}
-	result *= a;
+	result *= ax * ay;
 	return result;
 }

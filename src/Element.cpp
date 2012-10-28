@@ -13,11 +13,9 @@ Element::~Element() {
 	delete[] nodes;
 }
 
-Element_line2::Element_line2(Node *node_start, Node *node_end)
+Element_line2::Element_line2(Node **nodes)
 {
-	nodes = new Node*[2];
-	nodes[0] = node_start;
-	nodes[1] = node_end;
+	this->nodes = nodes;
 	normal = NULL;
 }
 
@@ -66,12 +64,9 @@ Element_line2::~Element_line2()
 }
 
 
-Element_line3::Element_line3(Node *node_start, Node *node_mid, Node *node_end)
+Element_line3::Element_line3(Node **nodes)
 {
-	nodes = new Node*[3];
-	nodes[0] = node_start;
-	nodes[1] = node_mid;
-	nodes[2] = node_end;
+	this->nodes = nodes;
 }
 
 
@@ -129,13 +124,9 @@ void Element_line3::calculate_normals_and_supports()
 	nodes[2]->add_support_fraction(support);
 }
 
-Element_tria3::Element_tria3(Node *first, Node *second, Node *third)
+Element_tria3::Element_tria3(Node **nodes)
 {
-	nodes = new Node*[3];
-	nodes[0] = first;
-	nodes[1] = second;
-	nodes[2] = third;
-	normal = NULL;
+	this->nodes = nodes;
 }
 
 void Element_tria3::print(std::ostream &out) const
@@ -188,10 +179,7 @@ Element_tria3::~Element_tria3()
 
 Element_tria6::Element_tria6(Node **nodes)
 {
-	this->nodes = new Node*[6];
-	for(int i = 0; i < 6; i++) {
-		this->nodes[i] = nodes[i];
-	}
+	this->nodes = nodes;
 }
 
 void Element_tria6::print(std::ostream& out) const
@@ -282,13 +270,9 @@ void Element_tria6::calculate_normals_and_supports()
 	delete normal;
 }
 
-Element_quad4::Element_quad4(Node *first, Node *second, Node *third, Node *fourth)
+Element_quad4::Element_quad4(Node **nodes)
 {
-	nodes = new Node*[4];
-	nodes[0] = first;
-	nodes[1] = second;
-	nodes[2] = third;
-	nodes[3] = fourth;
+	this->nodes = nodes;
 }
 
 void Element_quad4::print(std::ostream &out) const
@@ -353,10 +337,7 @@ void Element_quad4::calculate_normals_and_supports()
 
 Element_quad8::Element_quad8(Node **nodes)
 {
-	this->nodes = new Node*[8];
-	for(int i = 0; i < 8; i++) {
-		this->nodes[i] = nodes[i];
-	}
+	this->nodes = nodes;
 }
 
 void Element_quad8::print(std::ostream& out) const

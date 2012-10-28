@@ -35,6 +35,14 @@ void Boundary::calculate_normals_and_supprts()
 	}
 }
 
+void Boundary::save_normals_and_support(const char* fileName)
+{
+	std::map<int, Node*>::const_iterator it;
+	for(it = nodes.begin(); it != nodes.end(); it++) {
+		it->second->save_normal_and_support(fileName);
+	}
+}
+
 void Boundary::print(std::ostream &out) const
 {
 	out << "Boundary:\n";
@@ -52,6 +60,7 @@ void Boundary::print(std::ostream &out) const
 		out << **it2 << "\n";
 	}
 }
+
 Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coords)
 {
 	// The first index in file is 1, but the first index in EPetra matrix is 0
@@ -72,38 +81,109 @@ std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
 	return out;
 }
 
-Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords)
+Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
+		Epetra_SerialDenseMatrix *coords, int element_type)
 {
 	int index;
 	Element *line;
-	for (int i = 0; i < mesh_desc->N(); i++) {
-		index = (*mesh_desc)(6, i);
-		Node *first = get_unique_node_or_create_new(index, coords);
-		index = (*mesh_desc)(7, i);
-		Node *second = get_unique_node_or_create_new(index, coords);
-		index = (*mesh_desc)(8, i);
-		if(index) { //if the index is not zero we must create line3
-			Node *third = get_unique_node_or_create_new(index, coords);
-			line = new Element_line3(first, second, third);
-			third->add_element(line);
-		} else {
-			line = new Element_line2(first, second);
+
+	if(element_type == line2) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[2];
+			for(int j = 0; j < 2; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line2(n);
+			for(int j = 0; j < 2; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
 		}
-		first->add_element(line);
-		second->add_element(line);
-		elements.push_back(line);
+	}
+
+	if(element_type == line3) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[3];
+			for(int j = 0; j < 3; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line3(n);
+			for(int j = 0; j < 3; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
+		}
 	}
 }
 
-void Boundary2D::save_normals_and_support(const char* fileName)
-{
-	std::map<int, Node*>::const_iterator it;
-	for(it = nodes.begin(); it != nodes.end(); it++) {
-		it->second->save_normal_and_support(fileName);
-	}
-}
 
-void Boundary2D::print(std::ostream& out) const
+Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
+		Epetra_SerialDenseMatrix *coords, int element_type)
 {
-	Boundary::print(out);
+	int index;
+	Element *line;
+	if(element_type == tria3) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[3];
+			for(int j = 0; j < 3; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line2(n);
+			for(int j = 0; j < 3; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
+		}
+	}
+	if(element_type == tria6) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[6];
+			for(int j = 0; j < 6; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line2(n);
+			for(int j = 0; j < 6; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
+		}
+	}
+	if(element_type == quad4) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[4];
+			for(int j = 0; j < 4; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line2(n);
+			for(int j = 0; j < 4; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
+		}
+	}
+	if(element_type == quad8) {
+		Node **n;
+		for(int i = 0; i < mesh_desc->N(); i++) {
+			n = new Node*[8];
+			for(int j = 0; j < 8; j++) {
+				index = (*mesh_desc)(j + 6, i);
+				n[j] = get_unique_node_or_create_new(index, coords);
+			}
+			line = new Element_line2(n);
+			for(int j = 0; j < 8; j++) {
+				n[j]->add_element(line);
+			}
+			elements.push_back(line);
+		}
+	}
 }

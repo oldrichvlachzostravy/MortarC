@@ -30,7 +30,7 @@ std::ostream& operator<<(std::ostream& out, const Element & element);
 class Element_line2 : public Element
 {
 	public:
-		Element_line2(Node *node_start, Node *node_end);
+		Element_line2(Node **nodes);
 		virtual ~Element_line2();
 
 		Vec3 * get_jacobian(double s, double t);
@@ -45,7 +45,7 @@ class Element_line2 : public Element
 class Element_line3 : public Element
 {
 	public:
-		Element_line3(Node *node_start, Node *node_mid, Node *node_end);
+		Element_line3(Node **nodes);
 		virtual ~Element_line3() { }
 
 		Vec3 * get_jacobian(double s, double t);
@@ -58,7 +58,7 @@ class Element_line3 : public Element
 class Element_tria3: public Element
 {
 	public:
-		Element_tria3(Node *first, Node *second, Node *third);
+		Element_tria3(Node **nodes);
 		virtual ~Element_tria3();
 
 		Vec3 * get_jacobian(double s, double t);
@@ -86,7 +86,7 @@ class Element_tria6: public Element
 class Element_quad4: public Element
 {
 	public:
-		Element_quad4(Node *first, Node *second, Node *third, Node* fourth);
+		Element_quad4(Node **nodes);
 		virtual ~Element_quad4() { };
 
 		Vec3 * get_jacobian(double s, double t);

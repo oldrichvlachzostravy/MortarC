@@ -16,6 +16,13 @@
 #include "Element.h"
 #include "Node.h"
 
+#define line2 0
+#define line3 1
+#define tria3 2
+#define tria6 3
+#define quad4 4
+#define quad8 5
+
 class Boundary
 {
 	public:
@@ -23,8 +30,8 @@ class Boundary
 
 		void calculate_normals_and_supprts();
 
-		virtual void print(std::ostream &out) const;
-		virtual void save_normals_and_support(const char* fileName) =0;
+		void print(std::ostream &out) const;
+		void save_normals_and_support(const char* fileName);
 
 	protected:
 		Node* get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coordinates);
@@ -39,10 +46,13 @@ std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
 class Boundary2D: public Boundary
 {
 	public:
-		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords);
+		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
+};
 
-		void print(std::ostream& out) const;
-		void save_normals_and_support(const char* fileName);
+class Boundary3D: public Boundary
+{
+	public:
+		Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
 };
 
 #endif /* BOUNDARY_H_ */

@@ -28,6 +28,7 @@ using namespace std;
 Epetra_SerialDenseMatrix *coordinates, *friction;
 Epetra_IntSerialDenseMatrix *domainN, *master_els, *nodes2dofs, *slave_els;
 Boundary *master, *slave;
+int element_type;
 
 Epetra_SerialDenseMatrix* load_Epetra_SerialDenseMatrix(const char* fileName)
 {
@@ -184,18 +185,39 @@ void init(int argc, char** argv)
 
 	int c;
 	string path;
-	while((c = getopt(argc, argv, "p:")) != -1) {
+	while((c = getopt(argc, argv, "p:e:")) != -1) {
 		switch(c) {
 			case 'p': {
 				path = optarg;
+				break;
+			}
+			case 'e': {
+				string e = optarg;
+				if(e.compare("line2")) { element_type = line2; }
+				if(e.compare("line3")) { element_type = line3; }
+				if(e.compare("tria3")) { element_type = tria3; }
+				if(e.compare("tria6")) { element_type = tria6; }
+				if(e.compare("quad4")) { element_type = quad4; }
+				if(e.compare("quad8")) { element_type = quad8; }
+				break;
+			}
+			default: {
+				cout << "list of options:\n";
+				cout << "\t-p path of source matrix\n";
+				cout << "\t-e type of elements. Example: -e line2\n";
 				break;
 			}
 		}
 	}
 	load_matrices(path);
 
-	master = new Boundary2D(master_els, coordinates);
-	slave = new Boundary2D(slave_els, coordinates);
+	if(element_type <= line3) {
+		master = new Boundary2D(master_els, coordinates, element_type);
+		slave = new Boundary2D(slave_els, coordinates, element_type);
+	} else {
+		master = new Boundary3D(master_els, coordinates, element_type);
+		slave = new Boundary3D(slave_els, coordinates, element_type);
+	}
 }
 
 int main(int argc, char** argv)

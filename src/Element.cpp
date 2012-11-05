@@ -123,9 +123,9 @@ void Element_tria3::calculate_normals_and_supports()
 	Vec3* jacobi = get_jacobian(0, 0);
 	Vec3 *normal = crossprod(jacobi[1], jacobi[0]);
 	delete[] jacobi;
+	double support = normal->length() / 6;
 	normal->normalize();
 
-	double support = 1;
 	for(int i = 0; i < 3; i++) {
 		nodes[i]->add_normal_fraction(*normal);
 		nodes[i]->add_support_fraction(support);

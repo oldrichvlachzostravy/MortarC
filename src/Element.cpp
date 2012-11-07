@@ -9,6 +9,165 @@
 #include "Node.h"
 #include "GaussianQuadrature.h"
 
+void Element::compute_center(int n)
+{
+	this->center = Vec3(0, 0, 0);
+	for(int i = 0; i < n; i++) {
+		this->center += nodes[i]->get_coordinates();
+	}
+	this->center /= n;
+}
+
+Vec3 Element::get_center()
+{
+	return this->center;
+}
+
+Compare	Element::compare_fnc[9] = {
+		Element::compare_fnc1,
+		Element::compare_fnc2,
+		Element::compare_fnc3,
+		Element::compare_fnc4,
+		Element::compare_fnc5,
+		Element::compare_fnc6,
+		Element::compare_fnc7,
+		Element::compare_fnc8,
+		Element::compare_fnc9
+};
+
+
+/*
+ * Compare two elements by function x
+ */
+int Element::compare_fnc1(const void * element1, const void * element2)
+{
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = (*e1)->center.x -(*e2)->center.x;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function y
+ */
+int Element::compare_fnc2(const void * element1, const void * element2)
+{
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = (*e1)->center.y -(*e2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x + y
+ */
+int Element::compare_fnc3(const void * element1, const void * element2)
+{
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d =
+			(*e1)->center.x - (*e1)->center.y -
+			(*e2)->center.x + (*e2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc4(const void * element1, const void * element2)
+{
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d =
+				(*e1)->center.x + (*e1)->center.y -
+				(*e2)->center.x - (*e2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc5(const void * element1, const void * element2)
+{
+	return 0;
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc6(const void * element1, const void * element2)
+{
+	double d =
+				((Element*)element1)->center.x - ((Element*)element1)->center.y -
+				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc7(const void * element1, const void * element2)
+{
+	double d =
+				((Element*)element1)->center.x - ((Element*)element1)->center.y -
+				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc8(const void * element1, const void * element2)
+{
+	double d =
+				((Element*)element1)->center.x - ((Element*)element1)->center.y -
+				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/*
+ * Compare two elements by function x - y
+ */
+int Element::compare_fnc9(const void * element1, const void * element2)
+{
+	double d =
+				((Element*)element1)->center.x - ((Element*)element1)->center.y -
+				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
 Element::~Element() {
 	delete[] nodes;
 }
@@ -16,6 +175,7 @@ Element::~Element() {
 Element_line2::Element_line2(Node **nodes)
 {
 	this->nodes = nodes;
+	this->compute_center(2);
 }
 
 void Element_line2::print(std::ostream &out) const

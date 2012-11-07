@@ -9,6 +9,8 @@
 #include <Epetra_IntSerialDenseMatrix.h>
 #include "Vec3.h"
 
+typedef int(*Compare)(const void *, const void *);
+
 class Node;
 
 class Element
@@ -20,9 +22,24 @@ class Element
 		virtual void calculate_normals_and_supports() =0;
 
 		Node ** get_nodes() { return this->nodes; }
+		Vec3 get_center();
+
+		static Compare compare_fnc[9];
+		static int compare_fnc1(const void * element1, const void * element2);
+		static int compare_fnc2(const void * element1, const void * element2);
+		static int compare_fnc3(const void * element1, const void * element2);
+		static int compare_fnc4(const void * element1, const void * element2);
+		static int compare_fnc5(const void * element1, const void * element2);
+		static int compare_fnc6(const void * element1, const void * element2);
+		static int compare_fnc7(const void * element1, const void * element2);
+		static int compare_fnc8(const void * element1, const void * element2);
+		static int compare_fnc9(const void * element1, const void * element2);
+
 
 	protected:
+		void compute_center(int n);
 		Node** nodes;
+		Vec3 center;
 };
 
 std::ostream& operator<<(std::ostream& out, const Element & element);

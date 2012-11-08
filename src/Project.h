@@ -23,6 +23,7 @@ class Project
 
 		void calculate_normals_and_supports();
 		void save_normals_and_supports(const char* fileName);
+		void createBoundVolumeTree();
 
 		Boundary * get_master() { return master; }
 		Boundary * get_slave() { return slave; }

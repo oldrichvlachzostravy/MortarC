@@ -228,7 +228,8 @@ int main(int argc, char** argv)
 	Project project(master, slave);
 
 	project.calculate_normals_and_supports();
-	project.save_normals_and_supports("out.txt");
+	//project.save_normals_and_supports("out.txt");
+	project.createBoundVolumeTree();
 
 	return 0;
 }

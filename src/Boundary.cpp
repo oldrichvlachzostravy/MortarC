@@ -20,6 +20,11 @@ Boundary::~Boundary()
 		delete it2->second;
 	}
 	nodes.clear();
+
+	delete[] source_elements;
+	if(BVT != NULL) {
+		delete BVT;
+	}
 }
 
 void Boundary::calculate_normals_and_supprts()
@@ -81,12 +86,82 @@ std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
 	return out;
 }
 
-Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
-		Epetra_SerialDenseMatrix *coords, int element_type)
+void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count)
+{
+	if(element_count == 1) {
+		for(int i = 0; i < bound_count; i++) {
+			delete[] sorted_elements[i];
+		}
+		delete[] sorted_elements;
+		return;
+	}
+
+	double max = -1;
+	int index = -1;
+	for(int i = 0; i < bound_count; i++) {
+		if(max < root->get_item()->get_bounds()[i].end - root->get_item()->get_bounds()[i].start) {
+			max = root->get_item()->get_bounds()[i].end - root->get_item()->get_bounds()[i].start;
+			index = i;
+		}
+	}
+
+	double median = Element::get_value[index](sorted_elements[index][element_count / 2]);
+
+	//TODO: fix this algorithm for case when there are more elements with median value
+	Element ***left_sorted_elements = new Element**[bound_count];
+	Element ***right_sorted_elements = new Element**[bound_count];
+	int pointer[bound_count][2];
+	int left_count = element_count / 2;
+	int right_count = element_count - element_count / 2;
+
+	for(int i = 0; i < bound_count; i++) {
+		left_sorted_elements[i] = new Element*[left_count];
+		right_sorted_elements[i] = new Element*[right_count];
+		pointer[i][0] = 0;
+		pointer[i][1] = 0;
+	}
+
+	for(int i = 0; i < element_count; i++) {
+		for(int j = 0; j < bound_count; j++) {
+			if(Element::get_value[index](sorted_elements[j][i]) < median) {
+				left_sorted_elements[j][pointer[j][0]++] = sorted_elements[j][i];
+			} else {
+				right_sorted_elements[j][pointer[j][1]++] = sorted_elements[j][i];
+			}
+		}
+	}
+
+	Interval *left_bounds = new Interval[bound_count];
+	Interval *right_bounds = new Interval[bound_count];
+	for(int i = 1; i < bound_count; i++) {
+		left_bounds[i] = Interval(Element::get_value[i](left_sorted_elements[i][0]), Element::get_value[i](left_sorted_elements[i][left_count - 1]));
+		right_bounds[i] = Interval(Element::get_value[i](right_sorted_elements[i][0]), Element::get_value[i](right_sorted_elements[i][right_count - 1]));
+	}
+
+	BoundingVolume *left_bound_volume = new BoundingVolume(left_bounds, bound_count);
+	BoundingVolume *right_bound_volume = new BoundingVolume(right_bounds, bound_count);
+	root->setLeaf1(left_bound_volume);
+	root->setLeaf2(right_bound_volume);
+
+	divide_bound_volume(root->getLeaf1(), left_sorted_elements, left_count, bound_count);
+	divide_bound_volume(root->getLeaf2(), right_sorted_elements, right_count, bound_count);
+
+	for(int i =0; i < bound_count; i++) {
+		delete[] sorted_elements[i];
+	}
+	delete[] sorted_elements;
+}
+
+
+Boundary2D::Boundary2D(
+		Epetra_IntSerialDenseMatrix *mesh_desc,
+		Epetra_SerialDenseMatrix *coords,
+		int element_type)
 {
 	int index;
 	Element *line;
 
+	source_elements = new Element*[mesh_desc->N()];
 	if(element_type == line2) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
@@ -100,6 +175,7 @@ Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				n[j]->add_element(line);
 			}
 			elements.push_back(line);
+			source_elements[i] = line;
 		}
 	}
 
@@ -116,8 +192,39 @@ Boundary2D::Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				n[j]->add_element(line);
 			}
 			elements.push_back(line);
+			source_elements[i] = line;
 		}
 	}
+	this->BVT = NULL;
+}
+
+void Boundary2D::createBoundVolumeTree()
+{
+	/*
+	 * Create arrays of elements for sorting:
+	 * sorted[0] - ordered by x
+	 * sorted[1] - ordered by y
+	 * sorted[2] - ordered by x + y
+	 * sorted[3] - ordered by x - y
+	 */
+	int size = elements.size();
+	Element ***sorted = new Element**[4];
+
+	for(int i = 0; i < 4; i++) {
+		sorted[i] = new Element*[size];
+		memcpy(sorted[i], source_elements, sizeof(Element*) * size);
+		qsort(sorted[i], size, sizeof(Element*), Element::compare_fnc[i]);
+	}
+
+	Interval *b = new Interval[4];
+	for(int i = 1; i < 4; i++) {
+		b[i] = Interval(Element::get_value[i](sorted[i][0]), Element::get_value[i](sorted[i][size - 1]));
+	}
+
+	BoundingVolume *bv = new BoundingVolume(b, 4);
+	this->BVT = new BoundingVolumeTree(bv);
+
+	divide_bound_volume(this->BVT, sorted, size, 4);
 }
 
 
@@ -126,6 +233,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 {
 	int index;
 	Element *face;
+	source_elements = new Element*[mesh_desc->N()];
 	if(element_type == tria3) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
@@ -186,4 +294,11 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 			elements.push_back(face);
 		}
 	}
+	this->BVT = NULL;
+}
+
+
+void Boundary3D::createBoundVolumeTree()
+{
+
 }

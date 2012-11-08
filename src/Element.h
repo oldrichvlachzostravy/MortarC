@@ -9,9 +9,13 @@
 #include <Epetra_IntSerialDenseMatrix.h>
 #include "Vec3.h"
 
-typedef int(*Compare)(const void *, const void *);
-
 class Node;
+class Element;
+
+typedef int(*Compare)(const void *, const void *);
+typedef double(*Value)(Element *);
+
+
 
 class Element
 {
@@ -24,7 +28,24 @@ class Element
 		Node ** get_nodes() { return this->nodes; }
 		Vec3 get_center();
 
+		static Value get_value[9];
 		static Compare compare_fnc[9];
+
+	protected:
+		void compute_center(int n);
+		Node** nodes;
+		Vec3 center;
+
+		static double get_value1(Element *);
+		static double get_value2(Element *);
+		static double get_value3(Element *);
+		static double get_value4(Element *);
+		static double get_value5(Element *);
+		static double get_value6(Element *);
+		static double get_value7(Element *);
+		static double get_value8(Element *);
+		static double get_value9(Element *);
+
 		static int compare_fnc1(const void * element1, const void * element2);
 		static int compare_fnc2(const void * element1, const void * element2);
 		static int compare_fnc3(const void * element1, const void * element2);
@@ -34,12 +55,6 @@ class Element
 		static int compare_fnc7(const void * element1, const void * element2);
 		static int compare_fnc8(const void * element1, const void * element2);
 		static int compare_fnc9(const void * element1, const void * element2);
-
-
-	protected:
-		void compute_center(int n);
-		Node** nodes;
-		Vec3 center;
 };
 
 std::ostream& operator<<(std::ostream& out, const Element & element);

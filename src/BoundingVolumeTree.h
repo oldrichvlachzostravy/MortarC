@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 #ifndef BOUNDINGVOLUMETREE_H_
 #define BOUNDINGVOLUMETREE_H_
@@ -7,6 +8,8 @@
 
 struct Interval
 {
+		Interval(): start(0), end(0) { };
+		Interval(double s, double e): start(s), end(e) { };
 		double start;
 		double end;
 };
@@ -14,14 +17,15 @@ struct Interval
 class BoundingVolume
 {
 	public:
-		BoundingVolume();
+		BoundingVolume(Interval *bounds, int dimension);
 		~BoundingVolume();
 
-		BoundingVolume * divide(); // Divide volume to two smaller volumes
+		Interval * get_bounds() { return bounds; }
+
 		bool isOverlapped(BoundingVolume &boundingVolume);
 
 	private:
-		int dimension;
+		int bounds_count;
 		Interval *bounds;
 };
 
@@ -31,11 +35,15 @@ class BoundingVolumeTree
 		BoundingVolumeTree(BoundingVolume *root);
 		~BoundingVolumeTree();
 
+		BoundingVolume * get_item() { return item; }
+
 		void setLeaf1(BoundingVolume *leaf);
+		BoundingVolumeTree * getLeaf1() { return leaf1; }
 		void setLeaf2(BoundingVolume *leaf);
+		BoundingVolumeTree * getLeaf2() { return leaf2; }
 
 	protected:
-		BoundingVolume *root;
+		BoundingVolume *item;
 		BoundingVolumeTree *leaf1;
 		BoundingVolumeTree *leaf2;
 

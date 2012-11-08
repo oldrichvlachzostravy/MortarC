@@ -15,6 +15,7 @@
 
 #include "Element.h"
 #include "Node.h"
+#include "BoundingVolumeTree.h"
 
 #define line2 0
 #define line3 1
@@ -29,6 +30,7 @@ class Boundary
 		virtual ~Boundary();
 
 		void calculate_normals_and_supprts();
+		virtual void createBoundVolumeTree() =0;
 
 		void print(std::ostream &out) const;
 		void save_normals_and_support(const char* fileName);
@@ -38,21 +40,28 @@ class Boundary
 
 		std::vector<Element* > elements;
 		std::map<int, Node* > nodes;
+		Element **source_elements;
+		BoundingVolumeTree *BVT;
 };
 
 std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
+void divide_bound_volume();
 
 
 class Boundary2D: public Boundary
 {
 	public:
 		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
+
+		void createBoundVolumeTree();
 };
 
 class Boundary3D: public Boundary
 {
 	public:
 		Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
+
+		void createBoundVolumeTree();
 };
 
 #endif /* BOUNDARY_H_ */

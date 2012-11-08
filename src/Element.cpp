@@ -23,6 +23,18 @@ Vec3 Element::get_center()
 	return this->center;
 }
 
+Value Element::get_value[9] = {
+		Element::get_value1,
+		Element::get_value2,
+		Element::get_value3,
+		Element::get_value4,
+		Element::get_value5,
+		Element::get_value6,
+		Element::get_value7,
+		Element::get_value8,
+		Element::get_value9
+};
+
 Compare	Element::compare_fnc[9] = {
 		Element::compare_fnc1,
 		Element::compare_fnc2,
@@ -35,6 +47,51 @@ Compare	Element::compare_fnc[9] = {
 		Element::compare_fnc9
 };
 
+double Element::get_value1(Element *e)
+{
+	return e->get_center().x;
+}
+
+double Element::get_value2(Element *e)
+{
+	return e->get_center().y;
+}
+
+double Element::get_value3(Element *e)
+{
+	return e->get_center().y - e->get_center().x;
+}
+
+double Element::get_value4(Element *e)
+{
+	return e->get_center().y + e->get_center().x;
+}
+
+double Element::get_value5(Element *e)
+{
+	return e->get_center().z;
+}
+
+double Element::get_value6(Element *e)
+{
+	return e->get_center().x;
+}
+
+double Element::get_value7(Element *e)
+{
+	return e->get_center().x;
+}
+
+double Element::get_value8(Element *e)
+{
+	return e->get_center().x;
+}
+
+double Element::get_value9(Element *e)
+{
+	return e->get_center().x;
+}
+
 
 /*
  * Compare two elements by function x
@@ -43,7 +100,7 @@ int Element::compare_fnc1(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = (*e1)->center.x -(*e2)->center.x;
+	double d = (*e1)->get_center().x -(*e2)->get_center().x;
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -58,7 +115,7 @@ int Element::compare_fnc2(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = (*e1)->center.y -(*e2)->center.y;
+	double d = (*e1)->get_center().y -(*e2)->get_center().y;
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -74,8 +131,8 @@ int Element::compare_fnc3(const void * element1, const void * element2)
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
 	double d =
-			(*e1)->center.x - (*e1)->center.y -
-			(*e2)->center.x + (*e2)->center.y;
+			(*e1)->get_center().y - (*e1)->get_center().x -
+			(*e2)->get_center().y + (*e2)->get_center().x;
 	if(d <= 0) {
 		return -1;
 	} else {

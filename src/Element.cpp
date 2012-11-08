@@ -59,12 +59,12 @@ double Element::get_value2(Element *e)
 
 double Element::get_value3(Element *e)
 {
-	return e->get_center().y - e->get_center().x;
+	return e->get_center().y + e->get_center().x;
 }
 
 double Element::get_value4(Element *e)
 {
-	return e->get_center().y + e->get_center().x;
+	return e->get_center().y - e->get_center().x;
 }
 
 double Element::get_value5(Element *e)
@@ -74,22 +74,22 @@ double Element::get_value5(Element *e)
 
 double Element::get_value6(Element *e)
 {
-	return e->get_center().x;
+	return e->get_center().z + e->get_center().x;
 }
 
 double Element::get_value7(Element *e)
 {
-	return e->get_center().x;
+	return e->get_center().z - e->get_center().x;
 }
 
 double Element::get_value8(Element *e)
 {
-	return e->get_center().x;
+	return e->get_center().z + e->get_center().y;
 }
 
 double Element::get_value9(Element *e)
 {
-	return e->get_center().x;
+	return e->get_center().z - e->get_center().y;
 }
 
 
@@ -100,7 +100,7 @@ int Element::compare_fnc1(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = (*e1)->get_center().x -(*e2)->get_center().x;
+	double d = get_value[fn_X](*e1)- get_value[fn_X](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -115,7 +115,7 @@ int Element::compare_fnc2(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = (*e1)->get_center().y -(*e2)->get_center().y;
+	double d = get_value[fn_Y](*e1)- get_value[fn_Y](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -130,9 +130,7 @@ int Element::compare_fnc3(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d =
-			(*e1)->get_center().y - (*e1)->get_center().x -
-			(*e2)->get_center().y + (*e2)->get_center().x;
+	double d = get_value[fn_X_plus_Y](*e1)- get_value[fn_X_plus_Y](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -147,9 +145,7 @@ int Element::compare_fnc4(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d =
-				(*e1)->center.x + (*e1)->center.y -
-				(*e2)->center.x - (*e2)->center.y;
+	double d = get_value[fn_X_minus_Y](*e1)- get_value[fn_X_minus_Y](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -162,7 +158,14 @@ int Element::compare_fnc4(const void * element1, const void * element2)
  */
 int Element::compare_fnc5(const void * element1, const void * element2)
 {
-	return 0;
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = get_value[fn_Z](*e1)- get_value[fn_Z](*e2);
+	if(d <= 0) {
+		return -1;
+	} else {
+		return 1;
+	}
 }
 
 /*
@@ -170,9 +173,9 @@ int Element::compare_fnc5(const void * element1, const void * element2)
  */
 int Element::compare_fnc6(const void * element1, const void * element2)
 {
-	double d =
-				((Element*)element1)->center.x - ((Element*)element1)->center.y -
-				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = get_value[fn_Z_plus_X](*e1)- get_value[fn_Z_plus_X](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -185,9 +188,9 @@ int Element::compare_fnc6(const void * element1, const void * element2)
  */
 int Element::compare_fnc7(const void * element1, const void * element2)
 {
-	double d =
-				((Element*)element1)->center.x - ((Element*)element1)->center.y -
-				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = get_value[fn_Z_minus_X](*e1)- get_value[fn_Z_minus_X](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -200,9 +203,9 @@ int Element::compare_fnc7(const void * element1, const void * element2)
  */
 int Element::compare_fnc8(const void * element1, const void * element2)
 {
-	double d =
-				((Element*)element1)->center.x - ((Element*)element1)->center.y -
-				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = get_value[fn_Z_plus_X](*e1)- get_value[fn_Z_plus_X](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -215,9 +218,9 @@ int Element::compare_fnc8(const void * element1, const void * element2)
  */
 int Element::compare_fnc9(const void * element1, const void * element2)
 {
-	double d =
-				((Element*)element1)->center.x - ((Element*)element1)->center.y -
-				((Element*)element2)->center.x + ((Element*)element2)->center.y;
+	Element **e1 = (Element**)element1;
+	Element **e2 = (Element**)element2;
+	double d = get_value[fn_Z_minus_Y](*e1)- get_value[fn_Z_minus_Y](*e2);
 	if(d <= 0) {
 		return -1;
 	} else {

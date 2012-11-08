@@ -9,13 +9,16 @@
 #include <Epetra_IntSerialDenseMatrix.h>
 #include "Vec3.h"
 
+
 class Node;
 class Element;
 
 typedef int(*Compare)(const void *, const void *);
 typedef double(*Value)(Element *);
 
-
+enum BoundingBoxFunctions {
+       fn_X=0, fn_Y, fn_X_plus_Y, fn_X_minus_Y, fn_Z, fn_Z_plus_X, fn_Z_minus_X, fn_Z_plus_Y, fn_Z_minus_Y
+};
 
 class Element
 {

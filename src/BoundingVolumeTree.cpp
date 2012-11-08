@@ -40,5 +40,10 @@ void BoundingVolumeTree::setLeaf2(BoundingVolume *leaf)
 	this->leaf2 = new BoundingVolumeTree(leaf);
 }
 
-
+bool  BoundingVolume::isOverlapped(BoundingVolume &boundingVolume) {
+	for(int i=0;i<bounds_count;i++) {
+		if (!(bounds[i].isOverlapped(boundingVolume.bounds[i]))) return false;
+	}
+	return true;
+}
 

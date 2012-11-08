@@ -6,12 +6,26 @@
 #define BOUNDING_VOLUME_2D 0
 #define BOUNDING_VOLUME_3D 1
 
+
 struct Interval
 {
 		Interval(): start(0), end(0) { };
-		Interval(double s, double e): start(s), end(e) { };
+		Interval(double s, double e): start(s), end(e) {
+			if (start>end) {
+				double tmp = start;
+				start = end;
+				end = tmp;
+			}
+		};
 		double start;
 		double end;
+		bool isOverlapped(Interval interval) {
+			if (start<=interval.start && end>=interval.start) return true;
+			if (start<=interval.end && end>=interval.end) return true;
+			if (interval.start<=start && interval.end>=start) return true;
+			if (interval.start<=end && interval.end>= end) return true;
+			return false;
+		}
 };
 
 class BoundingVolume

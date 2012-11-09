@@ -1,10 +1,3 @@
-/*
- * Boundary.cpp
- *
- *  Created on: Aug 6, 2012
- *      Author: beh01
- */
-
 #include "Boundary.h"
 
 Boundary::~Boundary()
@@ -58,12 +51,7 @@ void Boundary::print(std::ostream &out) const
 		cout << it1->first << " => " << *(it1->second) << "\n";
 	}
 
-	out << "Elements:\n";
-
 	std::vector<Element*>::const_iterator it2;
-	for (it2 = elements.begin(); it2 != elements.end(); it2++) {
-		out << **it2 << "\n";
-	}
 }
 
 Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coords)
@@ -78,6 +66,34 @@ Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatri
 		nodes.insert(std::pair<int, Node*>(index, result));
 		return result;
 	}
+}
+
+void Boundary::create_bound_volume_tree()
+{
+	int size = elements.size();
+	Element ***sorted = new Element**[bounds_count];
+
+	for(int i = 0; i < bounds_count; i++) {
+		sorted[i] = new Element*[size];
+		memcpy(sorted[i], source_elements, sizeof(Element*) * size);
+		qsort(sorted[i], size, sizeof(Element*), Element::compare_by_fn[i]);
+	}
+
+	Interval *b = new Interval[bounds_count];
+
+	for(int i = 0; i < bounds_count; i++) {
+		double min = Element::get_value_of_fn[i](sorted[i][0]->get_center());
+		double max = Element::get_value_of_fn[i](sorted[i][size - 1]->get_center());
+		for(int j = 0; j < size; j++) {
+			sorted[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
+		}
+		b[i] = Interval(min, max);
+	}
+
+	BoundingVolume *bv = new BoundingVolume(b, bounds_count);
+	this->BVT = new BoundingVolumeTree(bv);
+
+	divide_bound_volume(this->BVT, sorted, size, bounds_count);
 }
 
 std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
@@ -105,9 +121,13 @@ void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, i
 		}
 	}
 
-	double median = Element::get_value[index](sorted_elements[index][element_count / 2]);
+	for(int i = 0; i < element_count / 2; i++) {
+		sorted_elements[index][i]->set_divide_flag(LESS_THEN_MEDIAN);
+	}
+	for(int i = element_count / 2; i < element_count; i++) {
+		sorted_elements[index][i]->set_divide_flag(GREATER_EQUAL_THEN_MEDIAN);
+	}
 
-	//TODO: fix this algorithm for case when there are more elements with median value
 	Element ***left_sorted_elements = new Element**[bound_count];
 	Element ***right_sorted_elements = new Element**[bound_count];
 	int pointer[bound_count][2];
@@ -123,7 +143,7 @@ void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, i
 
 	for(int i = 0; i < element_count; i++) {
 		for(int j = 0; j < bound_count; j++) {
-			if(Element::get_value[index](sorted_elements[j][i]) < median) {
+			if(sorted_elements[j][i]->get_divide_flag()) {
 				left_sorted_elements[j][pointer[j][0]++] = sorted_elements[j][i];
 			} else {
 				right_sorted_elements[j][pointer[j][1]++] = sorted_elements[j][i];
@@ -133,9 +153,20 @@ void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, i
 
 	Interval *left_bounds = new Interval[bound_count];
 	Interval *right_bounds = new Interval[bound_count];
-	for(int i = 1; i < bound_count; i++) {
-		left_bounds[i] = Interval(Element::get_value[i](left_sorted_elements[i][0]), Element::get_value[i](left_sorted_elements[i][left_count - 1]));
-		right_bounds[i] = Interval(Element::get_value[i](right_sorted_elements[i][0]), Element::get_value[i](right_sorted_elements[i][right_count - 1]));
+
+	for(int i = 0; i < bound_count; i++) {
+		double min = Element::get_value_of_fn[i](left_sorted_elements[i][0]->get_center());
+		double max = Element::get_value_of_fn[i](left_sorted_elements[i][left_count - 1]->get_center());
+		for(int j = 0; j < left_count; j++) {
+			left_sorted_elements[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
+		}
+		left_bounds[i] = Interval(min, max);
+		min = Element::get_value_of_fn[i](right_sorted_elements[i][0]->get_center());
+		max = Element::get_value_of_fn[i](right_sorted_elements[i][right_count - 1]->get_center());
+		for(int j = 0; j < left_count; j++) {
+			right_sorted_elements[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
+		}
+		right_bounds[i] = Interval(min, max);
 	}
 
 	BoundingVolume *left_bound_volume = new BoundingVolume(left_bounds, bound_count);
@@ -146,7 +177,7 @@ void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, i
 	divide_bound_volume(root->getLeaf1(), left_sorted_elements, left_count, bound_count);
 	divide_bound_volume(root->getLeaf2(), right_sorted_elements, right_count, bound_count);
 
-	for(int i =0; i < bound_count; i++) {
+	for(int i = 0; i < bound_count; i++) {
 		delete[] sorted_elements[i];
 	}
 	delete[] sorted_elements;
@@ -160,18 +191,18 @@ Boundary2D::Boundary2D(
 {
 	int index;
 	Element *line;
-
 	source_elements = new Element*[mesh_desc->N()];
+
 	if(element_type == line2) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[2];
-			for(int j = 0; j < 2; j++) {
+			n = new Node*[LINE2_NODES_COUNT];
+			for(int j = 0; j < LINE2_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			line = new Element_line2(n);
-			for(int j = 0; j < 2; j++) {
+			for(int j = 0; j < LINE2_NODES_COUNT; j++) {
 				n[j]->add_element(line);
 			}
 			elements.push_back(line);
@@ -182,13 +213,13 @@ Boundary2D::Boundary2D(
 	if(element_type == line3) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[3];
-			for(int j = 0; j < 3; j++) {
+			n = new Node*[LINE3_NODES_COUNT];
+			for(int j = 0; j < LINE3_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			line = new Element_line3(n);
-			for(int j = 0; j < 3; j++) {
+			for(int j = 0; j < LINE3_NODES_COUNT; j++) {
 				n[j]->add_element(line);
 			}
 			elements.push_back(line);
@@ -196,35 +227,7 @@ Boundary2D::Boundary2D(
 		}
 	}
 	this->BVT = NULL;
-}
-
-void Boundary2D::createBoundVolumeTree()
-{
-	/*
-	 * Create arrays of elements for sorting:
-	 * sorted[0] - ordered by x
-	 * sorted[1] - ordered by y
-	 * sorted[2] - ordered by x + y
-	 * sorted[3] - ordered by x - y
-	 */
-	int size = elements.size();
-	Element ***sorted = new Element**[4];
-
-	for(int i = 0; i < 4; i++) {
-		sorted[i] = new Element*[size];
-		memcpy(sorted[i], source_elements, sizeof(Element*) * size);
-		qsort(sorted[i], size, sizeof(Element*), Element::compare_fnc[i]);
-	}
-
-	Interval *b = new Interval[4];
-	for(int i = 1; i < 4; i++) {
-		b[i] = Interval(Element::get_value[i](sorted[i][0]), Element::get_value[i](sorted[i][size - 1]));
-	}
-
-	BoundingVolume *bv = new BoundingVolume(b, 4);
-	this->BVT = new BoundingVolumeTree(bv);
-
-	divide_bound_volume(this->BVT, sorted, size, 4);
+	this->bounds_count = BOUND_COUNT_2D;
 }
 
 
@@ -234,71 +237,71 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 	int index;
 	Element *face;
 	source_elements = new Element*[mesh_desc->N()];
+
 	if(element_type == tria3) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[3];
-			for(int j = 0; j < 3; j++) {
+			n = new Node*[TRIA3_NODES_COUNT];
+			for(int j = 0; j < TRIA3_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			face = new Element_tria3(n);
-			for(int j = 0; j < 3; j++) {
+			for(int j = 0; j < TRIA3_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
 			elements.push_back(face);
+			source_elements[i] = face;
 		}
 	}
 	if(element_type == tria6) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[6];
-			for(int j = 0; j < 6; j++) {
+			n = new Node*[TRIA6_NODES_COUNT];
+			for(int j = 0; j < TRIA6_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			face = new Element_tria6(n);
-			for(int j = 0; j < 6; j++) {
+			for(int j = 0; j < TRIA6_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
 			elements.push_back(face);
+			source_elements[i] = face;
 		}
 	}
 	if(element_type == quad4) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[4];
-			for(int j = 0; j < 4; j++) {
+			n = new Node*[QUAD4_NODES_COUNT];
+			for(int j = 0; j < QUAD4_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			face = new Element_quad4(n);
-			for(int j = 0; j < 4; j++) {
+			for(int j = 0; j < QUAD4_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
 			elements.push_back(face);
+			source_elements[i] = face;
 		}
 	}
 	if(element_type == quad8) {
 		Node **n;
 		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[8];
-			for(int j = 0; j < 8; j++) {
+			n = new Node*[QUAD8_NODES_COUNT];
+			for(int j = 0; j < QUAD8_NODES_COUNT; j++) {
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
 			face = new Element_quad8(n);
-			for(int j = 0; j < 8; j++) {
+			for(int j = 0; j < QUAD8_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
 			elements.push_back(face);
+			source_elements[i] = face;
 		}
 	}
 	this->BVT = NULL;
-}
-
-
-void Boundary3D::createBoundVolumeTree()
-{
-
+	this->bounds_count = BOUND_COUNT_3D;
 }

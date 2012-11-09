@@ -1,4 +1,3 @@
-
 #include "BoundingVolumeTree.h"
 
 BoundingVolume::BoundingVolume(Interval *bounds, int bounds_count)
@@ -40,9 +39,10 @@ void BoundingVolumeTree::setLeaf2(BoundingVolume *leaf)
 	this->leaf2 = new BoundingVolumeTree(leaf);
 }
 
-bool  BoundingVolume::isOverlapped(BoundingVolume &boundingVolume) {
-	for(int i=0;i<bounds_count;i++) {
-		if (!(bounds[i].isOverlapped(boundingVolume.bounds[i]))) return false;
+bool BoundingVolume::isOverlapped(BoundingVolume &bounding_volume)
+{
+	for(int i = 0; i < bounds_count; i++) {
+		if(!bounds[i].isOverlapped(bounding_volume.bounds[i])) return false;
 	}
 	return true;
 }

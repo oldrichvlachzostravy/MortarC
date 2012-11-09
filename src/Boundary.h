@@ -1,10 +1,3 @@
-/*
- * Boundary.h
- *
- *  Created on: Aug 6, 2012
- *      Author: beh01
- */
-
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
@@ -30,10 +23,10 @@ class Boundary
 		virtual ~Boundary();
 
 		void calculate_normals_and_supprts();
-		virtual void createBoundVolumeTree() =0;
+		void save_normals_and_support(const char* fileName);
+		void create_bound_volume_tree();
 
 		void print(std::ostream &out) const;
-		void save_normals_and_support(const char* fileName);
 
 	protected:
 		Node* get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coordinates);
@@ -41,27 +34,24 @@ class Boundary
 		std::vector<Element* > elements;
 		std::map<int, Node* > nodes;
 		Element **source_elements;
+		int bounds_count;
 		BoundingVolumeTree *BVT;
 };
 
 std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
-void divide_bound_volume();
+void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count);
 
 
 class Boundary2D: public Boundary
 {
 	public:
 		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
-
-		void createBoundVolumeTree();
 };
 
 class Boundary3D: public Boundary
 {
 	public:
 		Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
-
-		void createBoundVolumeTree();
 };
 
 #endif /* BOUNDARY_H_ */

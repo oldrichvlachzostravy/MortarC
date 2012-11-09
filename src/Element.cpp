@@ -1,106 +1,112 @@
-/*
- * Element.cpp
- *
- *  Created on: Aug 3, 2012
- *      Author: beh01
- */
-
 #include "Element.h"
 #include "Node.h"
 #include "GaussianQuadrature.h"
 
-void Element::compute_center(int n)
+void Element::compute_center()
 {
-	this->center = Vec3(0, 0, 0);
-	for(int i = 0; i < n; i++) {
-		this->center += nodes[i]->get_coordinates();
+	Vec3 c = Vec3(0, 0, 0);
+	for(int i = 0; i < node_count; i++) {
+		c += nodes[i]->get_coordinates();
 	}
-	this->center /= n;
+	c /= node_count;
+	this->center = new Node(c);
 }
 
-Vec3 Element::get_center()
+void Element::update_max_min_value_of_fn(double &min, double &max, Value fn)
+{
+	for(int i = 0; i < node_count; i++) {
+		if(fn(nodes[i]) < min) {
+			min = fn(nodes[i]);
+		}
+		if(fn(nodes[i]) > max) {
+			max = fn(nodes[i]);
+		}
+	}
+}
+
+Node * Element::get_center()
 {
 	return this->center;
 }
 
-Value Element::get_value[9] = {
-		Element::get_value1,
-		Element::get_value2,
-		Element::get_value3,
-		Element::get_value4,
-		Element::get_value5,
-		Element::get_value6,
-		Element::get_value7,
-		Element::get_value8,
-		Element::get_value9
+Value Element::get_value_of_fn[9] = {
+		Element::get_value_of_fn_x,
+		Element::get_value_of_fn_y,
+		Element::get_value_of_fn_y_minus_x,
+		Element::get_value_of_fn_y_plus_x,
+		Element::get_value_of_fn_z,
+		Element::get_value_of_fn_z_minus_x,
+		Element::get_value_of_fn_z_plus_x,
+		Element::get_value_of_fn_z_minus_y,
+		Element::get_value_of_fn_z_plus_y
 };
 
-Compare	Element::compare_fnc[9] = {
-		Element::compare_fnc1,
-		Element::compare_fnc2,
-		Element::compare_fnc3,
-		Element::compare_fnc4,
-		Element::compare_fnc5,
-		Element::compare_fnc6,
-		Element::compare_fnc7,
-		Element::compare_fnc8,
-		Element::compare_fnc9
+Compare	Element::compare_by_fn[9] = {
+		Element::compare_by_fn_x,
+		Element::compare_by_fn_y,
+		Element::compare_by_fn_y_minus_x,
+		Element::compare_by_fn_y_plus_x,
+		Element::compare_by_fn_z,
+		Element::compare_by_fn_z_minus_x,
+		Element::compare_by_fn_z_plus_x,
+		Element::compare_by_fn_z_minus_y,
+		Element::compare_by_fn_z_plus_y
 };
 
-double Element::get_value1(Element *e)
+double Element::get_value_of_fn_x(Node *e)
 {
-	return e->get_center().x;
+	return e->get_coordinates().x;
 }
 
-double Element::get_value2(Element *e)
+double Element::get_value_of_fn_y(Node *e)
 {
-	return e->get_center().y;
+	return e->get_coordinates().y;
 }
 
-double Element::get_value3(Element *e)
+double Element::get_value_of_fn_y_minus_x(Node *e)
 {
-	return e->get_center().y + e->get_center().x;
+	return e->get_coordinates().y - e->get_coordinates().x;
 }
 
-double Element::get_value4(Element *e)
+double Element::get_value_of_fn_y_plus_x(Node *e)
 {
-	return e->get_center().y - e->get_center().x;
+	return e->get_coordinates().y + e->get_coordinates().x;
 }
 
-double Element::get_value5(Element *e)
+double Element::get_value_of_fn_z(Node *e)
 {
-	return e->get_center().z;
+	return e->get_coordinates().z;
 }
 
-double Element::get_value6(Element *e)
+double Element::get_value_of_fn_z_minus_x(Node *e)
 {
-	return e->get_center().z + e->get_center().x;
+	return e->get_coordinates().z - e->get_coordinates().x;
 }
 
-double Element::get_value7(Element *e)
+double Element::get_value_of_fn_z_plus_x(Node *e)
 {
-	return e->get_center().z - e->get_center().x;
+	return e->get_coordinates().z + e->get_coordinates().x;
 }
 
-double Element::get_value8(Element *e)
+double Element::get_value_of_fn_z_minus_y(Node *e)
 {
-	return e->get_center().z + e->get_center().y;
+	return e->get_coordinates().z - e->get_coordinates().y;
 }
 
-double Element::get_value9(Element *e)
+double Element::get_value_of_fn_z_plus_y(Node *e)
 {
-	return e->get_center().z - e->get_center().y;
+	return e->get_coordinates().z + e->get_coordinates().y;
 }
 
 
 /*
  * Compare two elements by function x
  */
-int Element::compare_fnc1(const void * element1, const void * element2)
+int Element::compare_by_fn_x(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_X](*e1)- get_value[fn_X](*e2);
+	double d = get_value_of_fn[fn_x]((*e1)->get_center()) - get_value_of_fn[fn_x]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -111,11 +117,11 @@ int Element::compare_fnc1(const void * element1, const void * element2)
 /*
  * Compare two elements by function y
  */
-int Element::compare_fnc2(const void * element1, const void * element2)
+int Element::compare_by_fn_y(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Y](*e1)- get_value[fn_Y](*e2);
+	double d = get_value_of_fn[fn_y]((*e1)->get_center()) - get_value_of_fn[fn_y]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -124,13 +130,13 @@ int Element::compare_fnc2(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x + y
+ * Compare two elements by function x = y
  */
-int Element::compare_fnc3(const void * element1, const void * element2)
+int Element::compare_by_fn_y_minus_x(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_X_plus_Y](*e1)- get_value[fn_X_plus_Y](*e2);
+	double d = get_value_of_fn[fn_y_minus_x]((*e1)->get_center()) - get_value_of_fn[fn_y_minus_x]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -139,13 +145,13 @@ int Element::compare_fnc3(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function -x = y
  */
-int Element::compare_fnc4(const void * element1, const void * element2)
+int Element::compare_by_fn_y_plus_x(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_X_minus_Y](*e1)- get_value[fn_X_minus_Y](*e2);
+	double d = get_value_of_fn[fn_y_plus_x]((*e1)->get_center()) - get_value_of_fn[fn_y_plus_x]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -154,13 +160,13 @@ int Element::compare_fnc4(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function z
  */
-int Element::compare_fnc5(const void * element1, const void * element2)
+int Element::compare_by_fn_z(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Z](*e1)- get_value[fn_Z](*e2);
+	double d = get_value_of_fn[fn_z]((*e1)->get_center()) - get_value_of_fn[fn_z]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -169,13 +175,13 @@ int Element::compare_fnc5(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function x = z
  */
-int Element::compare_fnc6(const void * element1, const void * element2)
+int Element::compare_by_fn_z_minus_x(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Z_plus_X](*e1)- get_value[fn_Z_plus_X](*e2);
+	double d = get_value_of_fn[fn_z_minus_x]((*e1)->get_center()) - get_value_of_fn[fn_z_minus_x]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -184,13 +190,13 @@ int Element::compare_fnc6(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function -x = z
  */
-int Element::compare_fnc7(const void * element1, const void * element2)
+int Element::compare_by_fn_z_plus_x(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Z_minus_X](*e1)- get_value[fn_Z_minus_X](*e2);
+	double d = get_value_of_fn[fn_z_plus_x]((*e1)->get_center()) - get_value_of_fn[fn_z_plus_x]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -199,13 +205,13 @@ int Element::compare_fnc7(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function z = y
  */
-int Element::compare_fnc8(const void * element1, const void * element2)
+int Element::compare_by_fn_z_minus_y(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Z_plus_X](*e1)- get_value[fn_Z_plus_X](*e2);
+	double d = get_value_of_fn[fn_z_minux_y]((*e1)->get_center()) - get_value_of_fn[fn_z_minux_y]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -214,13 +220,13 @@ int Element::compare_fnc8(const void * element1, const void * element2)
 }
 
 /*
- * Compare two elements by function x - y
+ * Compare two elements by function z = -y
  */
-int Element::compare_fnc9(const void * element1, const void * element2)
+int Element::compare_by_fn_z_plus_y(const void * element1, const void * element2)
 {
 	Element **e1 = (Element**)element1;
 	Element **e2 = (Element**)element2;
-	double d = get_value[fn_Z_minus_Y](*e1)- get_value[fn_Z_minus_Y](*e2);
+	double d = get_value_of_fn[fn_z_plus_y]((*e1)->get_center()) - get_value_of_fn[fn_z_plus_y]((*e2)->get_center());
 	if(d <= 0) {
 		return -1;
 	} else {
@@ -230,19 +236,14 @@ int Element::compare_fnc9(const void * element1, const void * element2)
 
 Element::~Element() {
 	delete[] nodes;
+	delete center;
 }
 
 Element_line2::Element_line2(Node **nodes)
 {
 	this->nodes = nodes;
-	this->compute_center(2);
-}
-
-void Element_line2::print(std::ostream &out) const
-{
-	out << "Element_line2 - start: ";
-	out << nodes[0]->get_coordinate_index() + 1;
-	out << ", end: " << nodes[1]->get_coordinate_index() + 1;
+	this->node_count = LINE2_NODES_COUNT;
+	this->compute_center();
 }
 
 Vec3 * Element_line2::get_jacobian(double s, double t)
@@ -269,14 +270,8 @@ void Element_line2::calculate_normals_and_supports()
 Element_line3::Element_line3(Node **nodes)
 {
 	this->nodes = nodes;
-}
-
-void Element_line3::print(std::ostream &out) const
-{
-	out << "Element_line3 - start: ";
-	out << nodes[0]->get_coordinate_index();
-	out << ", mid: " << nodes[2]->get_coordinate_index() + 1;
-	out << ", end: " << nodes[1]->get_coordinate_index() + 1;
+	this->node_count = LINE3_NODES_COUNT;
+	this->compute_center();
 }
 
 Vec3 * Element_line3::get_jacobian(double s, double t)
@@ -319,16 +314,9 @@ void Element_line3::calculate_normals_and_supports()
 Element_tria3::Element_tria3(Node **nodes)
 {
 	this->nodes = nodes;
+	this->node_count = TRIA3_NODES_COUNT;
+	this->compute_center();
 }
-
-void Element_tria3::print(std::ostream &out) const
-{
-	out << "Element_tria3 - (0,0): ";
-	out << nodes[0]->get_coordinate_index() + 1;
-	out << "; (1,0) " << nodes[1]->get_coordinate_index() + 1;
-	out << "; (0,1) " << nodes[2]->get_coordinate_index() + 1;
-}
-
 
 Vec3* Element_tria3::get_jacobian(double s, double t)
 {
@@ -357,17 +345,8 @@ void Element_tria3::calculate_normals_and_supports()
 Element_tria6::Element_tria6(Node **nodes)
 {
 	this->nodes = nodes;
-}
-
-void Element_tria6::print(std::ostream& out) const
-{
-	out << "Element_tria6 - (0,0): ";
-	out << nodes[0]->get_coordinate_index() + 1;
-	out << "; (.5,0) " << nodes[3]->get_coordinate_index() + 1;
-	out << "; (1,0) " << nodes[1]->get_coordinate_index() + 1;
-	out << "; (.5,.5) " << nodes[4]->get_coordinate_index() + 1;
-	out << "; (0,1) " << nodes[2]->get_coordinate_index() + 1;
-	out << "; (0,.5) " << nodes[5]->get_coordinate_index() + 1;
+	this->node_count = TRIA6_NODES_COUNT;
+	this->compute_center();
 }
 
 Vec3* Element_tria6::get_jacobian(double s, double t)
@@ -441,17 +420,9 @@ void Element_tria6::calculate_normals_and_supports()
 Element_quad4::Element_quad4(Node **nodes)
 {
 	this->nodes = nodes;
+	this->node_count = QUAD4_NODES_COUNT;
+	this->compute_center();
 }
-
-void Element_quad4::print(std::ostream &out) const
-{
-	out << "Element_quad4 - (-1,-1): ";
-	out << nodes[0]->get_coordinate_index() + 1;
-	out << "; (1,-1) " << nodes[1]->get_coordinate_index() + 1;
-	out << "; (1,1) " << nodes[2]->get_coordinate_index() + 1;
-	out << "; (-1,1) " << nodes[3]->get_coordinate_index() + 1;
-}
-
 
 Vec3* Element_quad4::get_jacobian(double s, double t)
 {
@@ -516,19 +487,8 @@ void Element_quad4::calculate_normals_and_supports()
 Element_quad8::Element_quad8(Node **nodes)
 {
 	this->nodes = nodes;
-}
-
-void Element_quad8::print(std::ostream& out) const
-{
-	out << "Element_quad8 - (-1,-1): ";
-	out << nodes[0]->get_coordinate_index() + 1;
-	out << "; (0,-1) " << nodes[4]->get_coordinate_index() + 1;
-	out << "; (1,-1) " << nodes[1]->get_coordinate_index() + 1;
-	out << "; (1,0) " << nodes[5]->get_coordinate_index() + 1;
-	out << "; (1,1) " << nodes[2]->get_coordinate_index() + 1;
-	out << "; (0,1) " << nodes[6]->get_coordinate_index() + 1;
-	out << "; (-1,1) " << nodes[3]->get_coordinate_index() + 1;
-	out << "; (-1,0) " << nodes[7]->get_coordinate_index() + 1;
+	this->node_count = QUAD8_NODES_COUNT;
+	this->compute_center();
 }
 
 Vec3* Element_quad8::get_jacobian(double s, double t)
@@ -630,11 +590,4 @@ void Element_quad8::calculate_normals_and_supports()
 	nodes[7]->add_support_fraction(support);
 	delete normal;
 	delete[] jacobi;
-}
-
-
-std::ostream& operator<<(std::ostream &out, const Element &element)
-{
-	element.print(out);
-	return out;
 }

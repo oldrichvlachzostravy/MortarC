@@ -1,10 +1,3 @@
-/*
- * Node.h
- *
- *  Created on: Aug 3, 2012
- *      Author: beh01
- */
-
 #ifndef NODE_H_
 #define NODE_H_
 #include <iostream>
@@ -18,11 +11,11 @@ class Node
 {
 	public:
 		Node(int coord_index, Epetra_SerialDenseMatrix *coords);
+		Node(Vec3 point);
 
-		int get_coordinate_index() {return coord_index; }
 		int get_number_of_elements() { return elements.size(); }
 		Element * get_element(int index) { return elements[index]; }
-		Vec3 get_coordinates();
+		Vec3 get_coordinates() { return coords; }
 
 		void add_support_fraction(double support);
 		void add_normal_fraction(Vec3 normal);
@@ -33,10 +26,9 @@ class Node
 		void save_normal_and_support(const char* fileName);
 
 	protected:
-		int coord_index;
-		Epetra_SerialDenseMatrix *coords;
 		std::vector<Element *> elements;
 
+		Vec3 coords;
 		Vec3 normal;
 		double support;
 };

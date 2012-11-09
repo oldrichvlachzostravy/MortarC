@@ -35,7 +35,7 @@ void Project::save_normals_and_supports(const char* fileName)
 
 void Project::createBoundVolumeTree()
 {
-	this->master->createBoundVolumeTree();
+	this->master->create_bound_volume_tree();
 }
 
 std::ostream& operator<<(std::ostream &out, const Project &p)

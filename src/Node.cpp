@@ -1,30 +1,27 @@
-/*
- * Node.cpp
- *
- *  Created on: Aug 3, 2012
- *      Author: beh01
- */
-
 #include "Node.h"
 #include "Element.h"
 
 Node::Node(int coordinate_index, Epetra_SerialDenseMatrix *coords)
 {
-	this->coord_index = coordinate_index;
-	this->coords = coords;
+	this->coords = Vec3(
+			(*coords)(0, coordinate_index),
+			(*coords)(1, coordinate_index),
+			(*coords)(2, coordinate_index));
 	this->support = 0;
 	this->normal = Vec3(0, 0, 0);
 }
 
+Node::Node(Vec3 point)
+{
+	this->coords = point;
+}
+
 void Node::print(std::ostream &out) const
 {
-	out << "Node index " << coord_index + 1 << ", elements(";
-
-	std::vector<Element*>::const_iterator it;
-	for (it = elements.begin(); it != elements.end(); it++) {
-		out << (**it) << ",";
-	}
-	out << ")";
+	out << "Node ("
+			<< coords.x << ", "
+			<< coords.y << ", "
+			<< coords.z << ")";
 }
 
 void Node::save_normal_and_support(const char* fileName)
@@ -33,19 +30,10 @@ void Node::save_normal_and_support(const char* fileName)
 	 * there will be save to file function, but this function print control
 	 * output now!!
 	 */
-	printf("%d (%.2f, %.2f, %.2f) -> normal (%.5f, %.5f, %.5f), support %.3f\n",
-			coord_index + 1,
-			(*coords)(0, coord_index),
-			(*coords)(1, coord_index),
-			(*coords)(2, coord_index),
-			normal.x, normal.y, normal.z, support);
-}
-
-Vec3 Node::get_coordinates()
-{
-	return Vec3((*coords)(0, coord_index),
-			    (*coords)(1, coord_index),
-			    (*coords)(2, coord_index));
+	printf("(%.2f, %.2f, %.2f) -> normal (%.5f, %.5f, %.5f), support %.3f\n",
+			coords.x, coords.y, coords.z,
+			normal.x, normal.y, normal.z,
+			support);
 }
 
 void Node::add_normal_fraction(Vec3 normal)

@@ -1,17 +1,3 @@
-/*
- * Main.cpp
- *
- *  Created on: Aug 6, 2012
- *      Author: beh01
- */
-
-//============================================================================
-// Name        : Pokus.cpp
-// Author      :
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
-//============================================================================
 #include <stdio.h>
 #include <string.h>
 #include <iostream>

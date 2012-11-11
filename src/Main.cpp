@@ -214,8 +214,11 @@ int main(int argc, char** argv)
 	Project project(master, slave);
 
 	project.calculate_normals_and_supports();
+	project.create_bound_volume_tree();
+	project.find_intersection();
+	project.map_master_to_slave();
 	//project.save_normals_and_supports("out.txt");
-	project.createBoundVolumeTree();
+
 
 	return 0;
 }

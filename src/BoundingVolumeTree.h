@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include "Element.h"
 
 #ifndef BOUNDINGVOLUMETREE_H_
 #define BOUNDINGVOLUMETREE_H_
@@ -27,6 +28,8 @@ struct Interval
 			if(interval.end < start) return false;
 			return true;
 		}
+
+		double get_interval_size() { return end - start; }
 };
 
 class BoundingVolume
@@ -36,12 +39,17 @@ class BoundingVolume
 		~BoundingVolume();
 
 		Interval * get_bounds() { return bounds; }
+		double get_biggest_interval();
+		void set_element(Element *element) { this->element = element; }
+		Element * get_element() { return element; }
 
-		bool isOverlapped(BoundingVolume &bounding_volume);
+		// find the closest intersect and set its coordinates to the element in the bounding_volume
+		bool isOverlapped(BoundingVolume *bounded_volume);
 
 	private:
 		int bounds_count;
 		Interval *bounds;
+		Element *element;
 };
 
 class BoundingVolumeTree
@@ -51,11 +59,12 @@ class BoundingVolumeTree
 		~BoundingVolumeTree();
 
 		BoundingVolume * get_item() { return item; }
-
 		void setLeaf1(BoundingVolume *leaf);
 		BoundingVolumeTree * getLeaf1() { return leaf1; }
 		void setLeaf2(BoundingVolume *leaf);
 		BoundingVolumeTree * getLeaf2() { return leaf2; }
+
+		Element * find_closest_element(BoundingVolume *bounded_normal);
 
 	protected:
 		BoundingVolume *item;

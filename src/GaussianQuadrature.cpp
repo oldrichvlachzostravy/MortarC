@@ -54,14 +54,13 @@
 	double ay = (end_y - start_y) / 2;
 	double by = (end_y + start_y) / 2;
 	Vec3 *jacobi;
-	Vec3 *sup;
+	Vec3 sup;
 	for(int i = 0; i < points; i++) {
 		for(int j = 0; j < points; j++) {
 			jacobi = df(ax * G[i] + bx, ay * G[j] + by);
 			sup = crossprod(jacobi[1], jacobi[0]);
-			result += W[i] * W[j] * sup->length();
+			result += W[i] * W[j] * sup.length();
 			delete[] jacobi;
-			delete sup;
 		}
 	}
 	result *= ax * ay;

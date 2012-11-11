@@ -96,15 +96,62 @@ void Boundary::create_bound_volume_tree()
 	divide_bound_volume(this->BVT, sorted, size, bounds_count);
 }
 
+void Boundary::find_intersections(BoundingVolumeTree *bounding_volume_tree)
+{
+	double max_lenght = bounding_volume_tree->get_item()->get_biggest_interval() * NORMAL_LENGHT;
+	std::map<int, Node *>::iterator it;
+	for (it = nodes.begin(); it != nodes.end(); it++) {
+		Element_normal *normal = create_normal(it->second, max_lenght);
+
+		BoundingVolume *bounded_normal = create_bounds_around_normal(normal);
+		Element *closest_element = bounding_volume_tree->find_closest_element(bounded_normal);
+		it->second->set_closest_element(closest_element);
+
+		delete bounded_normal;
+		delete normal;
+	}
+}
+
+Element_normal * Boundary::create_normal(Node *node, double lenght)
+{
+	Node **n = new Node*[2];
+	n[0] = node;
+	n[1] = new Node(node->get_coordinates() + node->get_normal() * lenght);
+
+	return new Element_normal(n);
+}
+
+BoundingVolume * Boundary::create_bounds_around_normal(Element_normal *normal)
+{
+	Interval *b = new Interval[bounds_count];
+	for(int i = 0; i < bounds_count; i++) {
+		double min = Element::get_value_of_fn[i](normal->get_nodes()[0]);
+		double max = Element::get_value_of_fn[i](normal->get_nodes()[0]);
+		normal->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
+		b[i] = Interval(min, max);
+	}
+
+	return new BoundingVolume(b, bounds_count);
+}
+
+void Boundary::map_elements(Boundary *boundary)
+{
+	std::vector<Element*>::iterator it;
+	for (it = elements.begin(); it != elements.end(); it++) {
+		(*it)->clip_element();
+	}
+}
+
 std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
 {
 	boundary.print(out);
 	return out;
 }
 
-void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count)
+void Boundary::divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count)
 {
 	if(element_count == 1) {
+		root->get_item()->set_element(sorted_elements[0][0]);
 		for(int i = 0; i < bound_count; i++) {
 			delete[] sorted_elements[i];
 		}
@@ -201,7 +248,7 @@ Boundary2D::Boundary2D(
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line2(n);
+			line = new Element_line2((*mesh_desc)(5, i), n);
 			for(int j = 0; j < LINE2_NODES_COUNT; j++) {
 				n[j]->add_element(line);
 			}
@@ -218,7 +265,7 @@ Boundary2D::Boundary2D(
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			line = new Element_line3(n);
+			line = new Element_line3((*mesh_desc)(5, i), n);
 			for(int j = 0; j < LINE3_NODES_COUNT; j++) {
 				n[j]->add_element(line);
 			}
@@ -246,7 +293,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			face = new Element_tria3(n);
+			face = new Element_tria3((*mesh_desc)(5, i), n);
 			for(int j = 0; j < TRIA3_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
@@ -262,7 +309,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			face = new Element_tria6(n);
+			face = new Element_tria6((*mesh_desc)(5, i), n);
 			for(int j = 0; j < TRIA6_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
@@ -278,7 +325,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			face = new Element_quad4(n);
+			face = new Element_quad4((*mesh_desc)(5, i), n);
 			for(int j = 0; j < QUAD4_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}
@@ -294,7 +341,7 @@ Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
 				index = (*mesh_desc)(j + 6, i);
 				n[j] = get_unique_node_or_create_new(index, coords);
 			}
-			face = new Element_quad8(n);
+			face = new Element_quad8((*mesh_desc)(5, i), n);
 			for(int j = 0; j < QUAD8_NODES_COUNT; j++) {
 				n[j]->add_element(face);
 			}

@@ -101,8 +101,8 @@ inline double dotprod(const Vec3 &v1, const Vec3 &v2) {
 }
 
 /*! Returns the cross product of \a a and \a b     \relates Vec3 */
-inline Vec3 * crossprod(const Vec3 &a, const Vec3 &b) {
-	return new Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+inline Vec3 crossprod(const Vec3 &a, const Vec3 &b) {
+	return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
 			a.x * b.y - a.y * b.x);
 }
 

@@ -4,6 +4,9 @@
 #include <map>
 #include "Vec3.h"
 #include <cmath>
+#include <Epetra_SerialDenseSolver.h>
+#include <Epetra_SerialDenseVector.h>
+
 
 class Node;
 class Element;
@@ -31,7 +34,7 @@ class Element
 		virtual Vec3 * get_jacobian(double s, double t) =0;
 		virtual void calculate_normals_and_supports() =0;
 		// return true if line intersect element
-		virtual bool is_intersected(Element_normal *normal) =0;
+		virtual Vec3 * is_intersected(Element_normal *normal) =0;
 
 		void calculate_centers_normal();
 		void clip_element();
@@ -49,6 +52,7 @@ class Element
 
 		static Value get_value_of_fn[9];
 		static Compare compare_by_fn[9];
+		static Vec3 * normal_line_intersection(Vec3 normal, Vec3 center, Vec3 x1, Vec3 x2);
 
 	protected:
 		void compute_center();
@@ -58,6 +62,7 @@ class Element
 		int node_count;
 		Node* center;
 		bool divide_flag;
+
 
 	private:
 		void compute_projection_matrix(double *matrix);
@@ -99,6 +104,7 @@ class Element
 		static int compare_by_fn_z_plus_x(const void * element1, const void * element2);
 		static int compare_by_fn_z_minus_y(const void * element1, const void * element2);
 		static int compare_by_fn_z_plus_y(const void * element1, const void * element2);
+
 };
 
 class Element_normal : public Element
@@ -109,7 +115,7 @@ class Element_normal : public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -121,7 +127,7 @@ class Element_line2 : public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -133,7 +139,7 @@ class Element_line3 : public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -145,7 +151,7 @@ class Element_tria3: public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -157,7 +163,7 @@ class Element_tria6: public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3 *  is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -169,7 +175,7 @@ class Element_quad4: public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 
@@ -181,7 +187,7 @@ class Element_quad8: public Element
 
 		Vec3 * get_jacobian(double s, double t);
 		void calculate_normals_and_supports();
-		bool is_intersected(Element_normal *normal);
+		Vec3* is_intersected(Element_normal *normal);
 		Element * get_projection_on_plane(double *rotation_matrix);
 };
 

@@ -2,6 +2,7 @@
 #include "Node.h"
 #include "GaussianQuadrature.h"
 
+
 void Element::compute_center()
 {
 	Vec3 c = Vec3(0, 0, 0);
@@ -439,7 +440,7 @@ void Element_normal::calculate_normals_and_supports()
 	return;
 }
 
-bool Element_normal::is_intersected(Element_normal *normal)
+Vec3* Element_normal::is_intersected(Element_normal *normal)
 {
 	return false;
 }
@@ -477,11 +478,45 @@ void Element_line2::calculate_normals_and_supports()
 		this->nodes[i]->add_support_fraction(support);
 	}
 }
+Vec3 * Element::normal_line_intersection(Vec3 normal, Vec3 center, Vec3 x1, Vec3 x2) {
+	Epetra_SerialDenseSolver solver;
+	Epetra_SerialDenseMatrix A(2,2);
+	Epetra_SerialDenseVector x(2),b(2);
+	A(0,0) = -normal.x;
+	A(1,0) = -normal.y;
 
-bool Element_line2::is_intersected(Element_normal *normal)
+	Vec3 next_row = (x2-x1)*0.5;
+
+	A(1,0) = next_row.x;
+	A(1,1) = next_row.y;
+
+	x(0)=0;
+	x(1)=0;
+
+	Vec3 right_hand = center+(x1+x2)*0.5;
+	b(0)=right_hand.x;
+	b(1)=right_hand.y;
+
+	solver.SetMatrix( A );
+	solver.SetVectors( x, b );
+	//return 0 if successful
+	int result = solver.Solve();
+	if (result==0) {
+		//normal to short, g is greater than 1
+		if (x(0)>1) return NULL;
+		//s goes from -1 to 1 for line2 element
+		if (x(1)>1 || x(1)<-1) return NULL;
+		//returns center + g * normal
+		return new Vec3(center+ normal*x(0));
+	}
+	return NULL;
+}
+
+
+Vec3* Element_line2::is_intersected(Element_normal *normal)
 {
-	//TODO: write code for intersection with normal
-	return true;
+	Vec3 real_norm = normal->get_node(1)->get_coordinates()-normal->get_node(0)->get_coordinates();
+	return normal_line_intersection(real_norm, normal->get_node(0)->get_coordinates(),nodes[0]->get_coordinates(), nodes[1]->get_coordinates());
 }
 
 Element_line3::Element_line3(int id, Node **nodes)
@@ -490,6 +525,7 @@ Element_line3::Element_line3(int id, Node **nodes)
 	this->nodes = nodes;
 	this->node_count = LINE3_NODES_COUNT;
 	this->compute_center();
+
 }
 
 Vec3 * Element_line3::get_jacobian(double s, double t)
@@ -529,10 +565,19 @@ void Element_line3::calculate_normals_and_supports()
 	nodes[2]->add_support_fraction(support);
 }
 
-bool Element_line3::is_intersected(Element_normal *normal)
+Vec3* Element_line3::is_intersected(Element_normal *normal)
 {
-	//TODO: write code for intersection with normal
-	return false;
+	Vec3 real_norm = normal->get_node(1)->get_coordinates()-normal->get_node(0)->get_coordinates();
+	Vec3 start = normal->get_node(0)->get_coordinates();
+	Vec3 * result1 =  normal_line_intersection(real_norm, start,nodes[0]->get_coordinates(), get_center()->get_coordinates());
+	Vec3 * result2 =  normal_line_intersection(real_norm, start,nodes[0]->get_coordinates(), get_center()->get_coordinates());
+	if (result1==NULL ) return result2;
+	if (result2==NULL ) return result1;
+	if ( (*result1-start).length()<(*result2-start).length()) {
+		return result1;
+	}else {
+		return result2;
+	}
 }
 
 Element_tria3::Element_tria3(int id, Node **nodes)
@@ -565,10 +610,10 @@ void Element_tria3::calculate_normals_and_supports()
 	}
 }
 
-bool Element_tria3::is_intersected(Element_normal *normal)
+Vec3* Element_tria3::is_intersected(Element_normal *normal)
 {
 	//TODO: write code for intersection with normal
-	return true;
+	return NULL;
 }
 
 
@@ -642,10 +687,10 @@ void Element_tria6::calculate_normals_and_supports()
 	delete[] jacobi;
 }
 
-bool Element_tria6::is_intersected(Element_normal *normal)
+Vec3* Element_tria6::is_intersected(Element_normal *normal)
 {
 	//TODO: write code for intersection with normal
-	return false;
+	return NULL;
 }
 
 
@@ -713,10 +758,10 @@ void Element_quad4::calculate_normals_and_supports()
 	delete[] jacobi;
 }
 
-bool Element_quad4::is_intersected(Element_normal *normal)
+Vec3 * Element_quad4::is_intersected(Element_normal *normal)
 {
 	//TODO: write code for intersection with normal
-	return false;
+	return NULL;
 }
 
 
@@ -822,7 +867,7 @@ void Element_quad8::calculate_normals_and_supports()
 	delete[] jacobi;
 }
 
-bool Element_quad8::is_intersected(Element_normal *normal)
+Vec3 * Element_quad8::is_intersected(Element_normal *normal)
 {
 	//TODO: write code for intersection with normal
 	return false;

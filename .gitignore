@@ -1,5 +1,11 @@
 .*
 *.ascii
-Debug
+Debug*
+Mex*
+meca
+matrix
+latex
+html
+doxygen*
 Release
 *~

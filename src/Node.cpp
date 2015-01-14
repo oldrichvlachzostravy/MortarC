@@ -1,81 +1,81 @@
 #include "Node.h"
-#include "Element.h"
 
-Node::Node(int coordinate_index, Epetra_SerialDenseMatrix *coords)
+Node::Node(int coordinate_index, DenseMatrix<double> *coords)
 {
-	this->coords = Vec3(
-			(*coords)(0, coordinate_index),
-			(*coords)(1, coordinate_index),
-			(*coords)(2, coordinate_index));
-	init();
-}
-
-Node::Node(Vec3 point)
-{
-	this->coords = point;
-	init();
-}
-
-void Node::init()
-{
+	this->id = coordinate_index;
+	int c = coords->get_columns();
+	this->coords = MCVec3(
+			(*coords)[coordinate_index],
+			(*coords)[1 * c + coordinate_index],
+			(*coords)[2 * c + coordinate_index]);
 	this->support = 0;
-	this->normal = Vec3(0, 0, 0);
-	this->closest_element = NULL;
+	this->normal = MCVec3(0, 0, 0);
 }
 
-void Node::print(std::ostream &out) const
+Node::Node(int id, MCVec3 point)
 {
-	out << "Node ("
-			<< coords.x << ", "
-			<< coords.y << ", "
-			<< coords.z << ")";
+	this->id = id;
+	this->coords = point;
+	this->support = 0;
+	this->normal = MCVec3(0, 0, 0);
 }
 
-void Node::save_normal_and_support(const char* fileName)
+int Node::get_id()
 {
-	/**
-	 * there will be save to file function, but this function print control
-	 * output now!!
-	 */
-	printf("(%.2f, %.2f, %.2f) -> normal (%.5f, %.5f, %.5f), support %.3f\n",
-			coords.x, coords.y, coords.z,
-			normal.x, normal.y, normal.z,
-			support);
-	if(closest_element == NULL) return;
-	printf("closest elemnet: ");
-	for(int i = 0; i < closest_element->get_node_count(); i++) {
-		printf("(%.2f, %.2f, %.2f)",
-				closest_element->get_nodes()[i]->get_coordinates().x,
-				closest_element->get_nodes()[i]->get_coordinates().y,
-				closest_element->get_nodes()[i]->get_coordinates().z);
-		if(i < closest_element->get_node_count() - 1) {
-			printf("-->");
-		}
-	}
-	printf("\n");
+	return this->id;
+}
+
+MCVec3 Node::get_coordinates()
+{
+	return this->coords;
+}
+
+MCVec3 Node::get_normal()
+{
+	return this->normal;
+}
+
+double Node::get_support()
+{
+	return this->support;
+}
+
+void Node::set_normal(MCVec3 normal)
+{
+	this->normal = normal;
+}
+
+MCVec3 Node::get_line_projection()
+{
+	MCVec3 ret = this->projected_coords;
+	ret.z = ret.y = 0;
+	return ret;
+}
+
+MCVec3 Node::get_plane_projection()
+{
+	MCVec3 ret = this->projected_coords;
+	ret.z = 0;
+	return ret;
+}
+
+MCVec3 Node::get_full_projection()
+{
+	return this->projected_coords;
 }
 
 void Node::project_point_to_plane(double *projection_matrix)
 {
-	projected_coords = Vec3();
-	projected_coords.x =
-			coords.x * projection_matrix[0] +
-			coords.y * projection_matrix[3] +
-			coords.z * projection_matrix[6] +
-			projection_matrix[9];
-	projected_coords.y =
-			coords.x * projection_matrix[1] +
-			coords.y * projection_matrix[4] +
-			coords.z * projection_matrix[7] +
-			projection_matrix[10];
-	projected_coords.z =
-			coords.x * projection_matrix[2] +
-			coords.y * projection_matrix[5] +
-			coords.z * projection_matrix[8] +
-			projection_matrix[11];
+	this->projected_coords = transform(coords, projection_matrix);
 }
 
-void Node::add_normal_fraction(Vec3 normal)
+void Node::project_point_to_line(double *line_projection_matrix)
+{
+	MCVec2 res = transform(MCVec2(coords), line_projection_matrix);
+	this->projected_coords = res;
+}
+
+void Node::add_normal_fraction(MCVec3 normal)
 {
 	this->normal += normal;
 }
@@ -85,13 +85,7 @@ void Node::add_support_fraction(double support)
 	this->support += support;
 }
 
-void Node::calculate_normal_and_support()
+void Node::normalize_node_normal()
 {
 	this->normal.normalize();
-}
-
-std::ostream& operator<<(std::ostream &out, const Node &node)
-{
-	node.print(out);
-	return out;
 }

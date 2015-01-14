@@ -1,4 +1,315 @@
+
 #include "Boundary.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <sstream>
+//#include <iostream>
+//#include <iomanip>
+//#include <fstream>
+
+/**
+ * Constructor that reads from
+ * @param mesh_desc       \f$(15,n_{elements})\f$ element matrix, each column describes one element
+ * @param coords         \f$(3,n_{nodes})\f$ coordinate matrix each column contains node coordinates
+ * @param elements_type  type of element (defined in Element.h)
+ */
+Boundary::Boundary(
+		DenseMatrix<int> *mesh_desc,
+		DenseMatrix<double> *coords,
+		int elements_type)
+{
+	int index;
+	int c = mesh_desc->get_columns();
+	Element *element;
+
+	Node **n;
+	int nodes_count = Element::get_element_nodes_count(elements_type);
+	for(int i = 0; i < c; i++) {
+		n = new Node*[nodes_count];
+		for(int j = 0; j < nodes_count; j++) {
+			index = (*mesh_desc)[(j + 6) * c + i];
+			n[j] = get_unique_node_or_create_new(index, coords);
+		}
+		element = Element::create_element(
+				(*mesh_desc)[5 * c + i],
+				n,
+				elements_type);
+
+		for(int j = 0; j < nodes_count; j++) {
+			adjacent[j].push_back(element);
+		}
+		elements.push_back(element);
+	}
+//	//begin DEBUG
+//	std::cout << mesh_desc->get_rows() << " " << mesh_desc->get_columns() << "\n";
+//	for(int i = 0; i < mesh_desc->get_rows(); i++) {
+//		for(int j = 0; j < mesh_desc->get_columns(); j++) {
+//			std::cout << "  " << std::setw(7) << (*mesh_desc)[i*(mesh_desc->get_columns()) + j];
+//		}
+//		std::cout << "\n";
+//	}
+//	// end DEBUG
+
+
+
+	this->elements_type = elements_type;
+}
+
+void Boundary::calculate_normals_and_supports()
+{
+	std::vector<Element*>::iterator it1;
+	for (it1 = elements.begin(); it1 != elements.end(); it1++)
+	{
+		FEPrimalBase fe(2);
+		fe.init_all(*it1, NULL, false);
+		const std::vector<MCVec3>& normals = fe.get_normal();
+		for (unsigned int i = 0; i < normals.size(); i++)
+		{
+			(*it1)->get_node(i)->add_normal_fraction(normals[i]);
+		}
+		fe.init_all(*it1);
+		const std::vector<double>& supports = fe.get_support();
+		for (unsigned int i = 0; i < normals.size(); i++)
+		{
+			(*it1)->get_node(i)->add_support_fraction(supports[i]);
+		}
+	}
+
+	std::map<int, Node *>::iterator it2;
+	for (it2 = nodes.begin(); it2 != nodes.end(); it2++) {
+		it2->second->normalize_node_normal();
+	}
+
+	for (it1 = elements.begin(); it1 != elements.end(); it1++) {
+		(*it1)->calculate_centers_normal();
+	}
+}
+
+Node* Boundary::get_unique_node_or_create_new(
+		int index,
+		DenseMatrix<double> *coords)
+{
+	// The first index in file is 1, but the first index in EPetra matrix is 0
+	index--;
+
+	if (nodes.count(index)) {
+		return nodes[index];
+	} else {
+		Node* result = new Node(index, coords);
+		nodes.insert(std::pair<int, Node*>(index, result));
+		return result;
+	}
+}
+
+Element *** Boundary::sort_elements()
+{
+	uint bounds_count = Element::get_bound_count(elements_type);
+	uint size = elements.size();
+
+	Element ***sorted = new Element**[bounds_count];
+	Element **source_elements = new Element*[size];
+	for(uint i = 0; i < size; i++) {
+		source_elements[i] = elements[i];
+	}
+
+	for(uint i = 0; i < bounds_count; i++) {
+		sorted[i] = new Element*[size];
+		memcpy(sorted[i], source_elements, sizeof(Element*) * size);
+		qsort(sorted[i], size, sizeof(Element*), Element::compare_by_fn[i]);
+	}
+	delete[] source_elements;
+	return sorted;
+}
+
+Interval * Boundary::get_elements_bounds(Element ***sorted, uint size)
+{
+	uint bounds_count = Element::get_bound_count(elements_type);
+	Interval *boundary_volume = new Interval[bounds_count];
+
+	double min, max;
+	Interval interval;
+	for(uint i = 0; i < bounds_count; i++) {
+		interval = sorted[i][0]->get_element_bound(i);
+		min = interval.start;
+		max = interval.end;
+		for(uint j = 1; j < size; j++) {
+			interval = sorted[i][j]->get_element_bound(i);
+			if(interval.start < min) {
+				min = interval.start;
+			}
+			if(interval.end > max) {
+				max = interval.end;
+			}
+		}
+		boundary_volume[i] = Interval(min, max);
+	}
+
+	return boundary_volume;
+}
+
+BoundingVolumeTree * Boundary::compute_bounding_volume_tree()
+{
+	BoundingVolumeTree *bvt;
+	uint bounds_count = Element::get_bound_count(elements_type);
+	uint size = elements.size();
+
+	for(uint i = 0; i < size; i++) {
+		BoundingVolume *volume = Element::get_bound_volume(
+				elements[i]->get_nodes(),
+				elements[i]->get_node_count(),
+				bounds_count);
+		elements[i]->set_bound_volume(volume);
+	}
+	if(size == 1) {
+		bvt = new BoundingVolumeTree(elements[0], elements[0]->get_element_bounds());
+		return bvt;
+	}
+
+	Element ***sorted = sort_elements();
+	Interval *b = get_elements_bounds(sorted, size);
+
+	BoundingVolume *bv = new BoundingVolume(b, bounds_count);
+	bvt = new BoundingVolumeTree(NULL, bv);
+
+	divide_bound_volume(bvt, sorted, size);
+	return bvt;
+}
+
+std::vector<Element*> & Boundary::get_elements()
+{
+    return elements;
+}
+
+Element * Boundary::get_element(int id)
+{
+	for(uint i = 0; i < elements.size(); i++) {
+		if(elements[i]->get_id() == id) {
+			return elements[i];
+		}
+	}
+	return NULL;
+}
+
+std::map<int, std::vector<Element* > > & Boundary::get_adjacent(){
+    return adjacent;
+}
+
+Element **** Boundary::split_elements(
+		Element ***elements,
+		int biggist_interval,
+		int element_count)
+{
+	uint bounds_count = Element::get_bound_count(elements_type);
+	int count[2] = {
+			element_count / 2,
+			element_count - element_count / 2
+	};
+	int pointer[bounds_count][2];
+
+	Element ****division = new Element***[2];
+	division[0] = new Element**[bounds_count];
+	division[1] = new Element**[bounds_count];
+
+	for(int i = 0; i < count[0]; i++) {
+		elements[biggist_interval][i]->set_divide_flag(M_LESSER);
+	}
+	for(int i = count[0]; i < element_count; i++) {
+		elements[biggist_interval][i]->set_divide_flag(M_GREATER_OR_EQUAL);
+	}
+
+	for (uint i = 0; i < bounds_count; i++) {
+		for(int j = 0; j < 2; j++) {
+			division[j][i] = new Element*[count[j]];
+			pointer[i][j] = 0;
+		}
+	}
+	for (int i = 0; i < element_count; i++) {
+		for (uint j = 0; j < bounds_count; j++) {
+			if (elements[j][i]->get_divide_flag()) {
+				division[0][j][pointer[j][0]++] = elements[j][i];
+			} else {
+				division[1][j][pointer[j][1]++] = elements[j][i];
+			}
+		}
+	}
+
+	return division;
+}
+
+void Boundary::divide_bound_volume(
+		BoundingVolumeTree *root,
+		Element ***sorted_els,
+		int element_count)
+{
+	uint bounds_count = Element::get_bound_count(elements_type);
+	int count[2] = {
+			element_count / 2,
+			element_count - element_count / 2
+	};
+
+	int index = root->get_volume()->get_biggest_interval_index();
+	Element ****part = split_elements(sorted_els, index, element_count);
+
+	BoundingVolume *volume;
+	for(int i = 0; i < 2; i++) {
+		if (count[i] > 1) {
+			Interval *interval = get_elements_bounds(part[i], count[i]);
+			volume = new BoundingVolume(interval, bounds_count);
+			root->set_leaf(NULL, volume, i);
+			divide_bound_volume(root->get_leaf(i), part[i], count[i]);
+		} else {
+			volume = part[i][0][0]->get_element_bounds();
+			root->set_leaf(part[i][0][0], volume, i);
+			for(uint j = 0; j < bounds_count; j++) {
+				delete[] part[i][j];
+			}
+			delete[] part[i];
+		}
+	}
+
+	for(uint i = 0; i < bounds_count; i++) {
+		delete[] sorted_els[i];
+	}
+	delete[] sorted_els;
+	delete[] part;
+}
+
+void Boundary::find_closest_elements(BoundingVolumeTree *bvt)
+{
+	double lenght = bvt->get_volume()->get_biggest_interval_size() * NORMAL_LENGHT;
+	for(uint i = 0; i < elements.size(); i++) {
+		for(int j = 0; j < elements[i]->get_node_count(); j++) {
+			Element *normal = create_normal(
+					elements[i]->get_node(j),
+					elements[i]->get_center()->get_normal(),
+					lenght);
+
+			Element *closest_element = bvt->find_closest_element(normal);
+			elements[i]->set_closest_element(closest_element, j);
+			delete normal->get_element_bounds();
+			delete normal->get_node(1);
+			delete normal;
+		}
+	}
+}
+
+Element * Boundary::create_normal(
+		Node *node,
+		MCVec3 normal,
+		double length)
+{
+	int bounds_count = Element::get_bound_count(elements_type);
+	Node **n = new Node*[2];
+	//n[0] = node;
+	n[0] = new Node(-1, node->get_coordinates() - normal * 0.2 *length);
+	n[1] = new Node(-1, node->get_coordinates() + normal * length);
+	Element *e = Element::create_element(-1, n, M_ELEMENT_LINE2);
+	BoundingVolume *b = Element::get_bound_volume(n, 2, bounds_count);
+	delete n[0];
+	n[0] = node;
+	e->set_bound_volume(b);
+	return e;
+}
 
 Boundary::~Boundary()
 {
@@ -13,342 +324,108 @@ Boundary::~Boundary()
 		delete it2->second;
 	}
 	nodes.clear();
-
-	delete[] source_elements;
-	if(BVT != NULL) {
-		delete BVT;
-	}
 }
 
-void Boundary::calculate_normals_and_supprts()
+int Boundary::get_elements_size()
 {
-	std::vector<Element*>::iterator it1;
-	for (it1 = elements.begin(); it1 != elements.end(); it1++) {
-		(*it1)->calculate_normals_and_supports();
-	}
-
-	std::map<int, Node *>::iterator it2;
-	for (it2 = nodes.begin(); it2 != nodes.end(); it2++) {
-		it2->second->calculate_normal_and_support();
-	}
+	return this->elements.size();
 }
 
-void Boundary::save_normals_and_support(const char* fileName)
+int Boundary::get_element_type()
 {
-	std::map<int, Node*>::const_iterator it;
-	for(it = nodes.begin(); it != nodes.end(); it++) {
-		it->second->save_normal_and_support(fileName);
-	}
+	return this->elements_type;
 }
 
-void Boundary::print(std::ostream &out) const
+int Boundary::write_ensight_gold( std::ofstream *geofile_ptr, int &node_counter, int& element_counter)
 {
-	out << "Boundary:\n";
-	out << "Nodes:\n";
-
-	std::map<int, Node*>::const_iterator it1;
-	for (it1 = nodes.begin(); it1 != nodes.end(); it1++) {
-		cout << it1->first << " => " << *(it1->second) << "\n";
-	}
-
-	std::vector<Element*>::const_iterator it2;
-}
-
-Node* Boundary::get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coords)
-{
-	// The first index in file is 1, but the first index in EPetra matrix is 0
-	index--;
-
-	if (nodes.count(index)) {
-		return nodes[index];
-	} else {
-		Node* result = new Node(index, coords);
-		nodes.insert(std::pair<int, Node*>(index, result));
-		return result;
-	}
-}
-
-void Boundary::create_bound_volume_tree()
-{
-	int size = elements.size();
-	Element ***sorted = new Element**[bounds_count];
-
-	for(int i = 0; i < bounds_count; i++) {
-		sorted[i] = new Element*[size];
-		memcpy(sorted[i], source_elements, sizeof(Element*) * size);
-		qsort(sorted[i], size, sizeof(Element*), Element::compare_by_fn[i]);
-	}
-
-	Interval *b = new Interval[bounds_count];
-
-	for(int i = 0; i < bounds_count; i++) {
-		double min = Element::get_value_of_fn[i](sorted[i][0]->get_center());
-		double max = Element::get_value_of_fn[i](sorted[i][size - 1]->get_center());
-		for(int j = 0; j < size; j++) {
-			sorted[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
+	if (geofile_ptr->is_open())
+	{
+		/* COORDINATES (NODES) */
+		(*geofile_ptr) << "coordinates\n";
+		std::map<int, int> tmp_map_node2ind;
+		(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << nodes.size() << "\n";
+		std::map<int, Node *>::const_iterator it;
+		std::map<int, int>::iterator tmp_map_node2ind_it=tmp_map_node2ind.end();
+		int tmp_int = 1;
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			tmp_map_node2ind.insert( tmp_map_node2ind_it, std::pair<int,int>(it->first,tmp_int++));
+			(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << it->second->get_id() << "\n";
+//			if (node_counter<=0)
+//				(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << it->first+1 << "\n";
+//			else
+//				(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << node_counter++ << "\n";
 		}
-		b[i] = Interval(min, max);
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*geofile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_coordinates().x << "\n";
+		}
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*geofile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_coordinates().y << "\n";
+		}
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*geofile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_coordinates().z << "\n";
+		}
+		/* ELEMENTS */
+		(*geofile_ptr) << elements[0]->get_type_name() << "\n";
+		tmp_int = elements.size();
+		(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << tmp_int << "\n";
+		for ( int i=1; i<=tmp_int; i++)
+		{
+			//(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << element_counter++ << "\n";
+			(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << elements[i-1]->get_id() << "\n";
+		}
+		for ( int i=0; i<tmp_int; i++)
+		{
+			Element * tmp_element = elements[i];
+			for (int j=0; j<tmp_element->get_node_count(); j++)
+			{
+				(*geofile_ptr) << std::setw( ENSIGHT_GOLD_INT_WIDTH) << tmp_map_node2ind.find( tmp_element->get_node(j)->get_id())->second;
+			}
+			(*geofile_ptr) << "\n";
+		}
+		return 1;
 	}
-
-	BoundingVolume *bv = new BoundingVolume(b, bounds_count);
-	this->BVT = new BoundingVolumeTree(bv);
-
-	divide_bound_volume(this->BVT, sorted, size, bounds_count);
+	else return 0;
 }
 
-void Boundary::find_intersections(BoundingVolumeTree *bounding_volume_tree)
+int Boundary::write_normals_ensight_gold( std::ofstream * nvecfile_ptr)
 {
-	double max_lenght = bounding_volume_tree->get_item()->get_biggest_interval() * NORMAL_LENGHT;
-	std::map<int, Node *>::iterator it;
-	for (it = nodes.begin(); it != nodes.end(); it++) {
-		Element_normal *normal = create_normal(it->second, max_lenght);
-
-		BoundingVolume *bounded_normal = create_bounds_around_normal(normal);
-		Element *closest_element = bounding_volume_tree->find_closest_element(bounded_normal);
-		it->second->set_closest_element(closest_element);
-
-		delete bounded_normal;
-		delete normal;
+	if (nvecfile_ptr->is_open())
+	{
+		(*nvecfile_ptr) << "coordinates\n";
+		std::map<int, Node *>::const_iterator it;
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*nvecfile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_normal().x << "\n";
+		}
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*nvecfile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_normal().y << "\n";
+		}
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*nvecfile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_normal().z << "\n";
+		}
+		return 1;
 	}
+	else return 0;
 }
 
-Element_normal * Boundary::create_normal(Node *node, double lenght)
+int Boundary::write_supports_ensight_gold( std::ofstream * nvecfile_ptr)
 {
-	Node **n = new Node*[2];
-	n[0] = node;
-	n[1] = new Node(node->get_coordinates() + node->get_normal() * lenght);
-
-	return new Element_normal(n);
+	if (nvecfile_ptr->is_open())
+	{
+		(*nvecfile_ptr) << "coordinates\n";
+		std::map<int, Node *>::const_iterator it;
+		for (it = nodes.begin(); it != nodes.end(); it++)
+		{
+			(*nvecfile_ptr) << std::setw( ENSIGHT_GOLD_DOUBLE_WIDTH) << it->second->get_support() << "\n";
+		}
+		return 1;
+	}
+	else return 0;
 }
 
-BoundingVolume * Boundary::create_bounds_around_normal(Element_normal *normal)
-{
-	Interval *b = new Interval[bounds_count];
-	for(int i = 0; i < bounds_count; i++) {
-		double min = Element::get_value_of_fn[i](normal->get_nodes()[0]);
-		double max = Element::get_value_of_fn[i](normal->get_nodes()[0]);
-		normal->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
-		b[i] = Interval(min, max);
-	}
-
-	return new BoundingVolume(b, bounds_count);
-}
-
-void Boundary::map_elements(Boundary *boundary)
-{
-	std::vector<Element*>::iterator it;
-	for (it = elements.begin(); it != elements.end(); it++) {
-		(*it)->clip_element();
-	}
-}
-
-std::ostream& operator<<(std::ostream &out, const Boundary &boundary)
-{
-	boundary.print(out);
-	return out;
-}
-
-void Boundary::divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count)
-{
-	if(element_count == 1) {
-		root->get_item()->set_element(sorted_elements[0][0]);
-		for(int i = 0; i < bound_count; i++) {
-			delete[] sorted_elements[i];
-		}
-		delete[] sorted_elements;
-		return;
-	}
-
-	double max = -1;
-	int index = -1;
-	for(int i = 0; i < bound_count; i++) {
-		if(max < root->get_item()->get_bounds()[i].end - root->get_item()->get_bounds()[i].start) {
-			max = root->get_item()->get_bounds()[i].end - root->get_item()->get_bounds()[i].start;
-			index = i;
-		}
-	}
-
-	for(int i = 0; i < element_count / 2; i++) {
-		sorted_elements[index][i]->set_divide_flag(LESS_THEN_MEDIAN);
-	}
-	for(int i = element_count / 2; i < element_count; i++) {
-		sorted_elements[index][i]->set_divide_flag(GREATER_EQUAL_THEN_MEDIAN);
-	}
-
-	Element ***left_sorted_elements = new Element**[bound_count];
-	Element ***right_sorted_elements = new Element**[bound_count];
-	int pointer[bound_count][2];
-	int left_count = element_count / 2;
-	int right_count = element_count - element_count / 2;
-
-	for(int i = 0; i < bound_count; i++) {
-		left_sorted_elements[i] = new Element*[left_count];
-		right_sorted_elements[i] = new Element*[right_count];
-		pointer[i][0] = 0;
-		pointer[i][1] = 0;
-	}
-
-	for(int i = 0; i < element_count; i++) {
-		for(int j = 0; j < bound_count; j++) {
-			if(sorted_elements[j][i]->get_divide_flag()) {
-				left_sorted_elements[j][pointer[j][0]++] = sorted_elements[j][i];
-			} else {
-				right_sorted_elements[j][pointer[j][1]++] = sorted_elements[j][i];
-			}
-		}
-	}
-
-	Interval *left_bounds = new Interval[bound_count];
-	Interval *right_bounds = new Interval[bound_count];
-
-	for(int i = 0; i < bound_count; i++) {
-		double min = Element::get_value_of_fn[i](left_sorted_elements[i][0]->get_center());
-		double max = Element::get_value_of_fn[i](left_sorted_elements[i][left_count - 1]->get_center());
-		for(int j = 0; j < left_count; j++) {
-			left_sorted_elements[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
-		}
-		left_bounds[i] = Interval(min, max);
-		min = Element::get_value_of_fn[i](right_sorted_elements[i][0]->get_center());
-		max = Element::get_value_of_fn[i](right_sorted_elements[i][right_count - 1]->get_center());
-		for(int j = 0; j < left_count; j++) {
-			right_sorted_elements[i][j]->update_max_min_value_of_fn(min, max, Element::get_value_of_fn[i]);
-		}
-		right_bounds[i] = Interval(min, max);
-	}
-
-	BoundingVolume *left_bound_volume = new BoundingVolume(left_bounds, bound_count);
-	BoundingVolume *right_bound_volume = new BoundingVolume(right_bounds, bound_count);
-	root->setLeaf1(left_bound_volume);
-	root->setLeaf2(right_bound_volume);
-
-	divide_bound_volume(root->getLeaf1(), left_sorted_elements, left_count, bound_count);
-	divide_bound_volume(root->getLeaf2(), right_sorted_elements, right_count, bound_count);
-
-	for(int i = 0; i < bound_count; i++) {
-		delete[] sorted_elements[i];
-	}
-	delete[] sorted_elements;
-}
-
-
-Boundary2D::Boundary2D(
-		Epetra_IntSerialDenseMatrix *mesh_desc,
-		Epetra_SerialDenseMatrix *coords,
-		int element_type)
-{
-	int index;
-	Element *line;
-	source_elements = new Element*[mesh_desc->N()];
-
-	if(element_type == line2) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[LINE2_NODES_COUNT];
-			for(int j = 0; j < LINE2_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			line = new Element_line2((*mesh_desc)(5, i), n);
-			for(int j = 0; j < LINE2_NODES_COUNT; j++) {
-				n[j]->add_element(line);
-			}
-			elements.push_back(line);
-			source_elements[i] = line;
-		}
-	}
-
-	if(element_type == line3) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[LINE3_NODES_COUNT];
-			for(int j = 0; j < LINE3_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			line = new Element_line3((*mesh_desc)(5, i), n);
-			for(int j = 0; j < LINE3_NODES_COUNT; j++) {
-				n[j]->add_element(line);
-			}
-			elements.push_back(line);
-			source_elements[i] = line;
-		}
-	}
-	this->BVT = NULL;
-	this->bounds_count = BOUND_COUNT_2D;
-}
-
-
-Boundary3D::Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc,
-		Epetra_SerialDenseMatrix *coords, int element_type)
-{
-	int index;
-	Element *face;
-	source_elements = new Element*[mesh_desc->N()];
-
-	if(element_type == tria3) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[TRIA3_NODES_COUNT];
-			for(int j = 0; j < TRIA3_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			face = new Element_tria3((*mesh_desc)(5, i), n);
-			for(int j = 0; j < TRIA3_NODES_COUNT; j++) {
-				n[j]->add_element(face);
-			}
-			elements.push_back(face);
-			source_elements[i] = face;
-		}
-	}
-	if(element_type == tria6) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[TRIA6_NODES_COUNT];
-			for(int j = 0; j < TRIA6_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			face = new Element_tria6((*mesh_desc)(5, i), n);
-			for(int j = 0; j < TRIA6_NODES_COUNT; j++) {
-				n[j]->add_element(face);
-			}
-			elements.push_back(face);
-			source_elements[i] = face;
-		}
-	}
-	if(element_type == quad4) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[QUAD4_NODES_COUNT];
-			for(int j = 0; j < QUAD4_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			face = new Element_quad4((*mesh_desc)(5, i), n);
-			for(int j = 0; j < QUAD4_NODES_COUNT; j++) {
-				n[j]->add_element(face);
-			}
-			elements.push_back(face);
-			source_elements[i] = face;
-		}
-	}
-	if(element_type == quad8) {
-		Node **n;
-		for(int i = 0; i < mesh_desc->N(); i++) {
-			n = new Node*[QUAD8_NODES_COUNT];
-			for(int j = 0; j < QUAD8_NODES_COUNT; j++) {
-				index = (*mesh_desc)(j + 6, i);
-				n[j] = get_unique_node_or_create_new(index, coords);
-			}
-			face = new Element_quad8((*mesh_desc)(5, i), n);
-			for(int j = 0; j < QUAD8_NODES_COUNT; j++) {
-				n[j]->add_element(face);
-			}
-			elements.push_back(face);
-			source_elements[i] = face;
-		}
-	}
-	this->BVT = NULL;
-	this->bounds_count = BOUND_COUNT_3D;
-}

@@ -1,12 +1,26 @@
-/*
- * GaussianQuadrature.cpp
- *
- *  Created on: 26.10.2012
- *      Author: beh01
- */
-
 #include "GaussianQuadrature.h"
 
+double GaussianQuadrature::GAUSSPOINTS[3][3] = {
+		{ 0, 0, 0 },
+		{ -1 / sqrt(3), 1 / sqrt(3), 0 },
+		{-sqrt(3.0 / 5), 0, sqrt(3.0 / 5) }
+};
+
+double GaussianQuadrature::GAUSSWEIGHTS[3][3] = {
+		{ 2.0, 0, 0 },
+		{ 1, 1, 0 },
+		{ 5.0 / 9, 8.0 / 9,	5.0 / 9 }
+};
+
+double * GaussianQuadrature::get_gauss_weights(int points)
+{
+	return GAUSSWEIGHTS[points];
+}
+
+double * GaussianQuadrature::get_gauss_points(int points)
+{
+	return GAUSSPOINTS[points];
+}
 /**
  *Nummerically computes the length of the curve using Gaussian quadrature
  *
@@ -27,14 +41,18 @@
  *  h(x) = ----------- x + -----------
  *             2               2
  */
- double GaussianQuadrature::numCurveIntegration(JacobiFunctor df, double start, double end, int points)
+ double GaussianQuadrature::num_curve_integration(
+		 JacobiFunctor df,
+		 double start,
+		 double end,
+		 int points)
  {
 	 double result = 0;
-	 double *G = getGaussPoints1D(points - 1);
-	 double *W = getGaussWeights1D(points - 1);
+	 double *G = get_gauss_points(points - 1);
+	 double *W = get_gauss_weights(points - 1);
 	 double a = (end - start) / 2;
 	 double b = (end + start) / 2;
-	 Vec3 *j;
+	 MCVec3 *j;
 	 for (int i = 0; i < points; i++) {
 		 j = df(a * G[i] + b, 0);
 		 result += W[i] * j->length();
@@ -44,21 +62,27 @@
 	 return result;
 }
 
- double GaussianQuadrature::numAreaIntegration(JacobiFunctor df, double start_x, double end_x, double start_y, double end_y, int points)
+ double GaussianQuadrature::num_area_integration(
+		 JacobiFunctor df,
+		 double start_x,
+		 double end_x,
+		 double start_y,
+		 double end_y,
+		 int points)
  {
 	double result = 0;
-	double *G = getGaussPoints1D(points - 1);
-	double *W = getGaussWeights1D(points - 1);
+	double *G = get_gauss_points(points - 1);
+	double *W = get_gauss_weights(points - 1);
 	double ax = (end_x - start_x) / 2;
 	double bx = (end_x + start_x) / 2;
 	double ay = (end_y - start_y) / 2;
 	double by = (end_y + start_y) / 2;
-	Vec3 *jacobi;
-	Vec3 sup;
+	MCVec3 *jacobi;
+	MCVec3 sup;
 	for(int i = 0; i < points; i++) {
 		for(int j = 0; j < points; j++) {
 			jacobi = df(ax * G[i] + bx, ay * G[j] + by);
-			sup = crossprod(jacobi[1], jacobi[0]);
+			sup = cross_prod(jacobi[1], jacobi[0]);
 			result += W[i] * W[j] * sup.length();
 			delete[] jacobi;
 		}

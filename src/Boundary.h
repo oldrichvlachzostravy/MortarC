@@ -1,66 +1,76 @@
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
+#include <cstring>
 #include <vector>
 #include <map>
-#include <Epetra_IntSerialDenseMatrix.h>
-#include <Epetra_SerialDenseMatrix.h>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 
-#include "Element.h"
+//class Boundary;
+
+#include "SystemIncludes.h"
+#include "DenseMatrix.h"
 #include "Node.h"
+#include "Element.h"
+#include "FEPrimalBase.h"
+#include "BoundingVolume.h"
 #include "BoundingVolumeTree.h"
+#include "Utils.h"
 
-#define NORMAL_LENGHT 0.1
-#define line2 0
-#define line3 1
-#define tria3 2
-#define tria6 3
-#define quad4 4
-#define quad8 5
+// only temporalily
+//#include "mex.h"
 
+
+template <class T> class Mapping;
+//class BoundingVolumeTree;
+
+#define NORMAL_LENGHT 30
+#ifndef ENSIGHT_GOLD_DOUBLE_WIDTH
+#define ENSIGHT_GOLD_DOUBLE_WIDTH 12
+#endif
+#ifndef ENSIGHT_GOLD_INT_WIDTH
+#define ENSIGHT_GOLD_INT_WIDTH 10
+#endif
+
+/**
+ * The Boundary class represents the interface to the boundary of FEM mesh
+ *
+ *  @author Ondřej Meca
+ */
 class Boundary
 {
 	public:
-		virtual ~Boundary();
+		Boundary( DenseMatrix<int>*, DenseMatrix<double>*, int);
+		~Boundary();
 
-		BoundingVolumeTree * get_bounding_volume_tree() { return this->BVT; }
-
-		void calculate_normals_and_supprts();
-		void save_normals_and_support(const char* fileName);
-		void create_bound_volume_tree();
-		void find_intersections(BoundingVolumeTree *bounding_volume_tree);
-		void map_elements(Boundary *boundary);
-
-		void print(std::ostream &out) const;
+		void calculate_normals_and_supports();
+		BoundingVolumeTree * compute_bounding_volume_tree();
+		void find_closest_elements( BoundingVolumeTree*);
+		Element * get_element(int);
+		int get_elements_size();
+		std::map<int, std::vector<Element* > > & get_adjacent();
+		int get_element_type();
+		int write_ensight_gold( std::ofstream *, int&, int&);
+		int write_normals_ensight_gold( std::ofstream *);
+		int write_supports_ensight_gold( std::ofstream *);
+		std::vector<Element*> & get_elements();
 
 	protected:
-		Node* get_unique_node_or_create_new(int index, Epetra_SerialDenseMatrix *coordinates);
+		Node* get_unique_node_or_create_new(int, DenseMatrix<double>*);
 
 		std::vector<Element* > elements;
 		std::map<int, Node* > nodes;
-		Element **source_elements;
-		int bounds_count;
-		BoundingVolumeTree *BVT;
+		std::map<int, std::vector<Element* > > adjacent;
+		int elements_type;
 
 	private:
-		void divide_bound_volume(BoundingVolumeTree *root, Element ***sorted_elements, int element_count, int bound_count);
-		BoundingVolume * create_bounds_around_normal(Element_normal *normal);
-		Element_normal * create_normal(Node *node, double length);
-};
-
-std::ostream& operator<<(std::ostream &out, const Boundary &boundary);
-
-
-class Boundary2D: public Boundary
-{
-	public:
-		Boundary2D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
-};
-
-class Boundary3D: public Boundary
-{
-	public:
-		Boundary3D(Epetra_IntSerialDenseMatrix *mesh_desc, Epetra_SerialDenseMatrix *coords, int element_type);
+		Element *** sort_elements();
+		Interval * get_elements_bounds( Element***, uint);
+		void divide_bound_volume( BoundingVolumeTree*, Element***, int);
+		Element **** split_elements( Element ***, int, int);
+		Element * create_normal( Node*, MCVec3, double);
 };
 
 #endif /* BOUNDARY_H_ */

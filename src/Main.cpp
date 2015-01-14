@@ -1,22 +1,57 @@
 #include <stdio.h>
-#include <string.h>
+#include <string>
+#include <sstream>
 #include <iostream>
-#include <Epetra_SerialDenseMatrix.h>
-#include <Epetra_IntSerialDenseMatrix.h>
+#include <iomanip>
 #include <fstream>
+#include <time.h>
 #include <unistd.h>
+#include <math.h>
+//#include "mex.h"
 
-#include "Project.h"
+#include "BoundaryMapper.h"
 #include "Boundary.h"
+#include "DenseMatrix.h"
+#include "FEPrimalBase.h"
+#include "Element.h"
+#include "Assembler.h"
+
+#ifdef  D3
+#undef  D2
+#else
+#ifndef D2
+#define D2
+#endif
+#endif
+
+#define DEBUG_OUTPUTS         true
+
+#ifndef ENSIGHT_GOLD_DOUBLE_WIDTH
+#define ENSIGHT_GOLD_DOUBLE_WIDTH 12
+#endif
+#ifndef ENSIGHT_GOLD_INT_WIDTH
+#define ENSIGHT_GOLD_INT_WIDTH 10
+#endif
 
 using namespace std;
 
-Epetra_SerialDenseMatrix *coordinates, *friction;
-Epetra_IntSerialDenseMatrix *domainN, *master_els, *nodes2dofs, *slave_els;
+DenseMatrix<double> *coordinates, *friction;
+DenseMatrix<int> *domainN, *master_els, *nodes2dofs, *slave_els;
 Boundary *master, *slave;
 int element_type;
 
-Epetra_SerialDenseMatrix* load_Epetra_SerialDenseMatrix(const char* fileName)
+template <typename T> void denseMatrixPrint(int rows, int cols, DenseMatrix<T> *m)
+{
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			std::cout << (*m)[i * cols + j] << "  ";
+		}
+		std::cout << std::endl;
+	}
+	return;
+}
+
+template <typename T> DenseMatrix<T> * load_matlab_ascii_matrix(const char* fileName)
 {
 	string str;
 	ifstream myfile(fileName);
@@ -29,197 +64,169 @@ Epetra_SerialDenseMatrix* load_Epetra_SerialDenseMatrix(const char* fileName)
 			return NULL;
 		}
 
-		Epetra_SerialDenseMatrix *result = new Epetra_SerialDenseMatrix(rows, columns);
+		DenseMatrix<T> *result = new DenseMatrix<T>(rows, columns);
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
 				if (!myfile.good()) {
 					delete result;
 					return NULL;
 				}
-				getline(myfile, str, ' ');
-				(*result)(i, j) = atof(str.c_str());
+				//getline(myfile, str, ' ');
+				//stringstream ss(str.c_str());
+				myfile >> (*result)[i * columns + j];
 			}
 		}
 		myfile.close();
 		return result;
 	} else {
 		return NULL;
-	}
-}
-
-Epetra_IntSerialDenseMatrix * load_Epetra_IntSerialDenseMatrix(const char* fileName)
-{
-	string str;
-	ifstream myfile(fileName);
-
-	if (myfile.is_open()) {
-		getline(myfile, str);
-		int rows, columns;
-		if (sscanf(str.c_str(), "%d %d", &rows, &columns) != 2) {
-			myfile.close();
-			return NULL;
-		}
-
-		Epetra_IntSerialDenseMatrix *result = new Epetra_IntSerialDenseMatrix(rows, columns);
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
-				if (!myfile.good()) {
-					delete result;
-					return NULL;
-				}
-				getline(myfile, str, ' ');
-				(*result)(i, j) = atoi(str.c_str());
-
-			}
-		}
-		myfile.close();
-		return result;
-	} else {
-		return NULL;
-	}
-}
-
-void load_matrices(string path)
-{
-	coordinates = load_Epetra_SerialDenseMatrix((path + "coordinates.ascii").c_str());
-	if(!coordinates) {
-		fprintf(stderr, "Can not load coordinate matrix\n");
-		exit(1);
-	}
-	domainN = load_Epetra_IntSerialDenseMatrix((path + "domainN.ascii").c_str());
-	if(!domainN) {
-		fprintf(stderr, "Can not load domain matrix\n");
-		exit(1);
-	}
-	friction = load_Epetra_SerialDenseMatrix((path + "friction.ascii").c_str());
-	if(!friction) {
-		fprintf(stderr, "Can not load friction matrix\n");
-		exit(1);
-	}
-	master_els = load_Epetra_IntSerialDenseMatrix((path + "master_els.ascii").c_str());
-	if(!master_els) {
-		fprintf(stderr, "Can not load master elements matrix\n");
-		exit(1);
-	}
-	nodes2dofs = load_Epetra_IntSerialDenseMatrix((path + "nodes2dofs.ascii").c_str());
-	if(!nodes2dofs) {
-		fprintf(stderr, "Can not load nodes 2 dofs matrix\n");
-		exit(1);
-	}
-	slave_els = load_Epetra_IntSerialDenseMatrix((path + "slave_els.ascii").c_str());
-	if(!slave_els) {
-		fprintf(stderr, "Can not load slave elements matrix\n");
-		exit(1);
-	}
-}
-
-void print_master()
-{
-	cout << "MASTER IN FILE:\n";
-	for(int i = 0; i < master_els->N(); i++) {
-		printf("(%.2f, %.2f) -->> (%.2f, %.2f)\n",
-				(*coordinates)(0, (*master_els)(6, i) - 1),
-				(*coordinates)(1, (*master_els)(6, i) - 1),
-				(*coordinates)(0, (*master_els)(7, i) - 1),
-				(*coordinates)(1, (*master_els)(7, i) - 1));
-	}
-}
-
-void print_slave()
-{
-	cout << "SLAVE IN FILE:\n";
-	for(int i = 0; i < slave_els->N(); i++) {
-		printf("(%.2f, %.2f) -->> (%.2f, %.2f)\n",
-				(*coordinates)(0, (*slave_els)(6, i) - 1),
-				(*coordinates)(1, (*slave_els)(6, i) - 1),
-				(*coordinates)(0, (*slave_els)(7, i) - 1),
-				(*coordinates)(1, (*slave_els)(7, i) - 1));
-	}
-}
-
-void finish()
-{
-	if(coordinates) {
-		delete coordinates;
-	}
-	if(domainN) {
-		delete domainN;
-	}
-	if(friction) {
-		delete friction;
-	}
-	if(master_els) {
-		delete master_els;
-	}
-	if(nodes2dofs) {
-		delete nodes2dofs;
-	}
-	if(slave_els) {
-		delete slave_els;
-	}
-	if(master) {
-		delete master;
-	}
-	if(slave) {
-		delete slave;
-	}
-}
-
-void init(int argc, char** argv)
-{
-	atexit(finish);
-
-	int c;
-	string path;
-	while((c = getopt(argc, argv, "p:e:")) != -1) {
-		switch(c) {
-			case 'p': {
-				path = optarg;
-				break;
-			}
-			case 'e': {
-				string e = optarg;
-				if(!e.compare("line2")) { element_type = line2; }
-				if(!e.compare("line3")) { element_type = line3; }
-				if(!e.compare("tria3")) { element_type = tria3; }
-				if(!e.compare("tria6")) { element_type = tria6; }
-				if(!e.compare("quad4")) { element_type = quad4; }
-				if(!e.compare("quad8")) { element_type = quad8; }
-				break;
-			}
-			default: {
-				cout << "list of options:\n";
-				cout << "\t-p path of source matrix\n";
-				cout << "\t-e type of elements. Example: -e line2\n";
-				break;
-			}
-		}
-	}
-	load_matrices(path);
-
-	if(element_type <= line3) {
-		master = new Boundary2D(master_els, coordinates, element_type);
-		slave = new Boundary2D(slave_els, coordinates, element_type);
-	} else {
-		master = new Boundary3D(master_els, coordinates, element_type);
-		slave = new Boundary3D(slave_els, coordinates, element_type);
 	}
 }
 
 int main(int argc, char** argv)
 {
+	//int i, tmpint1, tmpint2;
+	//double *master_els_ptr, *slave_els_ptr, *coordinates0_ptr, *friction_ptr;
+#ifdef D3
+	cout << "D3\n";
+	string path = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
+	string example_root = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
+	string problem_name = "herz3d";
+#else
+	cout << "D2\n";
+	string path = "/home/olda/workspace/MortarC/matrix/test2d/";
+	string example_root = "/home/olda/workspace/MortarC/matrix/test2d/";
+	string problem_name = "herz2d";
+#endif
+	string coordinates_filename = "coordinates.ascii";
+	string master_els_filename = "master_els.ascii";
+	string slave_els_filename = "slave_els.ascii";
+	string friction_filename = "friction.ascii";
+	string boundary_mapper_dump_filename = path + "boundary_mapper_dump.m";
+	string ensight_gold_slave_master_mapping_filename = path + "slave_master_mapping";
+    cout << (example_root+problem_name).c_str() << "\n";
 
-	init(argc, argv);
+	//char const_string_options[]      = "options";
+	//char const_string_general[]      = "general";
+	//char const_string_problem_name[] = "problem_name";
+	//char const_string_example_root[] = "example_root";
 
-	Project project(master, slave);
+	//DenseMatrix<double> *friction, *coordinates;
+	DenseMatrix<int> *master_els, *slave_els;
+	Boundary *master, *slave;
+	int master_els_type, slave_els_type;
 
-	project.calculate_normals_and_supports();
-	project.create_bound_volume_tree();
-	project.find_intersection();
-	project.map_master_to_slave();
-	//project.save_normals_and_supports("out.txt");
+	/* ******** */
+	/* * INIT * */
+	/* ******** */
+	coordinates = load_matlab_ascii_matrix<double>((path + coordinates_filename).c_str());
+	if(!coordinates)
+	{
+		fprintf(stderr, "Can not load coordinate matrix\n");
+		exit(1);
+	}
+	master_els = load_matlab_ascii_matrix<int>((path + master_els_filename).c_str());
+	if(!master_els) {
+		fprintf(stderr, "Can not load master elements matrix\n");
+		exit(1);
+	}
+	slave_els = load_matlab_ascii_matrix<int>((path + slave_els_filename).c_str());
+#ifdef D2
+	// switch slave orientation
+	for (int i = 0; i < slave_els->get_columns(); i++){
+		double tmp = (*slave_els)[6*slave_els->get_columns() + i];
+		(*slave_els)[6*slave_els->get_columns() + i] = (*slave_els)[7*slave_els->get_columns() + i];
+		(*slave_els)[7*slave_els->get_columns() + i] = tmp;
+	}
+#endif
+	if(!slave_els) {
+		fprintf(stderr, "Can not load slave elements matrix\n");
+		exit(1);
+	}
+	friction = load_matlab_ascii_matrix<double>((path + friction_filename).c_str());
+	if(!friction) {
+		fprintf(stderr, "Can not load friction matrix\n");
+		exit(1);
+	}
+
+	//std::cout << "coordinates0" << std::endl;
+	//denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
+	//std::cout << "friction" << std::endl;
+	//denseMatrixPrint<double>( 1, 2, friction);
+	//std::cout << "master_els" << std::endl;
+	//denseMatrixPrint<int>( master_els->get_rows(), master_els->get_columns(), master_els);
+	//std::cout << "slave_els" << std::endl;
+	//denseMatrixPrint<int>( slave_els->get_rows(), slave_els->get_columns(), slave_els);
+	//return 0;
+
+	master_els_type = Element::get_element_type(master_els); // get element type from element matrices
+	slave_els_type  = Element::get_element_type(slave_els);
+	master = new Boundary(master_els, coordinates, master_els_type);
+	slave  = new Boundary( slave_els, coordinates,  slave_els_type);
 
 
-	return 0;
+	if (DEBUG_OUTPUTS)
+	{
+//		cout << "contact_3d_mex: reading boundaries  ... done\n";
+//		cout << "master element type: " << master->get_element_type() << endl;
+		cout << "slave  element type: " <<  slave->get_element_type() << endl;
+	}
+	/// Make slave -> master mapping
+	BoundaryMapper boundary_mapper;
+	boundary_mapper.set_slave(slave);
+	boundary_mapper.set_master(master);
+	boundary_mapper.execute();
+#ifdef D3
+	Mappings<SegmentTriangle> mappings;
+#else
+	Mappings<SegmentLine> mappings;
+#endif
+	mappings.compute_mapping(slave);
+	if (DEBUG_OUTPUTS)
+	{
+		boundary_mapper.dump_as_matlab_script_to_file(boundary_mapper_dump_filename.c_str());
+	}
+	cout << "MortarC: create mapping (size " << mappings.get_mappings().size() << ") ... done\n";
+
+	FEPrimalBase fe_slave(4);
+	FEPrimalBase fe_master(4);
+
+	// digonal matrix D
+	std::map<int,std::map<int,double> > d;
+	// matrix M
+	std::map<int,std::map<int,double> > m;
+	// sparse vector SUPPORTS
+	std::map<int,std::map<int,double> > supports;
+	// three columns sparse matrix NORMALS
+	std::map<int,std::map<int,double> > normals;
+
+	Assembler assembler;
+	assembler.assemble_d_m(mappings, master, d, m);
+	assembler.assemble_supports_normals(slave, supports, normals);
+
+	if (DEBUG_OUTPUTS)
+	{
+		print_sparse_matrix( d, "D");
+		print_sparse_matrix( m, "M");
+		print_sparse_matrix( supports, "SUPPORTS");
+		print_sparse_matrix( normals, "NORMALS");
+		/// Debug: write slave -> master mapping to Ensight gold file
+		std::ostringstream tmp_ostringstream;
+		tmp_ostringstream << example_root << problem_name;// << "_" << i;
+		std::string tmp_string = tmp_ostringstream.str();
+		mappings.write_ensight_gold_slave_master_mapping(boundary_mapper, tmp_string.c_str(), 1);
+		mappings.write_ensight_gold_normals(boundary_mapper, tmp_string.c_str(), 1);
+		mappings.write_mapping(master, tmp_string.c_str(), 1);
+		// Debug: write matrices
+
+	}
+	//TODO
+	//delete mapping;
+	/// clear objects at exit
+	if (coordinates)  { delete coordinates;	}
+	if (master_els)   { delete master_els; 	}
+	if (slave_els)    { delete slave_els;	}
+	if (master)       { delete master;      }
+	if (slave)        { delete slave;       }
+    return 0;
 }
-

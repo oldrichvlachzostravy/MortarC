@@ -133,11 +133,11 @@ int main(int argc, char** argv)
 	slave_els = load_matlab_ascii_matrix<int>((path + slave_els_filename).c_str());
 #ifdef D2
 	// switch slave orientation
-	for (int i = 0; i < slave_els->get_columns(); i++){
-		double tmp = (*slave_els)[6*slave_els->get_columns() + i];
-		(*slave_els)[6*slave_els->get_columns() + i] = (*slave_els)[7*slave_els->get_columns() + i];
-		(*slave_els)[7*slave_els->get_columns() + i] = tmp;
-	}
+//	for (int i = 0; i < slave_els->get_columns(); i++){
+//		double tmp = (*slave_els)[6*slave_els->get_columns() + i];
+//		(*slave_els)[6*slave_els->get_columns() + i] = (*slave_els)[7*slave_els->get_columns() + i];
+//		(*slave_els)[7*slave_els->get_columns() + i] = tmp;
+//	}
 #endif
 	if(!slave_els) {
 		fprintf(stderr, "Can not load slave elements matrix\n");
@@ -170,6 +170,17 @@ int main(int argc, char** argv)
 //		cout << "contact_3d_mex: reading boundaries  ... done\n";
 //		cout << "master element type: " << master->get_element_type() << endl;
 		cout << "slave  element type: " <<  slave->get_element_type() << endl;
+		// dump slave adjacent
+//		std::map<int, std::vector<Element* > > adjacent = master->get_adjacent();
+//		cout << "begin() : Slave adjacent dump" << endl;
+//		for (std::map<int, std::vector<Element* > >::iterator it = adjacent.begin(); it != adjacent.end(); it++) {
+//			cout << " node: " << it->first  << "  is adjacent to elements: ";
+//			for (int i = 0; i < it->second.size(); i++) {
+//				cout << it->second[i]->get_id() << "  ";
+//			}
+//			cout << endl;
+//		}
+//		cout << "end() : Slave adjacent dump" << endl;
 	}
 	/// Make slave -> master mapping
 	BoundaryMapper boundary_mapper;
@@ -181,11 +192,18 @@ int main(int argc, char** argv)
 #else
 	Mappings<SegmentLine> mappings;
 #endif
-	mappings.compute_mapping(slave);
+	mappings.compute_mapping(slave, master);
+#ifdef D2
 	if (DEBUG_OUTPUTS)
 	{
+		std::ostringstream tmp_ostringstream;
+		tmp_ostringstream << example_root << problem_name;
+		std::string tmp_string = tmp_ostringstream.str();
 		boundary_mapper.dump_as_matlab_script_to_file(boundary_mapper_dump_filename.c_str());
+		mappings.dump_as_matlab_script_append_to_file(boundary_mapper_dump_filename.c_str(), master);
+		mappings.write_mapping(master, tmp_string.c_str(), 1);
 	}
+#endif
 	cout << "MortarC: create mapping (size " << mappings.get_mappings().size() << ") ... done\n";
 
 	FEPrimalBase fe_slave(4);
@@ -208,8 +226,8 @@ int main(int argc, char** argv)
 	{
 		print_sparse_matrix( d, "D");
 		print_sparse_matrix( m, "M");
-		print_sparse_matrix( supports, "SUPPORTS");
-		print_sparse_matrix( normals, "NORMALS");
+		//print_sparse_matrix( supports, "SUPPORTS");
+		//print_sparse_matrix( normals, "NORMALS");
 		/// Debug: write slave -> master mapping to Ensight gold file
 		std::ostringstream tmp_ostringstream;
 		tmp_ostringstream << example_root << problem_name;// << "_" << i;
@@ -217,8 +235,6 @@ int main(int argc, char** argv)
 		mappings.write_ensight_gold_slave_master_mapping(boundary_mapper, tmp_string.c_str(), 1);
 		mappings.write_ensight_gold_normals(boundary_mapper, tmp_string.c_str(), 1);
 		mappings.write_mapping(master, tmp_string.c_str(), 1);
-		// Debug: write matrices
-
 	}
 	//TODO
 	//delete mapping;

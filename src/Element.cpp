@@ -35,7 +35,7 @@ void Element::calculate_centers_normal()
 	{
 	case M_ELEMENT_LINE2:
 	case M_ELEMENT_LINE3:
-		n = MCVec2(-j->y,j->x); // rotate 90
+		n = MCVec2(j->y,-j->x); // rotate 90
 		n.normalize();
 		this->center->set_normal(n);
 		break;

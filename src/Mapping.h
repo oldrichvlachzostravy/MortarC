@@ -71,7 +71,7 @@ template <class T>
 class Mappings
 {
     public:
-        void compute_mapping(Boundary *);
+        void compute_mapping(Boundary *, Boundary *);
         std::vector<Mapping<T> > & get_mappings() { return mappings; }
         //const std::vector<Mapping<T> > & get_const_mappings() const { return mappings; }
 
@@ -83,16 +83,18 @@ class Mappings
 
         void write_ensight_gold_normals(BoundaryMapper &project, const char *fname, int ii = 0);
 
+        void dump_as_matlab_script_append_to_file(const char*, Boundary*);
+
     private:
         void mortar_segmentation(Element *, std::map<int, std::vector<Element*> > &);
 
         std::vector<Mapping<T> > mappings;
 };
 
-template <class T> void Mappings<T>::compute_mapping(Boundary *slave) {
+template <class T> void Mappings<T>::compute_mapping(Boundary *slave, Boundary *master) {
     std::vector<Element*>::iterator it;
     for (it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
-        mortar_segmentation(*it, slave->get_adjacent());
+        mortar_segmentation(*it, master->get_adjacent());
     }
 }
 
@@ -332,4 +334,63 @@ template <class T> void Mappings<T>::write_ensight_gold_normals(BoundaryMapper &
     out_file.close();
 }
 
+template <class T> void Mappings<T>::dump_as_matlab_script_append_to_file(const char* file_name, Boundary * master)
+{
+	std::ofstream ofs(file_name, std::ofstream::app);
+	if (ofs.is_open()) {
+		ofs << "% dump mapping" << std::endl;
+		for(size_t i = 0; i < mappings.size(); i++){
+			for (typename std::map<int, std::vector<SegmentLine> >::const_iterator it = mappings[i].get_segments_for_master().begin(); it != mappings[i].get_segments_for_master().end(); ++it) {
+				for (typename std::vector<SegmentLine>::const_iterator seg_it = it->second.begin(); seg_it != it->second.end(); ++seg_it) {
+					std::ostringstream strs_x, strs_y, strs_z;
+					ofs << "line( ";
+					strs_x <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().x * 0.5*(1-seg_it->s[0]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().x * 0.5*(1+seg_it->s[0]);
+					strs_y <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().y * 0.5*(1-seg_it->s[0]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().y * 0.5*(1+seg_it->s[0]);
+					strs_z <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().z * 0.5*(1-seg_it->s[0]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().z * 0.5*(1+seg_it->s[0]);
+					strs_x << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().x * 0.5*(1-seg_it->m[0]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().x * 0.5*(1+seg_it->m[0]);
+					strs_y << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().y * 0.5*(1-seg_it->m[0]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().y * 0.5*(1+seg_it->m[0]);
+					strs_z << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().z * 0.5*(1-seg_it->m[0]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().z * 0.5*(1+seg_it->m[0]);
+					ofs << "[" << strs_x.str() << "], [" << strs_y.str() << "], [" << strs_z.str() << "], 'Color', 'black');" << std::endl;
+					strs_x.clear(); strs_x.str(""); strs_y.clear(); strs_y.str(""); strs_z.clear(); strs_z.str("");
+					ofs << "line( ";
+					strs_x <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().x * 0.5*(1-seg_it->s[1]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().x * 0.5*(1+seg_it->s[1]);
+					strs_y <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().y * 0.5*(1-seg_it->s[1]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().y * 0.5*(1+seg_it->s[1]);
+					strs_z <<
+							mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().z * 0.5*(1-seg_it->s[1]) +
+							mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().z * 0.5*(1+seg_it->s[1]);
+					strs_x << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().x * 0.5*(1-seg_it->m[1]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().x * 0.5*(1+seg_it->m[1]);
+					strs_y << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().y * 0.5*(1-seg_it->m[1]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().y * 0.5*(1+seg_it->m[1]);
+					strs_z << ", " <<
+							master->get_element(it->first)->get_node(0)->get_coordinates().z * 0.5*(1-seg_it->m[1]) +
+							master->get_element(it->first)->get_node(1)->get_coordinates().z * 0.5*(1+seg_it->m[1]);
+					ofs << "[" << strs_x.str() << "], [" << strs_y.str() << "], [" << strs_z.str() << "], 'Color', 'black');" << std::endl;
+				}
+			}
+		}
+	}
+	else {
+		fprintf(stderr, "Can not open boundary mapper dump file\n");
+		exit(1);
+	}
+}
 #endif /* MAPPING_H_ */

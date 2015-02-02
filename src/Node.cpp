@@ -2,7 +2,7 @@
 
 Node::Node(int coordinate_index, DenseMatrix<double> *coords)
 {
-	this->id = coordinate_index;
+	this->id = coordinate_index--;
 	int c = coords->get_columns();
 	this->coords = MCVec3(
 			(*coords)[coordinate_index],
@@ -40,9 +40,9 @@ double Node::get_support()
 	return this->support;
 }
 
-void Node::set_normal(MCVec3 normal)
+void Node::set_normal(MCVec3 normal_)
 {
-	this->normal = normal;
+	this->normal = normal_;
 }
 
 MCVec3 Node::get_line_projection()

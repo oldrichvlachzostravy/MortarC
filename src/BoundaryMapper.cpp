@@ -39,7 +39,6 @@ void BoundaryMapper::execute()
     slave->calculate_normals_and_supports();
     master_bvt = master->compute_bounding_volume_tree();
     slave->find_closest_elements(master_bvt);
-    printf("calculate\n");
 }
 
 int BoundaryMapper::dump_as_matlab_script_to_file(const char* file_name)
@@ -99,7 +98,6 @@ int BoundaryMapper::dump_as_matlab_script_to_file(const char* file_name)
 		}
 		ofs << "% dump master bounding volume tree" << std::endl;
 		dump_bvt_as_matlab_script(master_bvt, ofs);
-
 		return 1;
 	}
 	else {

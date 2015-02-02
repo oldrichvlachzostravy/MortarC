@@ -209,11 +209,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	master_els  = copyDenseMatrixFromMXArray<int>( master_els_nrows, master_els_ncols, master_els_ptr);
 	slave_els   = copyDenseMatrixFromMXArray<int>( slave_els_nrows, slave_els_ncols, slave_els_ptr);
 	// switch slave orientation
-	for (int iii = 0; iii < slave_els->get_columns(); iii++){
-		double tmp = (*slave_els)[6*slave_els->get_columns() + iii];
-		(*slave_els)[6*slave_els->get_columns() + iii] = (*slave_els)[7*slave_els->get_columns() + iii];
-		(*slave_els)[7*slave_els->get_columns() + iii] = tmp;
-	}
+//	for (int iii = 0; iii < slave_els->get_columns(); iii++){
+//		double tmp = (*slave_els)[6*slave_els->get_columns() + iii];
+//		(*slave_els)[6*slave_els->get_columns() + iii] = (*slave_els)[7*slave_els->get_columns() + iii];
+//		(*slave_els)[7*slave_els->get_columns() + iii] = tmp;
+//	}
 	friction    = copyDenseMatrixFromMXArray<double>( 1, 2, friction_ptr);
 	master_els_type = Element::get_element_type(master_els); // get element type from element matrices
 	slave_els_type  = Element::get_element_type(slave_els);
@@ -227,6 +227,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	std::cout << "slave_els" << std::endl;
 	denseMatrixPrint<int>( slave_els->get_rows(), slave_els->get_columns(), slave_els);
 
+	std::cout << "Boundary" << std::endl;
 	master = new Boundary(master_els, coordinates, master_els_type);
 	slave  = new Boundary( slave_els, coordinates,  slave_els_type);
 
@@ -241,7 +242,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     boundary_mapper.set_master(master);
     boundary_mapper.execute();
     Mappings<SegmentLine> mappings;
-    mappings.compute_mapping(slave);
+    mappings.compute_mapping(slave, master);
 
     mexPrintf("contact_2d_mex: boundary_mapper.execute, mappings.compute_mapping  ...  done\n");
 

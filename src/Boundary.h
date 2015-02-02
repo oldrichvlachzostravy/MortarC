@@ -20,7 +20,7 @@
 #include "Utils.h"
 
 // only temporalily
-//#include "mex.h"
+#include "mex.h"
 
 
 template <class T> class Mapping;

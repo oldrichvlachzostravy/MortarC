@@ -125,13 +125,33 @@ MCVec3 get_reference(MCVec3 u, MCVec3 v, MCVec3 w)
 }
 
 PointList* clip_lines(PointList *master, PointList *slave){
-	PointList *clipped = new PointList(slave->begin(), slave->end());
-	//printf("slave  [%f, %f]--[%f, %f]\n",
-	//		slave->begin().operator *().x, slave->begin().operator *().y,
-	//		slave->begin().operator ++().operator *().x, slave->begin().operator ++().operator *().y);
-	//printf("master [%f, %f]--[%f, %f]\n",
-	//			master->begin().operator *().x, master->begin().operator *().y,
-	//			master->begin().operator ++().operator *().x, master->begin().operator ++().operator *().y);
+	MCVec3* left, *right;
+	if (slave->begin()->x < slave->rbegin()->x) {
+		if (master->begin()->x < master->rbegin()->x) {
+			left  = (slave-> begin()->x < master-> begin()->x)? &(master-> begin().operator *()) :  &( slave-> begin().operator *());
+			right = (slave->rbegin()->x < master->rbegin()->x)? &( slave->rbegin().operator *()) :  &(master->rbegin().operator *());
+		} else {
+			left  = (slave-> begin()->x < master->rbegin()->x)? &(master->rbegin().operator *()) :  &( slave-> begin().operator *());
+			right = (slave->rbegin()->x < master-> begin()->x)? &( slave->rbegin().operator *()) :  &(master-> begin().operator *());
+		}
+	} else {
+		if (master->begin()->x < master->rbegin()->x) {
+			left  = (slave->rbegin()->x < master-> begin()->x)? &(master-> begin().operator *()) :  &( slave->rbegin().operator *());
+			right = (slave-> begin()->x < master->rbegin()->x)? &( slave-> begin().operator *()) :  &(master->rbegin().operator *());
+		} else {
+			left  = (slave->rbegin()->x < master->rbegin()->x)? &(master->rbegin().operator *()) :  &( slave-> begin().operator *());
+			right = (slave-> begin()->x < master-> begin()->x)? &( slave-> begin().operator *()) :  &(master-> begin().operator *());
+		}
+	}
+	PointList *clipped = new PointList();
+	clipped->push_back(*left);
+	clipped->push_back(*right);
+//	printf("slave  [%f, %f]--[%f, %f]\n",
+//			slave->begin().operator *().x, slave->begin().operator *().y,
+//			slave->begin().operator ++().operator *().x, slave->begin().operator ++().operator *().y);
+//	printf("master [%f, %f]--[%f, %f]\n",
+//				master->begin().operator *().x, master->begin().operator *().y,
+//				master->begin().operator ++().operator *().x, master->begin().operator ++().operator *().y);
 	return clipped;
 }
 

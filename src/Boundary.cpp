@@ -34,24 +34,12 @@ Boundary::Boundary(
 				(*mesh_desc)[5 * c + i],
 				n,
 				elements_type);
-
+        //mexPrintf("element %d [%3d, %3d]\n", element->get_id(), n[0]->get_id(), n[1]->get_id());
 		for(int j = 0; j < nodes_count; j++) {
-			adjacent[j].push_back(element);
+			adjacent[n[j]->get_id()].push_back(element);
 		}
 		elements.push_back(element);
 	}
-//	//begin DEBUG
-//	std::cout << mesh_desc->get_rows() << " " << mesh_desc->get_columns() << "\n";
-//	for(int i = 0; i < mesh_desc->get_rows(); i++) {
-//		for(int j = 0; j < mesh_desc->get_columns(); j++) {
-//			std::cout << "  " << std::setw(7) << (*mesh_desc)[i*(mesh_desc->get_columns()) + j];
-//		}
-//		std::cout << "\n";
-//	}
-//	// end DEBUG
-
-
-
 	this->elements_type = elements_type;
 }
 
@@ -90,7 +78,7 @@ Node* Boundary::get_unique_node_or_create_new(
 		DenseMatrix<double> *coords)
 {
 	// The first index in file is 1, but the first index in EPetra matrix is 0
-	index--;
+	//index--;
 
 	if (nodes.count(index)) {
 		return nodes[index];

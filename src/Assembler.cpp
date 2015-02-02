@@ -26,10 +26,10 @@ void Assembler::assemble_supports_normals(
 			if (supports[1].count(node_id+1) == 0)
 			{
 				const MCVec3 & normal = node_ptr->get_normal();
-				normals[1][node_id+1]  = normal.x;
-				normals[2][node_id+1]  = normal.y;
-				normals[3][node_id+1]  = normal.z;
-				supports[1][node_id+1] = node_ptr->get_support();
+				normals[1][node_id]  = normal.x;
+				normals[2][node_id]  = normal.y;
+				normals[3][node_id]  = normal.z;
+				supports[1][node_id] = node_ptr->get_support();
 			}
 		}
 	}

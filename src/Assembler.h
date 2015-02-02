@@ -179,7 +179,7 @@ void Assembler::assemble_d_m(
                         //if (element_master->get_node_count() == 0) mexPrintf("  !!!!!!!!!! \n");
                         for (int j = 0; j < element_master->get_node_count(); j++)
                         {
-//                          if (element_slave->get_node(i)->get_id()+1 == 8565) //if (element_slave->get_id() == 58397)
+//                          if (element_slave->get_node(i)->get_id() == 8565) //if (element_slave->get_id() == 58397)
 //                          {
 ////                                mexPrintf("  gp:%2d  i:%d  j:%d    n_slave[j][gp]:%5f  n_master[j][gp]:%5f  psi_slave[i][gp]:%5f\n",
 ////                                        segment_gp, i, j, n_slave[j][segment_gp], n_master[j][segment_gp], psi_slave[i][segment_gp]);
@@ -190,13 +190,13 @@ void Assembler::assemble_d_m(
 //                                      element_slave->get_id(), element_master->get_id());
 //                          }
                             // column index                           row index
-                            d[element_slave->get_node(j)->get_id()+1][element_slave->get_node(i)->get_id()+1] +=
+                            d[element_slave->get_node(j)->get_id()][element_slave->get_node(i)->get_id()] +=
                                     segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[j][segment_gp] * psi_slave[i][segment_gp];
                             //      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
                             //         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_j(vartheta(gp))         Psi_i(vartheta(gp))
 
                             // column index                           row index
-                            m[element_master->get_node(j)->get_id()+1][element_slave->get_node(i)->get_id()+1] +=
+                            m[element_master->get_node(j)->get_id()][element_slave->get_node(i)->get_id()] +=
                                     segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * psi_slave[i][segment_gp];
                             //      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
                             //         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
@@ -299,12 +299,12 @@ void Assembler::assemble_l_d(
                     norm_velocity_tangential_jump = velocity_tangential_jump.length();
                     for (int i = 0; i < element_slave->get_node_count(); i++)
                     {
-                        ds[1][element_slave->get_node(i)->get_id()+1] +=
+                        ds[1][element_slave->get_node(i)->get_id()] +=
                                 segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[i][segment_gp] * norm_velocity_tangential_jump * gamma;
                         for (int j = 0; j < element_slave->get_node_count(); j++)
                         {
                             //  column index                             row index
-                            lss[element_slave->get_node(j)->get_id()+1][element_slave->get_node(i)->get_id()+1] +=
+                            lss[element_slave->get_node(j)->get_id()][element_slave->get_node(i)->get_id()] +=
                                     segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[j][segment_gp] * n_slave[i][segment_gp] * gamma;
                             //      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
                             //         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
@@ -312,7 +312,7 @@ void Assembler::assemble_l_d(
                         for (int j = 0; j < element_master->get_node_count(); j++)
                         {
                             //  column index                             row index
-                            lsm[element_master->get_node(j)->get_id()+1][element_slave->get_node(i)->get_id()+1] -=
+                            lsm[element_master->get_node(j)->get_id()][element_slave->get_node(i)->get_id()] -=
                                     segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * n_slave[i][segment_gp] * gamma;
                             //      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
                             //         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
@@ -320,12 +320,12 @@ void Assembler::assemble_l_d(
                     }
                     for (int i = 0; i < element_master->get_node_count(); i++)
                     {
-                        dm[1][element_master->get_node(i)->get_id()+1] +=
+                        dm[1][element_master->get_node(i)->get_id()] +=
                                 segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[i][segment_gp] * norm_velocity_tangential_jump * gamma;
                         for (int j = 0; j < element_master->get_node_count(); j++)
                         {
                             //  column index                             row index
-                            lmm[element_master->get_node(j)->get_id()+1][element_master->get_node(i)->get_id()+1] +=
+                            lmm[element_master->get_node(j)->get_id()][element_master->get_node(i)->get_id()] +=
                                     segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * n_master[i][segment_gp] * gamma;
                             //      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
                             //         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))

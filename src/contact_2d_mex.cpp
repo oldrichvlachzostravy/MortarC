@@ -218,14 +218,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	master_els_type = Element::get_element_type(master_els); // get element type from element matrices
 	slave_els_type  = Element::get_element_type(slave_els);
 
-	std::cout << "coordinates0" << std::endl;
-	denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
-	std::cout << "friction" << std::endl;
-	denseMatrixPrint<double>( 1, 2, friction);
-	std::cout << "master_els" << std::endl;
-	denseMatrixPrint<int>( master_els->get_rows(), master_els->get_columns(), master_els);
-	std::cout << "slave_els" << std::endl;
-	denseMatrixPrint<int>( slave_els->get_rows(), slave_els->get_columns(), slave_els);
+//	std::cout << "coordinates0" << std::endl;
+//	denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
+//	std::cout << "friction" << std::endl;
+//	denseMatrixPrint<double>( 1, 2, friction);
+//	std::cout << "master_els" << std::endl;
+//	denseMatrixPrint<int>( master_els->get_rows(), master_els->get_columns(), master_els);
+//	std::cout << "slave_els" << std::endl;
+//	denseMatrixPrint<int>( slave_els->get_rows(), slave_els->get_columns(), slave_els);
 
 	std::cout << "Boundary" << std::endl;
 	master = new Boundary(master_els, coordinates, master_els_type);
@@ -248,14 +248,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if (DEBUG_OUTPUTS)
 	{
-		mexPrintf("done\n");
+		//mexPrintf("done\n");
 		std::ostringstream tmp_ostringstream;
 		tmp_ostringstream << example_root << problem_name << "_" << i;
 		std::string tmp_string = tmp_ostringstream.str();
 		mappings.write_ensight_gold_slave_master_mapping(boundary_mapper, tmp_string.c_str(), i);
 		mappings.write_ensight_gold_normals(boundary_mapper, tmp_string.c_str(), i);
 		mappings.write_mapping(master, tmp_string.c_str(), i);
-		mexPrintf("contact_3d_mex: construct mapping  ... done\n");
+		//mexPrintf("contact_3d_mex: construct mapping  ... done\n");
 	}
 	FEPrimalBase fe_slave(3);
 	FEPrimalBase fe_master(3);
@@ -279,17 +279,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// write to Matlab matrices
     mexPrintf("contact_3d_mex: assembler.assemble_ ... done\n");
 
-    boundary_mapper.dump_as_matlab_script_to_file("boundary_mapper_dump.m");
-    print_sparse_matrix( d, "D");
-    print_sparse_matrix( m, "M");
-    print_sparse_matrix( supports, "SUPPORTS");
-    print_sparse_matrix( normals, "NORMALS");
-    std::ostringstream tmp_ostringstream;
-    tmp_ostringstream << example_root << problem_name;// << "_" << i;
-    std::string tmp_string = tmp_ostringstream.str();
-    mappings.write_ensight_gold_slave_master_mapping(boundary_mapper, tmp_string.c_str(), 1);
-    mappings.write_ensight_gold_normals(boundary_mapper, tmp_string.c_str(), 1);
-    mappings.write_mapping(master, tmp_string.c_str(), 1);
+    if (DEBUG_OUTPUTS)
+    {
+    	boundary_mapper.dump_as_matlab_script_to_file("boundary_mapper_dump.m");
+    	//print_sparse_matrix( d, "D");
+    	//print_sparse_matrix( m, "M");
+    	//print_sparse_matrix( supports, "SUPPORTS");
+    	//print_sparse_matrix( normals, "NORMALS");
+    }
+
 
 	if ( nlhs > 0 ) create_matlab_sparse_matrix(D,d);
 	if ( nlhs > 1 ) create_matlab_sparse_matrix(M,m);

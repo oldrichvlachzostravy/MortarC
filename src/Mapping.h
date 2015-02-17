@@ -185,7 +185,7 @@ template <class T> void Mappings<T>::write_ensight_gold_slave_master_mapping(Bou
     timeinfo = localtime(&rawtime);
     std::ofstream out_file;
     out_file.open(tmp_ostringstream.str().c_str());
-    std::cout << "filename: " << tmp_ostringstream.str().c_str() << std::endl;
+    //std::cout << "filename: " << tmp_ostringstream.str().c_str() << std::endl;
     if (out_file.is_open())
     {
         out_file << "# Date (" << timeinfo->tm_mday << "-" << 1+timeinfo->tm_mon << "-" << 1900+timeinfo->tm_year << ")\n";

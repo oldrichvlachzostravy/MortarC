@@ -134,6 +134,7 @@ int BoundaryMapper::dump_bvt_as_matlab_script(BoundingVolumeTree * bvt, std::ofs
 	strs_x << ", " << polygon->begin()->x;
 	strs_y << ", " << polygon->begin()->y;
 	strs_z << ", " << polygon->begin()->z;
+	delete polygon;
 	ofs << "[" << strs_x.str().erase(0,2) << "], [" << strs_y.str().erase(0,2) << "], [" << strs_z.str().erase(0,2) << "], 'Color', c{cc}); cc = mod(cc,4)+1;" << std::endl;
 	// dump left tree
 	if (bvt->get_leaf(0) != NULL) {

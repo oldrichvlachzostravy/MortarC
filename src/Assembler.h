@@ -355,24 +355,29 @@ void Assembler::assemble_cc(
 	// iterate over slave elements
 	std::map<int,std::map<int,MCVec2> > nonnormalized_normals;
 	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
+		fe_slave.init_all(*it, NULL, false);
+		const std::vector<MCVec3>& normals = fe_slave.get_normal();
 		for (int i = 0; i < (*it)->get_node_count(); i++)
 		{
 			Node * node_ptr = (*it)->get_node(i);
 			int node_id = node_ptr->get_id();
-			const MCVec3 & normal = node_ptr->get_normal();
-			nonnormalized_normals[node_id][(*it)->get_id()] = MCVec2( normal.x, normal.y);
+			nonnormalized_normals[node_id][(*it)->get_id()] = MCVec2( normals[i].x, normals[i].y);
 		}
 	}
 	// iterate over slave nodes
+	std::vector<int>      e; //index(es) $e$ in appendix A.1 [PGW2009]
+	std::vector<Element*> ep;
+	std::vector<MCVec2>   n_he; // normal hat element : $\hat{\underline{n}}_{node,element}$
+	std::vector<double>   l_he;
 	for (std::map<int,Node *>::iterator it = slave->get_nodes().begin(); it != slave->get_nodes().end(); ++it) {
 		int neighbors_count = nonnormalized_normals[it->first].size();
-		std::vector<int>      e(    neighbors_count); //index(es) $e$ in appendix A.1 [PGW2009]
-		std::vector<Element*> ep(   neighbors_count);
-		std::vector<MCVec2>   n_he( neighbors_count); // normal hat element : $\hat{\underline{n}}_{node,element}$
-		std::vector<double>   l_he( neighbors_count);
+		e.resize(    neighbors_count);
+		ep.resize(   neighbors_count);
+		n_he.resize( neighbors_count); // normal hat element : $\hat{\underline{n}}_{node,element}$
+		l_he.resize( neighbors_count);
 		int index = 0;
 		int j = it->first;                            //index $j$ in appendix A.1 [PGW2009]
-		for (std::map<int,MCVec2>::iterator it_in = nonnormalized_normals[it->first].begin(); it_in != nonnormalized_normals[it->first].end(); it_in++) {
+		for (std::map<int,MCVec2>::iterator it_in = nonnormalized_normals[it->first].begin(); it_in != nonnormalized_normals[it->first].end(); ++it_in) {
 			e[   index] = it_in->first;
 			ep[  index] = slave->get_element(it_in->first);
 			n_he[index] = it_in->second;
@@ -383,6 +388,7 @@ void Assembler::assemble_cc(
 
 		}
 		else { //neighbors_count == 2
+			std::vector<std::vector<MCVec2> > dndxi0, dndxi1;
 			DenseMatrix<double> v_(2,2);  // V node
 			DenseMatrix<double> vt_(2,2);
 			DenseMatrix<double> w_(2,2);
@@ -410,11 +416,12 @@ void Assembler::assemble_cc(
 			tmp.push_back( MCVec2(it->second->get_coordinates()));
 			std::vector<MCVec2> tmp1  = fe_slave.get_reference_coordinates( ep[0], &tmp);
 			xi[0] = tmp1[0].x;
+			const std::vector<std::vector<MCVec2> >& dndxi = fe_slave.get_dndxi();
 			fe_slave.init_all( ep[0], &tmp1);
-			const std::vector<std::vector<MCVec2> >& dndxi0 = fe_slave.get_dndxi();
+			dndxi0 = dndxi;
 			xi[1]  = fe_slave.get_reference_coordinates( ep[1], &tmp)[0].x;
 			fe_slave.init_all( ep[1], &tmp1);
-			const std::vector<std::vector<MCVec2> >& dndxi1 = fe_slave.get_dndxi();
+			dndxi1 = dndxi;
 			// now v_  represents $\frac{1}{l_{j,2}}\underline{V}      + l_{j,1}\underline{\underline{I}}_2$ in (A7) [PGW2009]
 			// now vt_ represents $\frac{1}{l_{j,1}}\underline{V}^\top + l_{j,2}\underline{\underline{I}}_2$ in (A7) [PGW2009]
 			double p_heb[2][2]; // 2x2 block of matrix $\hat{\underline{\underline{P}}}_e\in\mathbb{R}^{2 \times 2|\mathcal{S}|}$ in (A7) [PGW2009]
@@ -442,6 +449,25 @@ void Assembler::assemble_cc(
 				p[2*j  ][2*ep[0]->get_node(k)->get_id()-1] += w_.value(1,0)*p_heb[0][0] + w_.value(1,1)*p_heb[1][0];
 				p[2*j  ][2*ep[0]->get_node(k)->get_id()  ] += w_.value(1,0)*p_heb[0][1] + w_.value(1,1)*p_heb[1][1];
 			}
+		}
+	}
+	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
+		fe_slave.init_all(*it, NULL, true);
+		const std::vector<std::vector<MCVec2> >& n_slave = fe_slave.get_n();
+		for (unsigned int gp = 0; gp < fe_slave.computation_refpoints.size(); gp++) {
+			MCVec2 dndxix(0.0, 0.0);
+			for (int i = 0; i < (*it)->get_node_count(); i++) {
+				dndxix += MCVec2( (*it)->get_node(i)->get_coordinates().x, (*it)->get_node(i)->get_coordinates().y) * fe_slave.get_dndxi()[i][gp];
+			}
+			double norm_dndxix = dndxix.length();
+			for (int i = 0; i < (*it)->get_node_count(); i++) {
+				int node_id = (*it)->get_node(i)->get_id();
+				double value;
+				value = fe_slave.get_computation_weights[gp] * n_slave[i][gp];
+				cc[2*node_id-1][2*node_id-1] += value;
+				cc[2*node_id  ][2*node_id  ] += value;
+			}
+
 		}
 	}
 }

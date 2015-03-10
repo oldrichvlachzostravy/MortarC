@@ -37,6 +37,7 @@ void Element::calculate_centers_normal()
 	case M_ELEMENT_LINE3:
 		n = MCVec2(j->y,-j->x); // rotate 90
 		n.normalize();
+		delete j;
 		this->center->set_normal(n);
 		break;
 	case M_ELEMENT_TRIA3:
@@ -45,7 +46,7 @@ void Element::calculate_centers_normal()
 	case M_ELEMENT_QUAD8:
 		n = cross_prod(j[0], j[1]);
 		n.normalize();
-		delete[] j;
+		delete j;
 		this->center->set_normal(n);
 		break;
 	default:
@@ -372,7 +373,8 @@ PointList * Element::clip_element_polygons(Element *master, Element *slave)
 	case M_ELEMENT_UNKNOWN: fprintf(stderr, "Element::clip_element_polygons ... unknown slave element type\n"); exit(1); break;
 
 	}
-
+    delete master_pl;
+    delete slave_pl;
 	return clipped;
 }
 

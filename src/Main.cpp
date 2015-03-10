@@ -89,13 +89,13 @@ int main(int argc, char** argv)
 	//double *master_els_ptr, *slave_els_ptr, *coordinates0_ptr, *friction_ptr;
 #ifdef D3
 	cout << "D3\n";
-	string path         = "/home/mortarc/workspace/MortarC/matrix/test3d/herz3d/";
-	string example_root = "/home/mortarc/workspace/MortarC/matrix/test3d/herz3d/";
+	string path         = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
+	string example_root = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
 	string problem_name = "herz3d";
 #else
 	cout << "D2\n";
-	string path         = "/home/mortarc/workspace/MortarC/matrix/test2d/";
-	string example_root = "/home/mortarc/workspace/MortarC/matrix/test2d/";
+	string path         = "/home/olda/workspace/MortarC/matrix/test2d/";
+	string example_root = "/home/olda/workspace/MortarC/matrix/test2d/";
 	string problem_name = "herz2d";
 #endif
 	string coordinates_filename = "coordinates.ascii";
@@ -119,6 +119,7 @@ int main(int argc, char** argv)
 	/* ******** */
 	/* * INIT * */
 	/* ******** */
+	cout << (path + coordinates_filename).c_str() << "\n";
 	coordinates = load_matlab_ascii_matrix<double>((path + coordinates_filename).c_str());
 	if(!coordinates)
 	{
@@ -250,5 +251,6 @@ int main(int argc, char** argv)
 	if (slave_els)    { delete slave_els;	}
 	if (master)       { delete master;      }
 	if (slave)        { delete slave;       }
+	if (friction)     { delete friction;       }
     return 0;
 }

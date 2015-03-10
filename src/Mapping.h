@@ -213,8 +213,14 @@ template <class T> void Mappings<T>::write_ensight_gold_slave_master_mapping(Bou
                  << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(0).end << "\n";
         out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(1).start
                  << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(1).end << "\n";
-        out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).start
-                 << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).end << "\n";
+        if (tmp_interval->get_bounds_count() < 5) {
+        	out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << 0.0
+        	        			<< std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << 0.0 << "\n";
+        }
+        else {
+        	out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).start
+        			<< std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).end << "\n";
+        }
         // SLAVE
         out_file << "part\n";
         out_file << std::setw(ENSIGHT_GOLD_INT_WIDTH) << part_counter++ << "\n";
@@ -282,8 +288,14 @@ template <class T> void Mappings<T>::write_ensight_gold_normals(BoundaryMapper &
                  << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(0).end << "\n";
         out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(1).start
                  << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(1).end << "\n";
-        out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).start
-                 << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).end << "\n";
+        if (tmp_interval->get_bounds_count() < 5) {
+        	out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << 0.0
+        			<< std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << 0.0 << "\n";
+        }
+        else {
+        	out_file << std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).start
+        			<< std::setw(ENSIGHT_GOLD_DOUBLE_WIDTH) << tmp_interval->get_bound(4).end << "\n";
+        }
         // SLAVE
         out_file << "part\n";
         out_file << std::setw(ENSIGHT_GOLD_INT_WIDTH) << part_counter++ << "\n";

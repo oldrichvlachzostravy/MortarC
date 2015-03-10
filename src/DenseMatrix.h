@@ -22,6 +22,7 @@ template<typename T> class DenseMatrix
 		DenseMatrix<T>& scalar_multiply(double);
 		DenseMatrix<T> transpose();
 		DenseMatrix<T>& operator+= (const DenseMatrix<T> &);
+		DenseMatrix<T>& operator=  (const DenseMatrix<T> &);
         static DenseMatrix<T> eye(const int);
 
 
@@ -42,10 +43,22 @@ DenseMatrix<T>::DenseMatrix(int rows, int columns)
 template <class T>
 DenseMatrix<T>::DenseMatrix(const DenseMatrix & origin)
 {   // copy constructor
-	this->rows = origin.rows;
-	this->columns = origin.columns;
+	rows = origin.rows;
+	columns = origin.columns;
 	data = new T[rows * columns];
 	memcpy(data, origin.data, rows*columns*sizeof(T));
+}
+
+template <class T>
+DenseMatrix<T>& DenseMatrix<T>::operator=  (const DenseMatrix<T> & origin)
+{
+	if ( this != &origin) {
+		rows = origin.rows;
+		columns = origin.columns;
+		delete [] data;
+		data = new T[rows * columns];
+		memcpy(data, origin.data, rows*columns*sizeof(T));
+	}
 }
 
 template <class T>

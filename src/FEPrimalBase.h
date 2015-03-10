@@ -79,6 +79,7 @@ class FEPrimalBase
 	const std::vector<MCVec2>& get_computation_refpoints()  const { return computation_refpoints; };
 	const std::vector<double>& get_int_n()  const                 { return int_n; };
 	const std::vector<std::vector<double> >& get_int_nn()  const  { return int_nn; };
+	const std::vector<double>& get_computation_weights() const    { return computation_weights; };
     void init_all(Element * element, std::vector<MCVec2> * refpoints = NULL, bool in_gauss_refpoints = true);
     const std::vector<MCVec3> get_refpoints_coordiantes(std::vector<MCVec2> * refpoints);
     int element_type;
@@ -100,13 +101,13 @@ class FEPrimalBase
     Element *            element;
 	std::vector<MCVec2>  computation_refpoints;
 	std::vector<MCVec2>  nodal_refpoints;
-	std::vector<double> computation_weights;
+	std::vector<double>  computation_weights;
 	std::vector<std::vector<double> > n;
 	std::vector<std::vector<MCVec2> > dndxi;
 	std::vector<MCVec3>  normals;
-	std::vector<double> j_w;
-	std::vector<double> supports;
-	std::vector<double> int_n;
+	std::vector<double>  j_w;
+	std::vector<double>  supports;
+	std::vector<double>  int_n;
 	std::vector<std::vector<double> > int_nn;
 	FEBaseInitializedIn  initialized_in;
 };

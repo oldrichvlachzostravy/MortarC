@@ -20,7 +20,7 @@
 #include "Utils.h"
 
 // only temporalily
-#include "mex.h"
+//#include "mex.h"
 
 
 template <class T> class Mapping;
@@ -56,6 +56,7 @@ class Boundary
 		int write_normals_ensight_gold( std::ofstream *);
 		int write_supports_ensight_gold( std::ofstream *);
 		std::vector<Element*> & get_elements();
+		std::map<int, Node* > & get_nodes();
 
 	protected:
 		Node* get_unique_node_or_create_new(int, DenseMatrix<double>*);

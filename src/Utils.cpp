@@ -378,7 +378,7 @@ void dense_matrix_solve(double * a, double * b, int n, int o)
 	LAPACKINT info;
 
 	dgesv_(&nn, &oo, a, &nn, ipiv, b, &nn, &info);
-	delete ipiv;
+	delete[] ipiv;
 }
 
 void dense_matrix_transpose(double * a, int m, int n)

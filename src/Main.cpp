@@ -89,13 +89,13 @@ int main(int argc, char** argv)
 	//double *master_els_ptr, *slave_els_ptr, *coordinates0_ptr, *friction_ptr;
 #ifdef D3
 	cout << "D3\n";
-	string path = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
-	string example_root = "/home/olda/workspace/MortarC/matrix/test3d/herz3d/";
+	string path         = "/home/mortarc/workspace/MortarC/matrix/test3d/herz3d/";
+	string example_root = "/home/mortarc/workspace/MortarC/matrix/test3d/herz3d/";
 	string problem_name = "herz3d";
 #else
 	cout << "D2\n";
-	string path = "/home/olda/workspace/MortarC/matrix/test2d/";
-	string example_root = "/home/olda/workspace/MortarC/matrix/test2d/";
+	string path         = "/home/mortarc/workspace/MortarC/matrix/test2d/";
+	string example_root = "/home/mortarc/workspace/MortarC/matrix/test2d/";
 	string problem_name = "herz2d";
 #endif
 	string coordinates_filename = "coordinates.ascii";
@@ -218,9 +218,15 @@ int main(int argc, char** argv)
 	// three columns sparse matrix NORMALS
 	std::map<int,std::map<int,double> > normals;
 
-	Assembler assembler;
-	assembler.assemble_d_m(mappings, master, d, m);
-	assembler.assemble_supports_normals(slave, supports, normals);
+	Assembler assembler( slave, master);
+	assembler.assemble_d_m( mappings, d, m);
+	assembler.assemble_supports_normals( supports, normals);
+
+#ifdef NEWTON
+	// digonal matrix \tilde{C}
+	std::map<int,std::map<int,double> > cc;
+	assembler.assemble_cc(mappings, cc);
+#endif
 
 	if (DEBUG_OUTPUTS)
 	{

@@ -168,6 +168,11 @@ std::vector<Element*> & Boundary::get_elements()
     return elements;
 }
 
+std::map<int,Node*> & Boundary::get_nodes()
+{
+    return nodes;
+}
+
 Element * Boundary::get_element(int id)
 {
 	for(uint i = 0; i < elements.size(); i++) {

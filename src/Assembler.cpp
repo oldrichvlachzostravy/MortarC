@@ -7,11 +7,10 @@
 
 #include "Assembler.h"
 
-Assembler::Assembler(): fe_slave(4), fe_master(4) {}
+Assembler::Assembler(Boundary *in_slave, Boundary *in_master): fe_slave(4), fe_master(4), slave(in_slave), master(in_master) {}
 
 
 void Assembler::assemble_supports_normals(
-		Boundary * slave,
 	    std::map<int,std::map<int,double> > & supports,
 	    std::map<int,std::map<int,double> > & normals)
 {

@@ -41,9 +41,14 @@ public:
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &);
-	template <class T> void assemble_cc(
+	template <class T> void assemble_newton(
 	        Mappings<T> &,
-	        std::map<int,std::map<int,double> > &);
+	        std::map<int,std::map<int,double> > &,
+			std::map<int,std::map<int,double> > &,
+			std::map<int,std::map<int,double> > &,
+			std::map<int,std::map<int,double> > &,
+			std::map<int,double> &,
+			std::map<int,double> &);
 	template <typename T> void init_all_fe_in_segment(
 			FEPrimalBase &segment_fe,
 			FEPrimalBase &element_fe,
@@ -346,12 +351,17 @@ void Assembler::assemble_l_d(
 /// . the matrix \f$ \underline{P}\in\mathcal{R}^{2|\mathcal{S}|\times 2|\mathcal{S}|} \f$ for linearization of outer normals
 /// . the
 template <class T>
-void Assembler::assemble_cc(
+void Assembler::assemble_newton(
         Mappings<T> &mappings,
-        std::map<int,std::map<int,double> > & cc)
+        std::map<int,std::map<int,double> > & cc,
+		std::map<int,std::map<int,double> > & ii,
+		std::map<int,std::map<int,double> > & ta,
+		std::map<int,std::map<int,double> > & fa,
+		std::map<int,double>                & zk,
+		std::map<int,double>                & dk)
 {
 	// obtain matrix $P$ [PGW09 (A12)]
-	std::map<int,std::map<int,double> > p;
+	std::map<int,std::map<int,double> > p; //!!! tt = rot90(p)
 	// iterate over slave elements
 	std::map<int,std::map<int,MCVec2> > nonnormalized_normals;
 	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
@@ -385,7 +395,25 @@ void Assembler::assemble_cc(
 			index ++;
 		}
 		if (neighbors_count == 1) {
-
+			DenseMatrix<double> w_(2,2);
+			double norm_nh  = l_he[0];
+			double norm_nh3 = norm_nh*norm_nh*norm_nh;
+			MCVec2 n_h      = n_he[0];
+			w_.value(0,0) = 1/norm_nh + (n_h.x *n_h.x)/norm_nh3;
+			w_.value(0,1) =       0.0 + (n_h.x *n_h.y)/norm_nh3;
+			w_.value(1,0) =       0.0 + (n_h.y *n_h.x)/norm_nh3;
+			w_.value(1,1) = 1/norm_nh + (n_h.y *n_h.y)/norm_nh3;
+			std::vector< MCVec2 > tmp;
+			tmp.push_back( MCVec2(it->second->get_coordinates()));
+			std::vector<MCVec2> tmp1  = fe_slave.get_reference_coordinates( ep[0], &tmp);
+			fe_slave.init_all( ep[0], &tmp1);
+			const std::vector<std::vector<MCVec2> >& dndxi0 = fe_slave.get_dndxi();
+			for (int k = 0; k < ep[0]->get_node_count(); k++) {
+				p[2*j-1][2*ep[0]->get_node(k)->get_id()-1] += w_.value(0,0)*           0.0 - w_.value(0,1)*dndxi0[k][0].x;
+				p[2*j-1][2*ep[0]->get_node(k)->get_id()  ] += w_.value(0,0)*dndxi0[k][0].x + w_.value(0,1)*           0.0;
+				p[2*j  ][2*ep[0]->get_node(k)->get_id()-1] += w_.value(1,0)*           0.0 - w_.value(1,1)*dndxi0[k][0].x;
+				p[2*j  ][2*ep[0]->get_node(k)->get_id()  ] += w_.value(1,0)*dndxi0[k][0].x + w_.value(1,1)*           0.0;
+			}
 		}
 		else { //neighbors_count == 2
 			std::vector<std::vector<MCVec2> > dndxi0, dndxi1;
@@ -444,10 +472,10 @@ void Assembler::assemble_cc(
 				p_heb[0][1] =  v_.value(0,0)*dndxi1[k][0].x +  v_.value(0,1)*           0.0;
 				p_heb[1][0] =  v_.value(1,0)*           0.0 -  v_.value(1,1)*dndxi1[k][0].x;
 				p_heb[1][1] =  v_.value(1,0)*dndxi1[k][0].x +  v_.value(1,1)*           0.0;
-				p[2*j-1][2*ep[0]->get_node(k)->get_id()-1] += w_.value(0,0)*p_heb[0][0] + w_.value(0,1)*p_heb[1][0];
-				p[2*j-1][2*ep[0]->get_node(k)->get_id()  ] += w_.value(0,0)*p_heb[0][1] + w_.value(0,1)*p_heb[1][1];
-				p[2*j  ][2*ep[0]->get_node(k)->get_id()-1] += w_.value(1,0)*p_heb[0][0] + w_.value(1,1)*p_heb[1][0];
-				p[2*j  ][2*ep[0]->get_node(k)->get_id()  ] += w_.value(1,0)*p_heb[0][1] + w_.value(1,1)*p_heb[1][1];
+				p[2*j-1][2*ep[1]->get_node(k)->get_id()-1] += w_.value(0,0)*p_heb[0][0] + w_.value(0,1)*p_heb[1][0];
+				p[2*j-1][2*ep[1]->get_node(k)->get_id()  ] += w_.value(0,0)*p_heb[0][1] + w_.value(0,1)*p_heb[1][1];
+				p[2*j  ][2*ep[1]->get_node(k)->get_id()-1] += w_.value(1,0)*p_heb[0][0] + w_.value(1,1)*p_heb[1][0];
+				p[2*j  ][2*ep[1]->get_node(k)->get_id()  ] += w_.value(1,0)*p_heb[0][1] + w_.value(1,1)*p_heb[1][1];
 			}
 		}
 	}

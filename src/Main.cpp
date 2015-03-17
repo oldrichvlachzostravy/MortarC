@@ -35,7 +35,7 @@
 
 using namespace std;
 
-DenseMatrix<double> *coordinates, *friction;
+DenseMatrix<double> *coordinates, *friction, *multipliers, *displacements;
 DenseMatrix<int> *domainN, *master_els, *nodes2dofs, *slave_els;
 Boundary *master, *slave;
 int element_type;
@@ -98,10 +98,14 @@ int main(int argc, char** argv)
 	string example_root = "/home/olda/workspace/MortarC/matrix/test2d/";
 	string problem_name = "herz2d";
 #endif
-	string coordinates_filename = "coordinates.ascii";
-	string master_els_filename = "master_els.ascii";
-	string slave_els_filename = "slave_els.ascii";
-	string friction_filename = "friction.ascii";
+	string coordinates_filename   =   "coordinates.ascii";
+	string master_els_filename    =    "master_els.ascii";
+	string slave_els_filename     =     "slave_els.ascii";
+	string friction_filename      =      "friction.ascii";
+#ifdef NEWTON
+	string multipliers_filename   =   "multipliers.ascii";
+	string displacements_filename = "displacements.ascii";
+#endif
 	string boundary_mapper_dump_filename = path + "boundary_mapper_dump.m";
 	string ensight_gold_slave_master_mapping_filename = path + "slave_master_mapping";
     cout << (example_root+problem_name).c_str() << "\n";
@@ -149,7 +153,22 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Can not load friction matrix\n");
 		exit(1);
 	}
-
+#ifdef NEWTON
+    multipliers   = load_matlab_ascii_matrix<double>((path +   multipliers_filename).c_str());
+    displacements = load_matlab_ascii_matrix<double>((path + displacements_filename).c_str());
+    std::map<int,int>    zk_indices;
+	std::map<int,MCVec2> zk_values;
+	std::map<int,MCVec2> dk;
+	int c = multipliers->get_columns();
+	for (int i = 0; i < c; i++) {
+		zk_values[ int((*multipliers)[0 * c + i]) ] = MCVec2( (*multipliers)[2 * c + i], (*multipliers)[3 * c + i]);
+		zk_indices[int((*multipliers)[0 * c + i]) ] = int((*multipliers)[1 * c + i]);
+	}
+	c = displacements->get_columns();
+	for (int i = 0; i < c; i++) {
+		dk[ i ] = MCVec2( (*displacements)[0 * c + i], (*displacements)[1 * c + i]);
+	}
+#endif
 	//std::cout << "coordinates0" << std::endl;
 	//denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
 	//std::cout << "friction" << std::endl;
@@ -226,7 +245,10 @@ int main(int argc, char** argv)
 #ifdef NEWTON
 	// digonal matrix \tilde{C}
 	std::map<int,std::map<int,double> > cc;
-	assembler.assemble_cc(mappings, cc);
+	std::map<int,std::map<int,double> > ii;
+	std::map<int,std::map<int,double> > ta;
+	std::map<int,std::map<int,double> > fa;
+	assembler.assemble_newton( mappings, cc, ii, ta, fa, zk_indices, zk_values, dk);
 #endif
 
 	if (DEBUG_OUTPUTS)

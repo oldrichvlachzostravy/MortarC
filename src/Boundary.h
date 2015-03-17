@@ -57,6 +57,7 @@ class Boundary
 		int write_supports_ensight_gold( std::ofstream *);
 		std::vector<Element*> & get_elements();
 		std::map<int, Node* > & get_nodes();
+		Node* get_node(int);
 
 	protected:
 		Node* get_unique_node_or_create_new(int, DenseMatrix<double>*);

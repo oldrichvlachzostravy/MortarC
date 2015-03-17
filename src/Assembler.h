@@ -47,8 +47,9 @@ public:
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
-			std::map<int,double> &,
-			std::map<int,double> &);
+			std::map<int,int> &,
+			std::map<int,MCVec2> &,
+			std::map<int,MCVec2> &);
 	template <typename T> void init_all_fe_in_segment(
 			FEPrimalBase &segment_fe,
 			FEPrimalBase &element_fe,
@@ -353,13 +354,27 @@ void Assembler::assemble_l_d(
 template <class T>
 void Assembler::assemble_newton(
         Mappings<T> &mappings,
-        std::map<int,std::map<int,double> > & cc,
-		std::map<int,std::map<int,double> > & ii,
-		std::map<int,std::map<int,double> > & ta,
-		std::map<int,std::map<int,double> > & fa,
-		std::map<int,double>                & zk,
-		std::map<int,double>                & dk)
+        std::map<int,std::map<int,double> > & cc, // 2|D|   x 2|D|
+		std::map<int,std::map<int,double> > & ii, // 2|I_k| x 2|S|
+		std::map<int,std::map<int,double> > & ta, //  |A_k| x 2|S|
+		std::map<int,std::map<int,double> > & fa, //  |A_k| x 2|D|
+		std::map<int,int>                   & zk_indices,
+		std::map<int,MCVec2>                & zk_values,
+		std::map<int,MCVec2>                & dk)
 {
+	// compute active and inactive sets see (66)
+	std::map<int,bool> Ak;
+	for (std::map<int,Node*>::iterator it = slave->get_nodes().begin(); it != slave->get_nodes().end(); it++) {
+		int j = it->first;
+        double zn_j = zk_values[j].scalar_product_with(MCVec2(slave->get_node(j)->get_normal()));
+        double gn_j = 0.0; //!!! TODO
+		if (zn_j - CN*gn_j) {
+			Ak[j] = true;
+		}
+		else {
+			Ak[j] = false;
+		}
+	}
 	// obtain matrix $P$ [PGW09 (A12)]
 	std::map<int,std::map<int,double> > p; //!!! tt = rot90(p)
 	// iterate over slave elements
@@ -479,23 +494,60 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
+	// create I^{k}_{\mathscr{I}}, T^{k}_{\mathscr{A}}, F^{k}_{\mathscr{A}}matrices
+	int cnt_i = 0;
+	int cnt_a = 0;
+	for (std::map<int,bool>::iterator it = Ak.begin(); it != Ak.end(); it++) {
+		int j = it->first;
+		Node *s_j = slave->get_node(j);
+		if ( ~(it->second)) {
+			ii[2*cnt_i-1][2*zk_indices[j]-1] = 1.0;
+			ii[2*cnt_i  ][2*zk_indices[j]  ] = 1.0;
+			cnt_i++;
+		}
+		else {
+			// from
+			ta[cnt_a][2*zk_indices[j]-1] = -s_j->get_normal().y;
+			ta[cnt_a][2*zk_indices[j]  ] =  s_j->get_normal().x;
+			// from
+			for (std::map<int,double>::iterator it = p[2*j-1].begin(); it != p[2*j-1].end(); it++) {
+				fa[cnt_a][it->first] +=   it->second * zk_values[j].y;
+				//                   + delta_t_j^k.y * z_j^k.y
+				//                   + delta_n_j^k.x * z_j^k.y
+			}
+			for (std::map<int,double>::iterator it = p[2*j  ].begin(); it != p[2*j  ].end(); it++) {
+				fa[cnt_a][it->first] -=   it->second * zk_values[j].x;
+				//                     delta_t_j^k.x * z_j^k.x
+				//                   - delta_n_j^k.y * z_j^k.x
+			}
+			cnt_a++;
+		}
+	}
 	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
 		fe_slave.init_all(*it, NULL, true);
-		const std::vector<std::vector<MCVec2> >& n_slave = fe_slave.get_n();
-		for (unsigned int gp = 0; gp < fe_slave.computation_refpoints.size(); gp++) {
+		const std::vector<std::vector<double> >& n_slave = fe_slave.get_n();
+		for (int gp = 0; gp < fe_slave.computation_refpoints.size(); gp++) {
 			MCVec2 dndxix(0.0, 0.0);
-			for (int i = 0; i < (*it)->get_node_count(); i++) {
-				dndxix += MCVec2( (*it)->get_node(i)->get_coordinates().x, (*it)->get_node(i)->get_coordinates().y) * fe_slave.get_dndxi()[i][gp];
+			for (int k = 0; k < (*it)->get_node_count(); k++) {
+				dndxix += MCVec2( (*it)->get_node(k)->get_coordinates().x, (*it)->get_node(k)->get_coordinates().y) * fe_slave.get_dndxi()[k][gp].x;
+				//        \-------------------------------------- x_k --------------------------------------------/ *
 			}
 			double norm_dndxix = dndxix.length();
-			for (int i = 0; i < (*it)->get_node_count(); i++) {
-				int node_id = (*it)->get_node(i)->get_id();
-				double value;
-				value = fe_slave.get_computation_weights[gp] * n_slave[i][gp];
-				cc[2*node_id-1][2*node_id-1] += value;
-				cc[2*node_id  ][2*node_id  ] += value;
+			dndxix /= norm_dndxix;
+			std::map<int,double> delta_J;
+			for (int k = 0; k < (*it)->get_node_count(); k++) {
+				int j = (*it)->get_node(k)->get_id();
+				delta_J[2*j-1] += dndxix.x * fe_slave.get_dndxi()[k][gp].x;
+				delta_J[2*j  ] += dndxix.y * fe_slave.get_dndxi()[k][gp].x;
 			}
-
+			for (int k = 0; k < (*it)->get_node_count(); k++) {
+				int j = (*it)->get_node(k)->get_id();
+				double value = fe_slave.get_computation_weights()[gp] * n_slave[k][gp];
+				for (std::map<int,double>::iterator it_J = delta_J.begin(); it_J != delta_J.end(); it_J++) {
+					cc[2*j-1][it_J->first] += value * it_J->second;
+					cc[2*j  ][it_J->first] += value * it_J->second;
+				}
+			}
 		}
 	}
 }

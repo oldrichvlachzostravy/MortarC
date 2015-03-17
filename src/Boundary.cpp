@@ -173,6 +173,11 @@ std::map<int,Node*> & Boundary::get_nodes()
     return nodes;
 }
 
+Node*  Boundary::get_node(int id)
+{
+    return nodes[id];
+}
+
 Element * Boundary::get_element(int id)
 {
 	for(uint i = 0; i < elements.size(); i++) {

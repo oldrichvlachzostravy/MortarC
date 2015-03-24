@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "SystemIncludes.h"
 
@@ -59,6 +60,7 @@ DenseMatrix<T>& DenseMatrix<T>::operator=  (const DenseMatrix<T> & origin)
 		data = new T[rows * columns];
 		memcpy(data, origin.data, rows*columns*sizeof(T));
 	}
+	return *this;
 }
 
 template <class T>

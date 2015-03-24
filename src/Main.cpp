@@ -239,7 +239,9 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > normals;
 
 	Assembler assembler( slave, master);
+#ifndef NEWTON
 	assembler.assemble_d_m( mappings, d, m);
+#endif
 	assembler.assemble_supports_normals( supports, normals);
 
 #ifdef NEWTON
@@ -248,7 +250,7 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > ii;
 	std::map<int,std::map<int,double> > ta;
 	std::map<int,std::map<int,double> > fa;
-	assembler.assemble_newton( mappings, cc, ii, ta, fa, zk_indices, zk_values, dk);
+	assembler.assemble_newton( mappings, cc, ii, ta, fa, d, m, zk_indices, zk_values, dk);
 #endif
 
 	if (DEBUG_OUTPUTS)

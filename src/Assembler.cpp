@@ -381,14 +381,56 @@ void Assembler::assemble_newton(
     			FEPrimalBase segment_slave_fe(6);
     			FEPrimalBase segment_master_fe(6);
     			// linearization of segment coordinates A.4
-    			init_all_fe_in_segment( segment_slave_fe,  fe_slave,  element_slave, bary_it->s, false);
-    			for (int i = 0; i < 2; i++) { // for a and b in A.4
+    			init_all_fe_in_segment(  segment_slave_fe,   fe_slave,  element_slave,  bary_it->s, true);
+    			std::vector<std::map<int,double> > deltaxi[2]; // $\Delta \xi^{(s,m)}_i$ i\in {a,b,g_1,...}
+    			deltaxi[0].resize(2+segment_slave_fe.computation_refpoints.size());
+    			deltaxi[1].resize(2+segment_slave_fe.computation_refpoints.size());
+    			// ***************************************************
+    			init_all_fe_in_segment(  segment_slave_fe,   fe_slave,  element_slave,  bary_it->s, false);
+    			init_all_fe_in_segment( segment_master_fe,  fe_master,  element_master, bary_it->m, false);
+    			// ***************************************************
+    			for (int i = 0; i < 2; i++) { // for i in {a,b} in A.4
     				if (bary_it->s[i] == -1 || bary_it->s[i] == 1) {
-
+    					//   case when $\xi^{(s)}_\#\in\{-1,1\}$
+    					//   $\Delta\xi^{(s)}_\#=0$
+    					//   $\Delta\xi^{(m)}_\#=\dots$ A(26)
+    					//  deltaxi[s][i] == empty map
+    					//  assemble deltaxi[m][i]
+    					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0);
+    					for (int l = 0; l < element_master->get_node_count(); l++) {
+    						int j_m = element_master->get_node(l)->get_id();
+    						tmp_A += fe_master.get_dndxi()[l][i].x * (element_master->get_node(l)->get_coordinates().x + dk[j_m].x);
+    						tmp_B += fe_master.get_dndxi()[l][i].x * (element_master->get_node(l)->get_coordinates().y + dk[j_m].y);
+    						tmp_C += fe_master.get_n()[l][i]       * (element_master->get_node(l)->get_coordinates().x + dk[j_m].x);
+    						tmp_D += fe_master.get_n()[l][i]       * (element_master->get_node(l)->get_coordinates().y + dk[j_m].y);
+    					}
+    					int j_s = element_slave->get_node(i)->get_id();
+    					MCVec2 n_i = MCVec2(element_slave->get_node(i)->get_normal().x, element_slave->get_node(i)->get_normal().y);
+    					MCVec2 x_i = MCVec2(
+    							element_slave->get_node(i)->get_coordinates().x + dk[j_s].x,
+								element_slave->get_node(i)->get_coordinates().y + dk[j_s].y);
+    					double denom = -( tmp_A * element_slave->get_node(i)->get_normal().y - tmp_B *element_slave->get_node(i)->get_normal().x );
+    					for (int l = 0; l < element_master->get_node_count(); l++) {
+    						int j_m = element_master->get_node(l)->get_id();
+    						deltaxi[1][i][2*j_m-1] += ( fe_master.get_n()[l][i] * n_i.y                                )/denom; //  first bracket in (A26) left
+    						deltaxi[1][i][2*j_m  ] -= ( fe_master.get_n()[l][i] * n_i.x                                )/denom; // second bracket in (A26) left
+    					}
+    					deltaxi[1][i][2*j_s-1]     -= (                           n_i.y                                )/denom; //  first bracket in (A26) right
+    					deltaxi[1][i][2*j_s  ]     += (                           n_i.x                                )/denom; // second bracket in (A26) right
+    					for (std::map<int,double>::iterator p_it = p[2*j_s  ].begin(); p_it != p[2*j_s  ].end(); p_it++) {
+    						deltaxi[1][i][p_it->first] += ( (tmp_C - x_i.x) * p_it->second                             )/denom; //  third bracket in (A28)
+    					}
+    					for (std::map<int,double>::iterator p_it = p[2*j_s-1].begin(); p_it != p[2*j_s-1].end(); p_it++) {
+    						deltaxi[1][i][p_it->first] -= ( (tmp_D - x_i.y) * p_it->second                             )/denom; // fourth bracket in (A28)
+    					}
     				}
-    				else { //                                                            (A29)
+    				else {
+    					//   case when $\xi^{(s)}_\#\in(-1,1)$
+    					//   $\Delta\xi^{(s)}_\#=\frac{\text{num}}{\text{denom}}$ (A28) (A29) (A30)
+    					//   $\Delta\xi^{(m)}_\#=0$ because $\xi^{(m)}_\#\in\{-1,1\}$
+    					//  deltaxi[m][i] == empty map
+    					//  assemble deltaxi[s][i]
     					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0), tmp_E(0.0), tmp_F(0.0), tmp_G(0.0), tmp_H(0.0);
-    					std::map<int,double> num_; // num / denom (A28)
     					for (int k = 0; k < element_slave->get_node_count(); k++) {
     						int j_s = element_slave->get_node(k)->get_id();
     						tmp_A += fe_slave.get_dndxi()[k][i].x * (element_slave->get_node(k)->get_coordinates().x + dk[j_s].x);
@@ -401,35 +443,52 @@ void Assembler::assemble_newton(
     						tmp_H += fe_slave.get_dndxi()[k][i].x * (element_slave->get_node(k)->get_normal().x);
     					}
     					int j_m_  = element_master->get_node(i)->get_id();
-    					MCVec2 x = MCVec2(
+    					MCVec2 x_i = MCVec2(
     							element_master->get_node(i)->get_coordinates().x + dk[j_m_].x,
 								element_master->get_node(i)->get_coordinates().y + dk[j_m_].y);
-    					double denom = - tmp_A*tmp_B + tmp_C*tmp_D - (tmp_E - x.x)*tmp_F + (tmp_G - x.y)*tmp_H;
+    					double denom = - tmp_A*tmp_B + tmp_C*tmp_D - (tmp_E - x_i.x)*tmp_F + (tmp_G - x_i.y)*tmp_H;
     					// from (A30)
     					for (int k = 0; k < element_slave->get_node_count(); k++) {
     						int j_s = element_slave->get_node(k)->get_id();
-    						int j_m = element_master->get_node(k)->get_id();
-    						num_[2*j_s-1] += ( fe_slave.get_n()[k][i] * tmp_B                                )/denom; //  first row (A30) left
-    						num_[2*j_m-1] -= ( tmp_B                                                         )/denom; //  first row (A30) right
-    						num_[2*j_s  ] -= ( fe_slave.get_n()[k][i] * tmp_D                                )/denom; // second row (A30) left
-    						num_[2*j_m  ] += ( tmp_D                                                         )/denom; // second row (A30) right
+    						deltaxi[0][i][2*j_s-1] += ( fe_slave.get_n()[k][i] * tmp_B                                )/denom; //  first row (A30) left
+    						deltaxi[0][i][2*j_s  ] -= ( fe_slave.get_n()[k][i] * tmp_D                                )/denom; // second row (A30) left
     						for (std::map<int,double>::iterator p_it = p[2*j_s  ].begin(); p_it != p[2*j_s  ].end(); p_it++) {
-    							num_[p_it->first] += ( fe_slave.get_n()[k][i] * (tmp_E - x.x) * p_it->second )/denom; //  third row (A30)
+    							deltaxi[0][i][p_it->first] += ( fe_slave.get_n()[k][i] * (tmp_E - x_i.x) * p_it->second )/denom; //  third row (A30)
     						}
     						for (std::map<int,double>::iterator p_it = p[2*j_s-1].begin(); p_it != p[2*j_s-1].end(); p_it++) {
-    							num_[p_it->first] -= ( fe_slave.get_n()[k][i] * (tmp_G - x.y) * p_it->second )/denom; // fourth row (A30)
+    							deltaxi[0][i][p_it->first] -= ( fe_slave.get_n()[k][i] * (tmp_G - x_i.y) * p_it->second )/denom; // fourth row (A30)
     						}
     					}
+    					int j_m = element_master->get_node(i)->get_id();
+    					deltaxi[0][i][2*j_m-1] -= ( tmp_B                                                             )/denom; //  first row (A30) right
+    					deltaxi[0][i][2*j_m  ] += ( tmp_D                                                             )/denom; // second row (A30) right
 
     				}
     			}
-    			// continue ... assembly process to D and M
     			init_all_fe_in_segment( segment_slave_fe,  fe_slave,  element_slave, bary_it->s, true);
     			init_all_fe_in_segment(segment_master_fe, fe_master, element_master, bary_it->m, true);
+				for (unsigned int g = 0; g < segment_slave_fe.computation_refpoints.size(); g++)
+				{
+					double eta_g = segment_slave_fe.get_computation_refpoints()[g].x; // eta_g
+					// (A31)
+					for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][0].begin(); deltaxi_it != deltaxi[0][0].end(); deltaxi_it++) {
+						deltaxi[0][2+g][deltaxi_it->first] += 0.5*(1-eta_g)*deltaxi_it->second;
+					}
+					for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][1].begin(); deltaxi_it != deltaxi[0][1].end(); deltaxi_it++) {
+						deltaxi[0][2+g][deltaxi_it->first] += 0.5*(1+eta_g)*deltaxi_it->second;
+					}
+					for (std::map<int,double>::iterator deltaxi_it = deltaxi[1][0].begin(); deltaxi_it != deltaxi[1][0].end(); deltaxi_it++) {
+						deltaxi[1][2+g][deltaxi_it->first] += 0.5*(1-eta_g)*deltaxi_it->second;
+					}
+					for (std::map<int,double>::iterator deltaxi_it = deltaxi[1][1].begin(); deltaxi_it != deltaxi[1][1].end(); deltaxi_it++) {
+						deltaxi[1][2+g][deltaxi_it->first] += 0.5*(1+eta_g)*deltaxi_it->second;
+					}
+				}
+    			// continue ... assembly process to D and M
     			const std::vector<std::vector<double> >& n_slave  = fe_slave.get_n();
     			const std::vector<std::vector<double> >& n_master = fe_master.get_n();
     			// compute dual shape functions on slave segment gauss points
-				std::vector<std::vector<double> >         psi_slave;
+				std::vector<std::vector<double> > psi_slave;
 				psi_slave.resize(n_slave.size());
 				for (unsigned int i = 0; i < n_slave.size(); i++)
 				{
@@ -449,7 +508,6 @@ void Assembler::assemble_newton(
 				// compute D and M !!! here we utilize the fact, that #slave gp == #master gp
 				for (unsigned int segment_gp = 0; segment_gp < segment_slave_fe.computation_refpoints.size(); segment_gp++)
 				{
-
 					for (int i = 0; i < element_slave->get_node_count(); i++)
 					{
 						// column index                           row index
@@ -475,12 +533,81 @@ void Assembler::assemble_newton(
 									segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[j][segment_gp] * psi_slave[i][segment_gp];
 							//      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
 							//         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_j(vartheta(gp))         Psi_i(vartheta(gp))
-
 							// column index                           row index
 							m[element_master->get_node(j)->get_id()][element_slave->get_node(i)->get_id()] +=
 									segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * psi_slave[i][segment_gp];
 							//      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
 							//         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
+						}
+					}
+					for (int k = 0; k < element_master->get_node_count(); k++) {
+						// (A22)
+						// *** second part of (A22)
+						for (std::map<int,double>::iterator deltaxi_it = deltaxi[1][segment_gp+2].begin(); deltaxi_it != deltaxi[1][segment_gp+2].end(); deltaxi_it++) {
+							for (int j = 0; j < element_slave->get_node_count(); j++) {
+								int jj = element_slave->get_node(j)->get_id();
+								double tmp = segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] *
+										psi_slave[j][segment_gp] * fe_master.get_dndxi()[k][segment_gp].x * deltaxi_it->second;
+								cc[2*element_master->get_node(k)->get_id()-1][deltaxi_it->first] -= tmp * zk_values[jj].x;
+								cc[2*element_master->get_node(k)->get_id()  ][deltaxi_it->first] -= tmp * zk_values[jj].y;
+							}
+						}
+						// ***  third part of (A22)
+						for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][1].begin(); deltaxi_it != deltaxi[0][1].end(); deltaxi_it++) {
+							// $\Delta \xi^{(s)}_b
+							for (int j = 0; j < element_slave->get_node_count(); j++) {
+								int jj = element_slave->get_node(j)->get_id();
+								double tmp = segment_slave_fe.get_computation_weights()[segment_gp] * fe_slave.j_w[segment_gp] *
+										psi_slave[j][segment_gp] * n_master[k][segment_gp] * 0.5*deltaxi_it->second;
+								cc[2*element_master->get_node(k)->get_id()-1][deltaxi_it->first] -= tmp * zk_values[jj].x;
+								cc[2*element_master->get_node(k)->get_id()  ][deltaxi_it->first] -= tmp * zk_values[jj].y;
+							}
+						}
+						for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][0].begin(); deltaxi_it != deltaxi[0][0].end(); deltaxi_it++) {
+							// $\Delta \xi^{(s)}_a
+							for (int j = 0; j < element_slave->get_node_count(); j++) {
+								int jj = element_slave->get_node(j)->get_id();
+								double tmp = segment_slave_fe.get_computation_weights()[segment_gp] * fe_slave.j_w[segment_gp] *
+										psi_slave[j][segment_gp] * n_master[k][segment_gp] * (-0.5*deltaxi_it->second);
+								cc[2*element_master->get_node(k)->get_id()-1][deltaxi_it->first] -= tmp * zk_values[jj].x;
+								cc[2*element_master->get_node(k)->get_id()  ][deltaxi_it->first] -= tmp * zk_values[jj].y;
+							}
+						}
+                        //  fourth part of (A22)
+						MCVec2 J_tmp = 0.0;
+						for (int l = 0; l < element_slave->get_node_count(); l++) {
+							int ll = element_slave->get_node(l)->get_id();
+							// constant (no \Delta) sum in (A24)
+							J_tmp += MCVec2(
+									fe_slave.get_dndxi()[l][segment_gp] * ( element_slave->get_node(k)->get_coordinates().x + dk[ll].x ),
+									fe_slave.get_dndxi()[l][segment_gp] * ( element_slave->get_node(k)->get_coordinates().x + dk[ll].y ));
+						}
+						J_tmp = J_tmp * 1/fe_slave.j_w[segment_gp];
+						for (int j = 0; j < element_slave->get_node_count(); j++) {
+							int jj = element_slave->get_node(j)->get_id();
+							double tmp = segment_slave_fe.j_w[segment_gp] * psi_slave[j][segment_gp] * n_master[k][segment_gp];
+							for (int l = 0; l < element_slave->get_node_count(); l++) {
+								int ll = element_slave->get_node(l)->get_id();
+								//  first part in (A24) into fourth part of (A22)
+								for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][segment_gp+2].begin(); deltaxi_it != deltaxi[0][segment_gp+2].end(); deltaxi_it++) {
+									const MCVec2 x(
+											element_slave->get_node(l)->get_coordinates().x + dk[ll].x,
+											element_slave->get_node(l)->get_coordinates().y + dk[ll].y);
+									cc[2*element_master->get_node(k)->get_id()-1][deltaxi_it->first] -=
+											J_tmp.scalar_product_with(x) * tmp * fe_slave.get_ddndxidxi()[l][segment_gp].x * deltaxi_it->second * zk_values[jj].x;
+									cc[2*element_master->get_node(k)->get_id()  ][deltaxi_it->first] -=
+											J_tmp.scalar_product_with(x) * tmp * fe_slave.get_ddndxidxi()[l][segment_gp].x * deltaxi_it->second * zk_values[jj].y;
+								}
+								// second part in (A24) into fourth part of (A22)
+								cc[    2*element_master->get_node(k)->get_id()-1][2*ll-1] -=
+										J_tmp.x * tmp * fe_slave.get_dndxi()[l][segment_gp].x * zk_values[jj].x;
+								cc[    2*element_master->get_node(k)->get_id()-1][2*ll  ] -=
+										J_tmp.y * tmp * fe_slave.get_dndxi()[l][segment_gp].x * zk_values[jj].x;
+								cc[    2*element_master->get_node(k)->get_id()  ][2*ll-1] -=
+										J_tmp.x * tmp * fe_slave.get_dndxi()[l][segment_gp].x * zk_values[jj].y;
+								cc[    2*element_master->get_node(k)->get_id()  ][2*ll  ] -=
+										J_tmp.y * tmp * fe_slave.get_dndxi()[l][segment_gp].x * zk_values[jj].y;
+							}
 						}
 					}
 				}

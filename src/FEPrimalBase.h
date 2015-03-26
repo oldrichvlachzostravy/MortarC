@@ -70,16 +70,17 @@ class FEPrimalBase
 	public:
 	FEPrimalBase(int);
 	~FEPrimalBase() { }
-	const std::vector<std::vector<double> >& get_n()      const   { return n; };
-	const std::vector<std::vector<MCVec2> >& get_dndxi()  const   { return dndxi; };
-	const std::vector<double>& get_j_w()  const                   { return j_w; };
-	const std::vector<MCVec3>& get_normal()  const                { return normals; };
-	const std::vector<double>& get_support()  const               { return supports; };
-	const std::vector<MCVec2>& get_nodal_refpoints()  const       { return nodal_refpoints; };
-	const std::vector<MCVec2>& get_computation_refpoints()  const { return computation_refpoints; };
-	const std::vector<double>& get_int_n()  const                 { return int_n; };
+	const std::vector<std::vector<double> >& get_n()       const  { return n; };
+	const std::vector<std::vector<MCVec2> >& get_dndxi()   const  { return dndxi; };
+	const std::vector<std::vector<MCVec2> >& get_d2ndxi2() const  { return d2ndxi2; };
+	const std::vector<double>& get_j_w()                   const  { return j_w; };
+	const std::vector<MCVec3>& get_normal()                const  { return normals; };
+	const std::vector<double>& get_support()               const  { return supports; };
+	const std::vector<MCVec2>& get_nodal_refpoints()       const  { return nodal_refpoints; };
+	const std::vector<MCVec2>& get_computation_refpoints() const  { return computation_refpoints; };
+	const std::vector<double>& get_int_n()                 const  { return int_n; };
 	const std::vector<std::vector<double> >& get_int_nn()  const  { return int_nn; };
-	const std::vector<double>& get_computation_weights() const    { return computation_weights; };
+	const std::vector<double>& get_computation_weights()   const  { return computation_weights; };
     void init_all(Element * element, std::vector<MCVec2> * refpoints = NULL, bool in_gauss_refpoints = true);
     const std::vector<MCVec3> get_refpoints_coordiantes(std::vector<MCVec2> * refpoints);
     int element_type;
@@ -104,6 +105,7 @@ class FEPrimalBase
 	std::vector<double>  computation_weights;
 	std::vector<std::vector<double> > n;
 	std::vector<std::vector<MCVec2> > dndxi;
+	std::vector<std::vector<MCVec2> > d2ndxi2;
 	std::vector<MCVec3>  normals;
 	std::vector<double>  j_w;
 	std::vector<double>  supports;

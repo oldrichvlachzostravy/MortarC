@@ -32,14 +32,14 @@ void FEPrimalBase::init_quadrature()
 			break;
 		case 2:
 			computation_refpoints.resize(2);                 computation_weights.resize(2);
-			computation_refpoints[0].x = -1.0/sqrt(3.0);    computation_refpoints[0].y = 0.0;                computation_weights[0]  = 1.0;
-			computation_refpoints[1].x =  1.0/sqrt(3.0);    computation_refpoints[1].y = 0.0;                computation_weights[1]  = 1.0;
+			computation_refpoints[0].x = -1.0/sqrt(3.0);     computation_refpoints[0].y = 0.0;                computation_weights[0]  = 1.0;
+			computation_refpoints[1].x =  1.0/sqrt(3.0);     computation_refpoints[1].y = 0.0;                computation_weights[1]  = 1.0;
 			break;
 		default: // quadratureOrder = 3
 			computation_refpoints.resize(3);                 computation_weights.resize(3);
-			computation_refpoints[0].x = -sqrt(3.0/5.0);    computation_refpoints[0].y = 0.0;                computation_weights[0]  =  5.0/9.0;
+			computation_refpoints[0].x = -sqrt(3.0/5.0);     computation_refpoints[0].y = 0.0;                computation_weights[0]  =  5.0/9.0;
 			computation_refpoints[1].x = 0.0;                computation_refpoints[1].y = 0.0;                computation_weights[1]  =  8.0/9.0;
-			computation_refpoints[2].x =  sqrt(3.0/5.0);    computation_refpoints[2].y = 0.0;                computation_weights[2]  =  5.0/9.0;
+			computation_refpoints[2].x =  sqrt(3.0/5.0);     computation_refpoints[2].y = 0.0;                computation_weights[2]  =  5.0/9.0;
 			break;
 		}
 		break;

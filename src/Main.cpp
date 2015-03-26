@@ -275,6 +275,6 @@ int main(int argc, char** argv)
 	if (slave_els)    { delete slave_els;	}
 	if (master)       { delete master;      }
 	if (slave)        { delete slave;       }
-	if (friction)     { delete friction;       }
+	if (friction)     { delete friction;    }
     return 0;
 }

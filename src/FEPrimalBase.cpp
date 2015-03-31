@@ -369,6 +369,7 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 	}
 	n.resize(shape_functions_count);
     dndxi.resize(shape_functions_count);
+    d2ndxi2.resize(shape_functions_count);
     j_w.resize(points_count);
     normals.resize(points_count);
     supports.resize(shape_functions_count);
@@ -378,6 +379,7 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
     {
     	n[i].resize(points_count);
     	dndxi[i].resize(points_count);
+    	d2ndxi2[i].resize(points_count);
     	int_nn[i].resize(shape_functions_count);
     }
     MCVec3 sum_xi1, sum_xi2;
@@ -397,6 +399,8 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			n[1][j]     = 0.5*(1+points->at(j).x);
 			dndxi[0][j] = MCVec2(-0.5,0.0);
 			dndxi[1][j] = MCVec2( 0.5,0.0);
+			d2ndxi2[0][j] = MCVec3( 0.0, 0.0, 0.0);
+			d2ndxi2[1][j] = MCVec3( 0.0, 0.0, 0.0);
 			break;
 		case M_ELEMENT_LINE3:
 			/** TODO
@@ -523,7 +527,7 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			break;
 		case M_ELEMENT_QUAD9:
 			/**
-			 * QUAD9
+			 * QUAD9 - shape functions
 			 * \f{eqnarray*}{
 			 * \varphi_{0}(r,s) &=&  \frac{1}{4}(1-r)r(1-s)s\\
 			 * \varphi_{1}(r,s) &=&  \frac{1}{4}(1+r)r(1-s)s\\
@@ -533,7 +537,31 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \varphi_{5}(r,s) &=&  \frac{1}{2}(1+r)r(1-s)(1+s)\\
 			 * \varphi_{6}(r,s) &=&  \frac{1}{2}(1-r)(1+r)s(1+s)\\
 			 * \varphi_{7}(r,s) &=& -\frac{1}{2}(1-r)r(1-s)(1+s)\\
-			 * \varphi_{8}(r,s) &=&  (1-r)(1+r)(1-s)(1+s)\\
+			 * \varphi_{8}(r,s) &=&   (1-r)(1+r)(1-s)(1+s)\\
+			 * \f}
+			 * QUAD9 - first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{4}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{5}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{6}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{7}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ \frac{\partial \varphi_{8}}{\partial s}\right]\varphi_{8}(r,s) &=&  \\
+			 * \f}
+			 * QUAD9 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{4}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{6}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{8}(r,s) &=&  \\
 			 * \f}
 			 */
 			n[0][j] =  0.25*(1-points->at(j).x)*(  points->at(j).x)*(1-points->at(j).y)*(  points->at(j).y);
@@ -572,6 +600,26 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			dndxi[8][j] = MCVec2(
 					2*points->at(j).x*(points->at(j).y*points->at(j).y-1),
 					2*points->at(j).y*(points->at(j).x*points->at(j).x-1));
+			d2ndxi2[0][j] = MCVec3(
+					+0.5 *(  points->at(j).y  )*(  points->at(j).y-1),
+					+0.25*(2*points->at(j).x-1)*(2*points->at(j).y-1),
+					+0.5 *(  points->at(j).x  )*(  points->at(j).x-1));
+			d2ndxi2[1][j] = MCVec3(
+					-0.5 *(  points->at(j).y  )*(  points->at(j).y-1),
+					-0.25*(2*points->at(j).x+1)*(2*points->at(j).y-1),
+					-0.5 *(  points->at(j).x  )*(  points->at(j).x+1));
+			d2ndxi2[2][j] = MCVec3(
+					+0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
+					+0.25*(2*points->at(j).x+1)*(2*points->at(j).y+1),
+					+0.5 *(  points->at(j).x  )*(  points->at(j).x+1));
+			d2ndxi2[3][j] = MCVec3(
+					-0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
+					-0.25*(2*points->at(j).x-1)*(2*points->at(j).y+1),
+					-0.5 *(  points->at(j).x  )*(  points->at(j).x-1));
+			d2ndxi2[4][j] = MCVec3(
+					+0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
+					+0.5 *(  points->at(j).x  )*(2*points->at(j).y-1),
+					+0.5 *(  points->at(j).x-1)*(  points->at(j).x+1));
 			break;
 		default: //M_ELEMENT_UNKNOWN
 			break;

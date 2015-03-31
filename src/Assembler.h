@@ -49,6 +49,7 @@ public:
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
+			std::map<int,std::map<int,double> > &,
 			std::map<int,int> &,
 			std::map<int,MCVec2> &,
 			std::map<int,MCVec2> &);

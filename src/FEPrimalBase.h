@@ -72,7 +72,7 @@ class FEPrimalBase
 	~FEPrimalBase() { }
 	const std::vector<std::vector<double> >& get_n()       const  { return n; };
 	const std::vector<std::vector<MCVec2> >& get_dndxi()   const  { return dndxi; };
-	const std::vector<std::vector<MCVec2> >& get_d2ndxi2() const  { return d2ndxi2; };
+	const std::vector<std::vector<MCVec3> >& get_d2ndxi2() const  { return d2ndxi2; };
 	const std::vector<double>& get_j_w()                   const  { return j_w; };
 	const std::vector<MCVec3>& get_normal()                const  { return normals; };
 	const std::vector<double>& get_support()               const  { return supports; };
@@ -105,7 +105,7 @@ class FEPrimalBase
 	std::vector<double>  computation_weights;
 	std::vector<std::vector<double> > n;
 	std::vector<std::vector<MCVec2> > dndxi;
-	std::vector<std::vector<MCVec2> > d2ndxi2;
+	std::vector<std::vector<MCVec3> > d2ndxi2;
 	std::vector<MCVec3>  normals;
 	std::vector<double>  j_w;
 	std::vector<double>  supports;

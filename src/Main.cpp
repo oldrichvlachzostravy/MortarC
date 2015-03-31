@@ -250,7 +250,8 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > ii;
 	std::map<int,std::map<int,double> > ta;
 	std::map<int,std::map<int,double> > fa;
-	assembler.assemble_newton( mappings, cc, ii, ta, fa, d, m, zk_indices, zk_values, dk);
+	std::map<int,std::map<int,double> > sma;
+	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, d, m, zk_indices, zk_values, dk);
 #endif
 
 	if (DEBUG_OUTPUTS)

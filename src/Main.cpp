@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>      // std::out_of_range
 #include <iomanip>
 #include <fstream>
 #include <time.h>
@@ -239,9 +240,7 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > normals;
 
 	Assembler assembler( slave, master);
-#ifndef NEWTON
 	assembler.assemble_d_m( mappings, d, m);
-#endif
 	assembler.assemble_supports_normals( supports, normals);
 
 #ifdef NEWTON
@@ -251,7 +250,13 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > ta;
 	std::map<int,std::map<int,double> > fa;
 	std::map<int,std::map<int,double> > sma;
-	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, d, m, zk_indices, zk_values, dk);
+	try{
+		assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, d, m, zk_indices, zk_values, dk);
+	}
+	catch (const std::out_of_range& oor) {
+		std::cerr << "Out of Range error: " << oor.what() << '\n';
+	}
+
 #endif
 
 	if (DEBUG_OUTPUTS)

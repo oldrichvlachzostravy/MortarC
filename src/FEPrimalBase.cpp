@@ -480,7 +480,7 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			break;
 		case M_ELEMENT_QUAD8:
 			/** TODO
-			 * QUAD8
+			 * QUAD8 - shape functions
 			 * \f{eqnarray*}{
 			 * \varphi_{0}(r,s) &=& -\frac{1}{4}(1-r)(1-s)(1+r+s)\\
 			 * \varphi_{1}(r,s) &=& -\frac{1}{4}(1+r)(1-s)(1-r+s)\\
@@ -490,6 +490,28 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \varphi_{5}(r,s) &=&  \frac{1}{2}(1+r)(1-s)(1+s)\\
 			 * \varphi_{6}(r,s) &=&  \frac{1}{2}(1+r)(1+s)(1-r)\\
 			 * \varphi_{7}(r,s) &=&  \frac{1}{2}(1-r)(1+s)(1-s)\\
+			 * \f}
+			 * QUAD8 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}       (s+2r)(1-s)       \ ,\quad  \frac{1}{4}(1-r)             (r+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}(s-2r)       (1-s)       \ ,\quad -\frac{1}{4}      (1+r)(r-2s)        \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}       (s+2r)      (1+s) \ ,\quad  \frac{1}{4}      (1+r)       (r+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}(s-2r)             (1+s) \ ,\quad -\frac{1}{4}(1-r)      (r-2s)        \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{4}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -                 r      (1-s)       \ ,\quad -\frac{1}{2}(1-r) (1+r)              \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{5}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}             (1-s) (1+s) \ ,\quad -                 (1+r)      s       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{6}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -                 r            (1+s) \ ,\quad  \frac{1}{2}(1-r) (1+r)       (1+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{7}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}             (1-s) (1+s) \ ,\quad -           (1-r)            s       \right]\\
+			 * \f}
+			 * QUAD8 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}(1-s)       \ ,\quad  \frac{1}{4}(1-2r)       (1-2s)        \ ,\quad -\frac{1}{2}(1-r)r      \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-s)s      \ ,\quad -\frac{1}{4}       (1+2r)(1-2s)        \ ,\quad  \frac{1}{2}     r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}     s(1+s) \ ,\quad  \frac{1}{4}       (1+2r)       (1+2s) \ ,\quad  \frac{1}{2}     r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}     s(1+s) \ ,\quad -\frac{1}{4}(1-2r)              (1+2s) \ ,\quad -\frac{1}{2}(1-r)r      \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{4}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s)s      \ ,\quad                   r      (1-2s)        \ ,\quad             (1-r) (1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad -                  (1+2r)      s       \ ,\quad -                r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{6}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -                s(1+s) \ ,\quad -                 r             (1+2s) \ ,\quad             (1-r) (1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad             (1-2r)             s       \ ,\quad             (1-r)r      \right]\\
 			 * \f}
 			 */
 			n[0][j] =     0.25*(1-points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).x+points->at(j).y);
@@ -529,97 +551,68 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			/**
 			 * QUAD9 - shape functions
 			 * \f{eqnarray*}{
-			 * \varphi_{0}(r,s) &=&  \frac{1}{4}(1-r)r(1-s)s\\
-			 * \varphi_{1}(r,s) &=&  \frac{1}{4}(1+r)r(1-s)s\\
-			 * \varphi_{2}(r,s) &=&  \frac{1}{4}(1+r)r(1+s)s\\
-			 * \varphi_{3}(r,s) &=&  \frac{1}{4}(1-r)r(1+s)s\\
-			 * \varphi_{4}(r,s) &=& -\frac{1}{2}(1-r)(1+r)(1-s)s\\
-			 * \varphi_{5}(r,s) &=&  \frac{1}{2}(1+r)r(1-s)(1+s)\\
-			 * \varphi_{6}(r,s) &=&  \frac{1}{2}(1-r)(1+r)s(1+s)\\
-			 * \varphi_{7}(r,s) &=& -\frac{1}{2}(1-r)r(1-s)(1+s)\\
-			 * \varphi_{8}(r,s) &=&   (1-r)(1+r)(1-s)(1+s)\\
+			 * \varphi_{0}(r,s) &=&  \frac{1}{4}(1-r)r     (1-s)s     \\
+			 * \varphi_{1}(r,s) &=& -\frac{1}{4}     r(1+r)(1-s)s     \\
+			 * \varphi_{2}(r,s) &=&  \frac{1}{4}     r(1+r)     s(1+s)\\
+			 * \varphi_{3}(r,s) &=& -\frac{1}{4}(1-r)r          s(1+s)\\
+			 * \varphi_{4}(r,s) &=& -\frac{1}{2}(1-r) (1+r)(1-s)s     \\
+			 * \varphi_{5}(r,s) &=&  \frac{1}{2}     r(1+r)(1-s) (1+s)\\
+			 * \varphi_{6}(r,s) &=&  \frac{1}{2}(1-r) (1+r)     s(1+s)\\
+			 * \varphi_{7}(r,s) &=& -\frac{1}{2}(1-r)r     (1-s) (1+s)\\
+			 * \varphi_{8}(r,s) &=&             (1-r) (1+r)(1-s) (1+s)\\
 			 * \f}
 			 * QUAD9 - first derivative of shape functions
 			 * \f{eqnarray*}{
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{4}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{5}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{6}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial}{\partial s}\right]\varphi_{7}(r,s) &=&  \\
-			 * \left[\frac{\partial}{\partial r}\ \frac{\partial \varphi_{8}}{\partial s}\right]\varphi_{8}(r,s) &=&  \\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}(1-2r)       (1-s)s      \ ,\quad  \frac{1}{4}(1-r)r     (1-2s)        \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}       (1+2r)(1-s)s      \ ,\quad -\frac{1}{4}     r(1+r)(1-2s)        \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}       (1+2r)     s(1+s) \ ,\quad  \frac{1}{4}     r(1+r)       (1+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}(1-2r)            s(1+s) \ ,\quad -\frac{1}{4}(1-r)r            (1+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{4}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}                   r      (1-s)s      \ ,\quad -\frac{1}{2}(1-r) (1+r)(1-2s)        \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{5}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}       (1+2r)(1-s) (1+s) \ ,\quad -                r(1+r)      s       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{6}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -                 r           s(1+s) \ ,\quad  \frac{1}{2}(1-r) (1+r)       (1+2s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{7}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-2r)       (1-s) (1+s) \ ,\quad             (1-r)r           s       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{8}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -2                r      (1-s) (1+s) \ ,\quad -2          (1-r) (1+r)      s       \right]\\
 			 * \f}
 			 * QUAD9 - second derivative of shape functions
 			 * \f{eqnarray*}{
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{4}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{6}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \\
-			 * \left[\frac{\partial^2}{\partial r^2}\ \frac{\partial^2}{\partial s\partial r} \frac{\partial^2}{\partial s^2}\right]\varphi_{8}(r,s) &=&  \\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-s)s      \ ,\quad  \frac{1}{4}(1-2r)       (1-2s)        \ ,\quad -\frac{1}{2}(1-r)r      \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-s)s      \ ,\quad -\frac{1}{4}       (1+2r)(1-2s)        \ ,\quad  \frac{1}{2}     r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}     s(1+s) \ ,\quad  \frac{1}{4}       (1+2r)       (1+2s) \ ,\quad  \frac{1}{2}     r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}     s(1+s) \ ,\quad -\frac{1}{4}(1-2r)              (1+2s) \ ,\quad -\frac{1}{2}(1-r)r      \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{4}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s)s      \ ,\quad                   r      (1-2s)        \ ,\quad             (1-r) (1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad -                  (1+2r)      s       \ ,\quad -                r(1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{6}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -                s(1+s) \ ,\quad -                 r             (1+2s) \ ,\quad             (1-r) (1+r) \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad             (1-2r)             s       \ ,\quad             (1-r)r      \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{8}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -2          (1-s) (1+s) \ ,\quad  4                r            s       \ ,\quad -2          (1-r) (1+r) \right]\\
 			 * \f}
 			 */
-			n[0][j] =  0.25*(1-points->at(j).x)*(  points->at(j).x)*(1-points->at(j).y)*(  points->at(j).y);
-			n[1][j] =  0.25*(1+points->at(j).x)*(  points->at(j).x)*(1-points->at(j).y)*(  points->at(j).y);
-			n[2][j] =  0.25*(1+points->at(j).x)*(  points->at(j).x)*(1+points->at(j).y)*(  points->at(j).y);
-			n[3][j] =  0.25*(1-points->at(j).x)*(  points->at(j).x)*(1+points->at(j).y)*(  points->at(j).y);
-			n[4][j] = -0.5 *(1-points->at(j).x)*(1+points->at(j).x)*(1-points->at(j).y)*(  points->at(j).y);
-			n[5][j] =  0.5 *(1+points->at(j).x)*(  points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).y);
-			n[6][j] =  0.5 *(1-points->at(j).x)*(1+points->at(j).x)*(  points->at(j).y)*(1+points->at(j).y);
-			n[7][j] = -0.5 *(1-points->at(j).x)*(  points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).y);
-			n[8][j] =       (1-points->at(j).x)*(1+points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).y);
-			dndxi[0][j] = MCVec2(
-					0.25*(-points->at(j).x*points->at(j).y*(1-points->at(j).y)+points->at(j).y*(1-points->at(j).x)*(1-points->at(j).y)),
-					0.25*(-points->at(j).x*points->at(j).y*(1-points->at(j).x)+points->at(j).x*(1-points->at(j).x)*(1-points->at(j).y)));
-			dndxi[1][j] = MCVec2(
-					0.25*( points->at(j).x*points->at(j).y*(1-points->at(j).y)+points->at(j).y*(1+points->at(j).x)*(1+points->at(j).y)),
-					0.25*(-points->at(j).x*points->at(j).y*(1+points->at(j).x)+points->at(j).x*(1-points->at(j).x)*(1-points->at(j).y)));
-			dndxi[2][j] = MCVec2(
-					0.25*( points->at(j).x*points->at(j).y*(1+points->at(j).y)+points->at(j).y*(1+points->at(j).x)*(1+points->at(j).y)),
-					0.25*( points->at(j).x*points->at(j).y*(1+points->at(j).x)+points->at(j).x*(1+points->at(j).x)*(1+points->at(j).y)));
-			dndxi[3][j] = MCVec2(
-					0.25*(-points->at(j).x*points->at(j).y*(1+points->at(j).y)+points->at(j).y*(1-points->at(j).x)*(1+points->at(j).y)),
-					0.25*( points->at(j).x*points->at(j).y*(1-points->at(j).x)+points->at(j).x*(1-points->at(j).x)*(1+points->at(j).y)));
-			dndxi[4][j] = MCVec2(
-					+points->at(j).x*points->at(j).y*(1-points->at(j).y),
-					-0.5+0.5*points->at(j).x*points->at(j).x+points->at(j).y*(1-points->at(j).x*points->at(j).x));
-			dndxi[5][j] = MCVec2(
-					+0.5-0.5*points->at(j).y*points->at(j).y+points->at(j).x*(1-points->at(j).y*points->at(j).y),
-					-points->at(j).x*points->at(j).y*(1+points->at(j).x));
-			dndxi[6][j] = MCVec2(
-					-points->at(j).x*points->at(j).y*(1-points->at(j).y),
-					+0.5-0.5*points->at(j).x*points->at(j).x+points->at(j).y*(1-points->at(j).x*points->at(j).x));
-			dndxi[7][j] = MCVec2(
-					-0.5+0.5*points->at(j).y*points->at(j).y+points->at(j).x*(1-points->at(j).y*points->at(j).y),
-					+points->at(j).x*points->at(j).y*(1-points->at(j).x));
-			dndxi[8][j] = MCVec2(
-					2*points->at(j).x*(points->at(j).y*points->at(j).y-1),
-					2*points->at(j).y*(points->at(j).x*points->at(j).x-1));
-			d2ndxi2[0][j] = MCVec3(
-					+0.5 *(  points->at(j).y  )*(  points->at(j).y-1),
-					+0.25*(2*points->at(j).x-1)*(2*points->at(j).y-1),
-					+0.5 *(  points->at(j).x  )*(  points->at(j).x-1));
-			d2ndxi2[1][j] = MCVec3(
-					-0.5 *(  points->at(j).y  )*(  points->at(j).y-1),
-					-0.25*(2*points->at(j).x+1)*(2*points->at(j).y-1),
-					-0.5 *(  points->at(j).x  )*(  points->at(j).x+1));
-			d2ndxi2[2][j] = MCVec3(
-					+0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
-					+0.25*(2*points->at(j).x+1)*(2*points->at(j).y+1),
-					+0.5 *(  points->at(j).x  )*(  points->at(j).x+1));
-			d2ndxi2[3][j] = MCVec3(
-					-0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
-					-0.25*(2*points->at(j).x-1)*(2*points->at(j).y+1),
-					-0.5 *(  points->at(j).x  )*(  points->at(j).x-1));
-			d2ndxi2[4][j] = MCVec3(
-					+0.5 *(  points->at(j).y  )*(  points->at(j).y+1),
-					+0.5 *(  points->at(j).x  )*(2*points->at(j).y-1),
-					+0.5 *(  points->at(j).x-1)*(  points->at(j).x+1));
+			n[0][j] =  0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
+			n[1][j] = -0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
+			n[2][j] =  0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
+			n[3][j] = -0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
+			n[4][j] = -0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
+			n[5][j] =  0.5 *(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
+			n[6][j] =  0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
+			n[7][j] = -0.5 *(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
+			n[8][j] =       (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
+			dndxi[0][j] = MCVec2(  0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),  0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
+			dndxi[1][j] = MCVec2( -0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
+			dndxi[2][j] = MCVec2(  0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y),  0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
+			dndxi[3][j] = MCVec2( -0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y), -0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
+			dndxi[4][j] = MCVec2(       (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
+			dndxi[5][j] = MCVec2(  0.5 *(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -     (1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
+			dndxi[6][j] = MCVec2( -     (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y),  0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
+			dndxi[7][j] = MCVec2( -0.5 *(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),       (1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
+			dndxi[8][j] = MCVec2( -2.0 *(1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -2.0 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
+			d2ndxi2[0][j] = MCVec3(	-0.5*(1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),  0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ), -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
+			d2ndxi2[1][j] = MCVec3(	-0.5*(1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ),  0.5*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
+			d2ndxi2[2][j] = MCVec3(	 0.5*(1.0                )*(points->at(j).y)*(1.0+points->at(j).y),	 0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y),  0.5*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
+			d2ndxi2[3][j] = MCVec3(  0.5*(1.0                )*(points->at(j).y)*(1.0+points->at(j).y),	-0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y), -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
+			d2ndxi2[4][j] = MCVec3(	     (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),       (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ),      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
+			d2ndxi2[5][j] = MCVec3(	     (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -     (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ), -    (1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
+			d2ndxi2[6][j] = MCVec3(	-    (1.0                )*(points->at(j).y)*(1.0+points->at(j).y), -     (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y),      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
+			d2ndxi2[7][j] = MCVec3(	     (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),       (1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                    )*(points->at(j).y)*(1.0                    ),      (1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
+			d2ndxi2[8][j] = MCVec3(	-2.0*(1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),  4.0 *(1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                    )*(points->at(j).y)*(1.0                    ), -2.0*(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
 			break;
 		default: //M_ELEMENT_UNKNOWN
 			break;

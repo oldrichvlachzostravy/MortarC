@@ -269,9 +269,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// three columns sparse matrix NORMALS
 	std::map<int,std::map<int,double> > normals;
 
-    Assembler assembler;
-    assembler.assemble_d_m(mappings, master, d, m);
-    assembler.assemble_supports_normals(slave, supports, normals);
+    Assembler assembler(slave, master);
+    assembler.assemble_d_m(mappings, d, m);
+    assembler.assemble_supports_normals(supports, normals);
 
 	/* ****************************** */
 	/* * CHECK FOR OUTPUT ARGUMENTS * */

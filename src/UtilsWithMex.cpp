@@ -54,5 +54,13 @@ void create_matlab_sparse_matrix(mxArray * & mex_mat, std::map<int,std::map<int,
 	jcs[cols] = k;
 }
 
-
+void mexprint_sparse_matrix(std::map<int,std::map<int,double> > &m, const char *name)
+{
+	mexPrintf("%s\n", name);
+	for (std::map<int,std::map<int,double> >::iterator rit = m.begin(); rit != m.end(); ++rit) {
+		for (std::map<int,double>::iterator cit = rit->second.begin(); cit != rit->second.end(); ++cit) {
+			mexPrintf("%4d, %4d, %7f\n", rit->first, cit->first, cit->second);
+		}
+	}
+}
 

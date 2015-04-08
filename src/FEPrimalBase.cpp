@@ -116,7 +116,6 @@ void FEPrimalBase::init_quadrature()
 			computation_refpoints[11].x = 0.048690315425316;  computation_refpoints[11].y = 0.638444188569809;  computation_weights[11] =  0.077113760890257/2.0;
 			computation_refpoints[12].x = 0.312865496004875;  computation_refpoints[12].y = 0.638444188569809;  computation_weights[12] =  0.077113760890257/2.0;
 			break;
-
 		}
 		break;
 	case M_ELEMENT_QUAD4:
@@ -394,6 +393,16 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \varphi_{0}(r) &=& \frac{1}{2}(1-r)\\
 			 * \varphi_{1}(r) &=& \frac{1}{2}(1+r)\\
 			 * \f}
+			 * LINE2 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \frac{\partial}{\partial r}\varphi_{0}(r) &=&  -\frac{1}{2} \\
+			 * \frac{\partial}{\partial r}\varphi_{1}(r) &=&   \frac{1}{2} \\
+			 * \f}
+			 * LINE2 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \frac{\partial^2}{\partial r^2}\varphi_{0}(r) &=&  0\\
+			 * \frac{\partial^2}{\partial r^2}\varphi_{1}(r) &=&  0\\
+			 * \f}
 			 */
 			n[0][j]     = 0.5*(1-points->at(j).x);
 			n[1][j]     = 0.5*(1+points->at(j).x);
@@ -403,20 +412,35 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			d2ndxi2[1][j] = MCVec3( 0.0, 0.0, 0.0);
 			break;
 		case M_ELEMENT_LINE3:
-			/** TODO
+			/**
 			 * LINE3
 			 * \f{eqnarray*}{
-			 * \varphi_{0}(r) &=& \frac{1}{2}r(1-r)\\
-			 * \varphi_{1}(r) &=& \frac{1}{2}r(1+r)\\
-			 * \varphi_{2}(r) &=& (1-r)(1+r)\\
+			 * \varphi_{0}(r) &=& -\frac{1}{2}r(1-r)\\
+			 * \varphi_{1}(r) &=&  \frac{1}{2}r(1+r)\\
+			 * \varphi_{2}(r) &=&  (1-r)(1+r)\\
+			 * \f}
+			 * LINE3 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \frac{\partial}{\partial r}\varphi_{0}(r) &=&  -\frac{1}{2} +r \\
+			 * \frac{\partial}{\partial r}\varphi_{1}(r) &=&   \frac{1}{2} +r \\
+			 * \frac{\partial}{\partial r}\varphi_{2}(r) &=&  -            2r \\
+			 * \f}
+			 * LINE3 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \frac{\partial^2}{\partial r^2}\varphi_{0}(r) &=&  1\\
+			 * \frac{\partial^2}{\partial r^2}\varphi_{1}(r) &=&  1\\
+			 * \frac{\partial^2}{\partial r^2}\varphi_{2}(r) &=& -2\\
 			 * \f}
 			 */
-			n[0][j]     = 0.5*(  points->at(j).x)*(1-points->at(j).x);
-			n[1][j]     = 0.5*(  points->at(j).x)*(1+points->at(j).x);
-			n[2][j]     =     (1-points->at(j).x)*(1+points->at(j).x);
+			n[0][j] = -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                );
+			n[1][j] =  0.5*(1.0                )*(points->at(j).x)*(1.0                );
+			n[2][j] =      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x);
 			dndxi[0][j] = MCVec2(-0.5+points->at(j).x,0.0);
 			dndxi[1][j] = MCVec2( 0.5+points->at(j).x,0.0);
-			dndxi[2][j] = MCVec2(  -2*points->at(j).x,0.0);
+			dndxi[2][j] = MCVec2(-2.0*points->at(j).x,0.0);
+			d2ndxi2[0][j] = MCVec3( 1.0, 0.0, 0.0);
+			d2ndxi2[1][j] = MCVec3( 1.0, 0.0, 0.0);
+			d2ndxi2[2][j] = MCVec3(-2.0, 0.0, 0.0);
 			break;
 		case M_ELEMENT_TRIA3:
 			/**
@@ -426,17 +450,32 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \varphi_{1}(r,s) &=& r\\
 			 * \varphi_{2}(r,s) &=& s\\
 			 * \f}
+			 * TRIA3 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -1 \ ,\quad -1 \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  1 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  1 \right]\\
+			 * \f}
+			 * TRIA3 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \right]\\
+			 * \f}
 			 */
 			n[0][j]     = (1-points->at(j).x-points->at(j).y);
 			n[1][j]     = points->at(j).x;
 			n[2][j]     = points->at(j).y;
-			dndxi[0][j] = MCVec2(-1.0,-1.0);
-			dndxi[1][j] = MCVec2( 1.0, 0.0);
-			dndxi[2][j] = MCVec2( 0.0, 1.0);
+			dndxi[0][j] = MCVec2( -1.0, -1.0 );
+			dndxi[1][j] = MCVec2(  1.0,  0.0 );
+			dndxi[2][j] = MCVec2(  0.0,  1.0 );
+			d2ndxi2[0][j] = MCVec3( 0.0, 0.0, 0.0 );
+			d2ndxi2[1][j] = MCVec3( 0.0, 0.0, 0.0 );
+			d2ndxi2[2][j] = MCVec3( 0.0, 0.0, 0.0 );
 			break;
 		case M_ELEMENT_TRIA6:
-			/** TODO
-			 * TRIA6
+			/**
+			 * TRIA6 - shape functions
 			 * \f{eqnarray*}{
 			 * \varphi_{0}(r,s) &=& (1-(r+s))(1-2(r+s))\\
 			 * \varphi_{1}(r,s) &=& r(2r-1)\\
@@ -445,41 +484,83 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \varphi_{4}(r,s) &=& 4rs\\
 			 * \varphi_{5}(r,s) &=& 4s(1-(r+s))\\
 			 * \f}
+			 * TRIA6 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -3 +4r +4s \ ,\quad -3 +4r +4s \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -1 +4r     \ ,\quad  0         \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  0         \ ,\quad -1     +4s \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  4 -8r -4s \ ,\quad    -4r     \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{4}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}         4s \ ,\quad     4r     \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{5}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}        -4s \ ,\quad  4 -4r -8s \right]\\
+			 * \f}
+			 * TRIA6 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  4 \ ,\quad  4 \ ,\quad  4 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  4 \ ,\quad  0 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  4 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -8 \ ,\quad -4 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{4}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  4 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad -4 \ ,\quad  8 \right]\\
+			 * \f}
 			 */
-			n[0][j]     =   (1-points->at(j).x-points->at(j).y)*(1-2*(points->at(j).x+points->at(j).y));
-			n[1][j]     =   points->at(j).x*(2*points->at(j).x-1);
-			n[2][j]     =   points->at(j).y*(2*points->at(j).y-1);
-			n[3][j]     = 4*points->at(j).x*(1-points->at(j).x-points->at(j).y);
-			n[4][j]     = 4*points->at(j).x*points->at(j).y;
-			n[5][j]     = 4*points->at(j).y*(1-points->at(j).x-points->at(j).y);
-			dndxi[0][j] = MCVec2(-3+4*points->at(j).x+4*points->at(j).y,-3+4*points->at(j).x+4*points->at(j).y);
-			dndxi[1][j] = MCVec2(-1+4*points->at(j).x                  , 0);
-			dndxi[2][j] = MCVec2( 0                                    ,-1+4*points->at(j).y);
-			dndxi[3][j] = MCVec2( 4-8*points->at(j).x-4*points->at(j).y,  -4*points->at(j).x);
-			dndxi[4][j] = MCVec2(   4*points->at(j).y                  ,   4*points->at(j).x);
-			dndxi[5][j] = MCVec2(  -4*points->at(j).y                  , 4-4*points->at(j).y-8*points->at(j).y);
+			n[0][j] =      (1.0            )*(1.0            )*(1.0-points->at(j).x-points->at(j).y)*(1.0-2.0*(points->at(j).x+points->at(j).y));
+			n[1][j] = -    (points->at(j).x)*(1.0            )*(1.0                                )*(1.0-2.0*points->at(j).x);
+			n[2][j] = -    (1.0            )*(points->at(j).y)*(1.0                                )*(1.0-2.0*points->at(j).y);
+			n[3][j] =  4.0*(points->at(j).x)*(1.0            )*(1.0-points->at(j).x-points->at(j).y);
+			n[4][j] =  4.0*(points->at(j).x)*(points->at(j).y)*(1.0                                );
+			n[5][j] =  4.0*(1.0            )*(points->at(j).y)*(1.0-points->at(j).x-points->at(j).y);
+			dndxi[0][j] = MCVec2(-3.0+4.0*points->at(j).x+4.0*points->at(j).y, -3.0+4.0*points->at(j).x+4.0*points->at(j).y );
+			dndxi[1][j] = MCVec2(-1.0+4.0*points->at(j).x                    ,  0.0                                         );
+			dndxi[2][j] = MCVec2( 0.0                                        , -1.0                    +4.0*points->at(j).y );
+			dndxi[3][j] = MCVec2( 4.0-8.0*points->at(j).x-4.0*points->at(j).y, -    4.0*points->at(j).x                     );
+			dndxi[4][j] = MCVec2(                         4.0*points->at(j).y,      4.0*points->at(j).x                     );
+			dndxi[5][j] = MCVec2(-                        4.0*points->at(j).y,  4.0-4.0*points->at(j).x-8.0*points->at(j).y );
+			d2ndxi2[0][j] = MCVec3(  4.0,  4.0,  4.0 );
+			d2ndxi2[1][j] = MCVec3(  4.0,  0.0,  0.0 );
+			d2ndxi2[2][j] = MCVec3(  0.0,  0.0,  4.0 );
+			d2ndxi2[3][j] = MCVec3( -8.0, -4.0,  0.0 );
+			d2ndxi2[4][j] = MCVec3(  0.0,  4.0,  0.0 );
+			d2ndxi2[5][j] = MCVec3(  0.0, -4.0, -8.0 );
 			break;
 		case M_ELEMENT_QUAD4:
 			/**
-			 * QUAD4
+			 * QUAD4 - shape functions
 			 * \f{eqnarray*}{
 			 * \varphi_{0}(r,s) &=& \frac{1}{4}(1-r)(1-s)\\
 			 * \varphi_{1}(r,s) &=& \frac{1}{4}(1+r)(1-s)\\
 			 * \varphi_{2}(r,s) &=& \frac{1}{4}(1+r)(1+s)\\
 			 * \varphi_{3}(r,s) &=& \frac{1}{4}(1-r)(1+s)\\
 			 * \f}
+			 * QUAD4 -  first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{0}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}(1-s)     \ ,\quad -\frac{1}{4}(1-r)       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{1}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}(1-s)     \ ,\quad -\frac{1}{4}      (1+r) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{2}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{4}     (1+s)\ ,\quad  \frac{1}{4}      (1+r) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\right]\varphi_{3}(r,s) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{4}     (1+s)\ ,\quad  \frac{1}{4}(1-r)       \right]\\
+			 * \f}
+			 * QUAD4 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{0}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0\ ,\quad  \frac{1}{4}\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{1}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0\ ,\quad -\frac{1}{4}\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0\ ,\quad  \frac{1}{4}\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0\ ,\quad -\frac{1}{4}\ ,\quad 0 \right]\\
+			 * \f}
 			 */
-			n[0][j]     = 0.25*(1-points->at(j).x)*(1-points->at(j).y);
-			n[1][j]     = 0.25*(1+points->at(j).x)*(1-points->at(j).y);
-			n[2][j]     = 0.25*(1+points->at(j).x)*(1+points->at(j).y);
-			n[3][j]     = 0.25*(1-points->at(j).x)*(1+points->at(j).y);
-			dndxi[0][j] = MCVec2(0.25*(-1+points->at(j).y),0.25*(-1+points->at(j).x));
-			dndxi[1][j] = MCVec2(0.25*( 1-points->at(j).y),0.25*(-1-points->at(j).x));
-			dndxi[2][j] = MCVec2(0.25*( 1+points->at(j).y),0.25*( 1+points->at(j).x));
-			dndxi[3][j] = MCVec2(0.25*(-1-points->at(j).y),0.25*( 1-points->at(j).x));
+			n[0][j] = 0.25*(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0                );
+			n[1][j] = 0.25*(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                );
+			n[2][j] = 0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y);
+			n[3][j] = 0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                )*(1.0+points->at(j).y);
+			dndxi[0][j] = MCVec2( -0.25*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0-points->at(j).x)*(1.0                ) );
+			dndxi[1][j] = MCVec2(  0.25*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0                )*(1.0+points->at(j).x) );
+			dndxi[2][j] = MCVec2(  0.25*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0                )*(1.0+points->at(j).x) );
+			dndxi[3][j] = MCVec2( -0.25*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0-points->at(j).x)*(1.0                ) );
+			d2ndxi2[0][j] = MCVec3( 0.0,  0.25, 0.0 );
+			d2ndxi2[1][j] = MCVec3( 0.0, -0.25, 0.0 );
+			d2ndxi2[2][j] = MCVec3( 0.0,  0.25, 0.0 );
+			d2ndxi2[3][j] = MCVec3( 0.0, -0.25, 0.0 );
 			break;
 		case M_ELEMENT_QUAD8:
-			/** TODO
+			/**
 			 * QUAD8 - shape functions
 			 * \f{eqnarray*}{
 			 * \varphi_{0}(r,s) &=& -\frac{1}{4}(1-r)(1-s)(1+r+s)\\
@@ -514,38 +595,30 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad             (1-2r)             s       \ ,\quad             (1-r)r      \right]\\
 			 * \f}
 			 */
-			n[0][j] =     0.25*(1-points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).x+points->at(j).y);
-			n[1][j] =     0.25*(1+points->at(j).x)*(1-points->at(j).y)*(1-points->at(j).x+points->at(j).y);
-			n[2][j] =     0.25*(1+points->at(j).x)*(1+points->at(j).y)*(1-points->at(j).x-points->at(j).y);
-			n[3][j] =     0.25*(1-points->at(j).x)*(1+points->at(j).y)*(1+points->at(j).x-points->at(j).y);
-			n[4][j] =     0.5 *(1-points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).x);
-			n[5][j] =     0.5 *(1+points->at(j).x)*(1-points->at(j).y)*(1+points->at(j).y);
-			n[6][j] =     0.5 *(1+points->at(j).x)*(1+points->at(j).y)*(1-points->at(j).x);
-			n[7][j] =     0.5 *(1-points->at(j).x)*(1+points->at(j).y)*(1-points->at(j).y);
-			dndxi[0][j] = MCVec2(
-					0.25*(-(1-points->at(j).y)*(1+points->at(j).x+points->at(j).y)+(1-points->at(j).x)*(1-points->at(j).y)),
-					0.25*(-(1-points->at(j).x)*(1+points->at(j).x+points->at(j).y)+(1-points->at(j).x)*(1-points->at(j).y)));
-			dndxi[1][j] = MCVec2(
-					0.25*( (1-points->at(j).y)*(1-points->at(j).x+points->at(j).y)-(1+points->at(j).x)*(1-points->at(j).y)),
-					0.25*(-(1+points->at(j).x)*(1-points->at(j).x+points->at(j).y)+(1+points->at(j).x)*(1-points->at(j).y)));
-			dndxi[2][j] = MCVec2(
-					0.25*( (1+points->at(j).y)*(1-points->at(j).x-points->at(j).y)-(1+points->at(j).x)*(1+points->at(j).y)),
-					0.25*( (1+points->at(j).x)*(1-points->at(j).x-points->at(j).y)-(1+points->at(j).x)*(1+points->at(j).y)));
-			dndxi[3][j] = MCVec2(
-					0.25*(-(1+points->at(j).y)*(1+points->at(j).x-points->at(j).y)+(1-points->at(j).x)*(1+points->at(j).y)),
-					0.25*( (1-points->at(j).x)*(1+points->at(j).x-points->at(j).y)-(1-points->at(j).x)*(1+points->at(j).y)));
-			dndxi[4][j] = MCVec2(
-					0.5* (-(1+points->at(j).x)*(1-points->at(j).y)+(1-points->at(j).x)*(1-points->at(j).y)),
-					0.5* (-(1-points->at(j).x)*(1+points->at(j).x)));
-			dndxi[5][j] = MCVec2(
-					0.5* ( (1-points->at(j).y)*(1+points->at(j).y)),
-					0.5* (-(1+points->at(j).x)*(1+points->at(j).y)+(1+points->at(j).x)*(1-points->at(j).y)));
-			dndxi[6][j] = MCVec2(
-					0.5* ( (1-points->at(j).x)*(1+points->at(j).y)-(1+points->at(j).x)*(1+points->at(j).y)),
-					0.5* ( (1-points->at(j).x)*(1+points->at(j).x)));
-			dndxi[7][j] = MCVec2(
-					0.5* (-(1-points->at(j).y)*(1+points->at(j).y)),
-					0.5* ( (1-points->at(j).x)*(1-points->at(j).y)-(1-points->at(j).x)*(1+points->at(j).y)));
+			n[0][j] =    -0.25*(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0                )*(1.0+points->at(j).x+points->at(j).y);
+			n[1][j] =    -0.25*(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                )*(1.0-points->at(j).x+points->at(j).y);
+			n[2][j] =    -0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y)*(1.0-points->at(j).x-points->at(j).y);
+			n[3][j] =    -0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                )*(1.0+points->at(j).y)*(1.0+points->at(j).x-points->at(j).y);
+			n[4][j] =     0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                );
+			n[5][j] =     0.5 *(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0+points->at(j).y);
+			n[6][j] =     0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y);
+			n[7][j] =     0.5 *(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0+points->at(j).y);
+			dndxi[0][j] = MCVec2(  0.25*(1.0-points->at(j).y)*(1.0                )*(1.0                                )*(1.0            )*(points->at(j).y+2.0*points->at(j).x),  0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                                )*(1.0            )*(points->at(j).x+2.0*points->at(j).y) );
+			dndxi[1][j] = MCVec2( -0.25*(1.0-points->at(j).y)*(1.0                )*(points->at(j).y-2.0*points->at(j).x)*(1.0            )*(1.0                                ), -0.25*(1.0                )*(1.0+points->at(j).x)*(points->at(j).x-2.0*points->at(j).y)*(1.0            )*(1.0                                ) );
+			dndxi[2][j] = MCVec2(  0.25*(1.0                )*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(points->at(j).y+2.0*points->at(j).x),  0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(points->at(j).x+2.0*points->at(j).y) );
+			dndxi[3][j] = MCVec2( -0.25*(1.0                )*(1.0+points->at(j).y)*(points->at(j).y-2.0*points->at(j).x)*(1.0            )*(1.0                                ), -0.25*(1.0-points->at(j).x)*(1.0                )*(points->at(j).x-2.0*points->at(j).y)*(1.0            )*(1.0                                ) );
+			dndxi[4][j] = MCVec2( -     (1.0-points->at(j).y)*(1.0                )*(1.0                                )*(points->at(j).x)*(1.0                                ), -0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(1.0                                ) );
+			dndxi[5][j] = MCVec2(  0.5 *(1.0-points->at(j).y)*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(1.0                                ), -     (1.0                )*(1.0+points->at(j).x)*(1.0                                )*(points->at(j).y)*(1.0                                ) );
+			dndxi[6][j] = MCVec2( -     (1.0                )*(1.0+points->at(j).y)*(1.0                                )*(points->at(j).x)*(1.0                                ),  0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(1.0                                ) );
+			dndxi[7][j] = MCVec2( -0.5 *(1.0-points->at(j).y)*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(1.0                                ), -     (1.0-points->at(j).x)*(1.0                )*(1.0                                )*(points->at(j).y)*(1.0                                ) );
+			d2ndxi2[0][j] = MCVec3(  0.5*(1.0-points->at(j).y)*(1.0                ),  0.25*(1.0-2.0*points->at(j).x-2.0*points->at(j).y),  0.5*(1.0-points->at(j).x)*(1.0                ) );
+			d2ndxi2[1][j] = MCVec3(  0.5*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0+2.0*points->at(j).x-2.0*points->at(j).y),  0.5*(1.0                )*(1.0+points->at(j).x) );
+			d2ndxi2[2][j] = MCVec3(  0.5*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0+2.0*points->at(j).x+2.0*points->at(j).y),  0.5*(1.0                )*(1.0+points->at(j).x) );
+			d2ndxi2[3][j] = MCVec3(  0.5*(1.0                )*(1.0+points->at(j).y), -0.25*(1.0-2.0*points->at(j).x+2.0*points->at(j).y),  0.5*(1.0-points->at(j).x)*(1.0                ) );
+			d2ndxi2[4][j] = MCVec3( -    (1.0-points->at(j).y)*(1.0                ),       (        points->at(j).x                    ),  0.0                                             );
+			d2ndxi2[5][j] = MCVec3(  0.0                                            , -     (                            points->at(j).y), -    (1.0                )*(1.0+points->at(j).x) );
+			d2ndxi2[6][j] = MCVec3( -    (1.0                )*(1.0+points->at(j).y), -     (        points->at(j).x                    ),  0.0                                             );
+			d2ndxi2[7][j] = MCVec3(  0.0                                            ,       (                            points->at(j).y), -    (1.0-points->at(j).x)*(1.0                ) );
 			break;
 		case M_ELEMENT_QUAD9:
 			/**

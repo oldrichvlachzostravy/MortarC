@@ -12,13 +12,21 @@
 // only temporalily
 //#include "mex.h"
 
-#define M_ELEMENT_LINE2 0
-#define M_ELEMENT_LINE3 1
-#define M_ELEMENT_TRIA3 2
-#define M_ELEMENT_TRIA6 3
-#define M_ELEMENT_QUAD4 4
-#define M_ELEMENT_QUAD8 5
-#define M_ELEMENT_QUAD9 6
+#define M_ELEMENT_LINE2    0
+#define M_ELEMENT_LINE3    1
+#define M_ELEMENT_TRIA3    2
+#define M_ELEMENT_TRIA6    3
+#define M_ELEMENT_QUAD4    4
+#define M_ELEMENT_QUAD8    5
+#define M_ELEMENT_QUAD9    6
+#define M_ELEMENT_TETRA4   7
+#define M_ELEMENT_TETRA10  8
+#define M_ELEMENT_PENTA6   9
+#define M_ELEMENT_PENTA15 10
+#define M_ELEMENT_HEXA8   11
+#define M_ELEMENT_HEXA10  12
+#define M_ELEMENT_HEXA27  13
+
 #define M_ELEMENT_UNKNOWN 100
 
 #define M_LINE2_NODES_COUNT 2

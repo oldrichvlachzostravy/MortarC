@@ -48,6 +48,7 @@ public:
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
 			std::map<int,std::map<int,double> > &,
+			std::map<int,std::map<int,double> > &,
 			const std::map<int,std::map<int,double> > &,
 			const std::map<int,std::map<int,double> > &,
 			const std::map<int,int> &,

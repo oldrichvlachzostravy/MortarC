@@ -384,6 +384,9 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
     MCVec3 sum_xi1, sum_xi2;
 	for (int j=0; j<points_count; j++)
 	{
+		double r = points->at(j).x;
+		double s = points->at(j).y;
+		double t = 0.0;
 		switch (element_type)
 		{
 		case M_ELEMENT_LINE2:
@@ -404,12 +407,12 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \frac{\partial^2}{\partial r^2}\varphi_{1}(r) &=&  0\\
 			 * \f}
 			 */
-			n[0][j]     = 0.5*(1-points->at(j).x);
-			n[1][j]     = 0.5*(1+points->at(j).x);
-			dndxi[0][j] = MCVec2(-0.5,0.0);
-			dndxi[1][j] = MCVec2( 0.5,0.0);
-			d2ndxi2[0][j] = MCVec3( 0.0, 0.0, 0.0);
-			d2ndxi2[1][j] = MCVec3( 0.0, 0.0, 0.0);
+			n[0][j]     = 0.5*(1-r)      ;
+			n[1][j]     = 0.5      *(1+r);
+			dndxi[0][j].resize(1); dndxi[0][j][0] =-0.5;
+			dndxi[1][j].resize(1); dndxi[1][j][0] = 0.5;
+			d2ndxi2[0][j].resize(1); d2ndxi2[0][j][0] = 0.0;
+			d2ndxi2[1][j].resize(1); d2ndxi2[1][j][0] = 0.0;
 			break;
 		case M_ELEMENT_LINE3:
 			/**
@@ -432,15 +435,15 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \frac{\partial^2}{\partial r^2}\varphi_{2}(r) &=& -2\\
 			 * \f}
 			 */
-			n[0][j] = -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                );
-			n[1][j] =  0.5*(1.0                )*(points->at(j).x)*(1.0                );
-			n[2][j] =      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x);
-			dndxi[0][j] = MCVec2(-0.5+points->at(j).x,0.0);
-			dndxi[1][j] = MCVec2( 0.5+points->at(j).x,0.0);
-			dndxi[2][j] = MCVec2(-2.0*points->at(j).x,0.0);
-			d2ndxi2[0][j] = MCVec3( 1.0, 0.0, 0.0);
-			d2ndxi2[1][j] = MCVec3( 1.0, 0.0, 0.0);
-			d2ndxi2[2][j] = MCVec3(-2.0, 0.0, 0.0);
+			n[0][j] = -0.5*(1.0-r)*(r)        ;
+			n[1][j] =  0.5        *(r)        ;
+			n[2][j] =      (1.0-r)    *(1.0+r);
+			dndxi[0][j].resize(1); dndxi[0][j][0] = -0.5+r;
+			dndxi[1][j].resize(1); dndxi[1][j][0] =  0.5+r;
+			dndxi[2][j].resize(1); dndxi[2][j][0] = -2.0*r;
+			d2ndxi2[0][j].resize(1); d2ndxi2[0][j][0] = 1.0;
+			d2ndxi2[1][j].resize(1); d2ndxi2[1][j][0] = 1.0;
+			d2ndxi2[2][j].resize(1); d2ndxi2[2][j][0] =-2.0;
 			break;
 		case M_ELEMENT_TRIA3:
 			/**
@@ -463,15 +466,15 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{2}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \right]\\
 			 * \f}
 			 */
-			n[0][j]     = (1-points->at(j).x-points->at(j).y);
-			n[1][j]     = points->at(j).x;
-			n[2][j]     = points->at(j).y;
-			dndxi[0][j] = MCVec2( -1.0, -1.0 );
-			dndxi[1][j] = MCVec2(  1.0,  0.0 );
-			dndxi[2][j] = MCVec2(  0.0,  1.0 );
-			d2ndxi2[0][j] = MCVec3( 0.0, 0.0, 0.0 );
-			d2ndxi2[1][j] = MCVec3( 0.0, 0.0, 0.0 );
-			d2ndxi2[2][j] = MCVec3( 0.0, 0.0, 0.0 );
+			n[0][j]     = (1-r-s);
+			n[1][j]     = r;
+			n[2][j]     = s;
+			dndxi[0][j].resize(2); dndxi[0][j][0] = -1.0; dndxi[0][j][1] =  -1.0;
+			dndxi[1][j].resize(2); dndxi[1][j][0] =  1.0; dndxi[1][j][1] =   0.0;
+			dndxi[2][j].resize(2); dndxi[2][j][0] =  0.0; dndxi[2][j][1] =   1.0;
+			d2ndxi2[0][j].resize(2); d2ndxi2[0][j][0] = 0.0; d2ndxi2[0][j][1] = 0.0; d2ndxi2[0][j][2] = 0.0;
+			d2ndxi2[1][j].resize(2); d2ndxi2[1][j][0] = 0.0; d2ndxi2[1][j][1] = 0.0; d2ndxi2[1][j][2] = 0.0;
+			d2ndxi2[2][j].resize(2); d2ndxi2[2][j][0] = 0.0; d2ndxi2[2][j][1] = 0.0; d2ndxi2[2][j][2] = 0.0;
 			break;
 		case M_ELEMENT_TRIA6:
 			/**
@@ -503,24 +506,24 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{5}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad -4 \ ,\quad  8 \right]\\
 			 * \f}
 			 */
-			n[0][j] =      (1.0            )*(1.0            )*(1.0-points->at(j).x-points->at(j).y)*(1.0-2.0*(points->at(j).x+points->at(j).y));
-			n[1][j] = -    (points->at(j).x)*(1.0            )*(1.0                                )*(1.0-2.0*points->at(j).x);
-			n[2][j] = -    (1.0            )*(points->at(j).y)*(1.0                                )*(1.0-2.0*points->at(j).y);
-			n[3][j] =  4.0*(points->at(j).x)*(1.0            )*(1.0-points->at(j).x-points->at(j).y);
-			n[4][j] =  4.0*(points->at(j).x)*(points->at(j).y)*(1.0                                );
-			n[5][j] =  4.0*(1.0            )*(points->at(j).y)*(1.0-points->at(j).x-points->at(j).y);
-			dndxi[0][j] = MCVec2(-3.0+4.0*points->at(j).x+4.0*points->at(j).y, -3.0+4.0*points->at(j).x+4.0*points->at(j).y );
-			dndxi[1][j] = MCVec2(-1.0+4.0*points->at(j).x                    ,  0.0                                         );
-			dndxi[2][j] = MCVec2( 0.0                                        , -1.0                    +4.0*points->at(j).y );
-			dndxi[3][j] = MCVec2( 4.0-8.0*points->at(j).x-4.0*points->at(j).y, -    4.0*points->at(j).x                     );
-			dndxi[4][j] = MCVec2(                         4.0*points->at(j).y,      4.0*points->at(j).x                     );
-			dndxi[5][j] = MCVec2(-                        4.0*points->at(j).y,  4.0-4.0*points->at(j).x-8.0*points->at(j).y );
-			d2ndxi2[0][j] = MCVec3(  4.0,  4.0,  4.0 );
-			d2ndxi2[1][j] = MCVec3(  4.0,  0.0,  0.0 );
-			d2ndxi2[2][j] = MCVec3(  0.0,  0.0,  4.0 );
-			d2ndxi2[3][j] = MCVec3( -8.0, -4.0,  0.0 );
-			d2ndxi2[4][j] = MCVec3(  0.0,  4.0,  0.0 );
-			d2ndxi2[5][j] = MCVec3(  0.0, -4.0, -8.0 );
+			n[0][j] =              (1.0-r-s)*(1.0-2.0*(r+s));
+			n[1][j] = -    (r)              *(1.0-2.0*r);
+			n[2][j] = -        (s)          *(1.0-2.0*s);
+			n[3][j] =  4.0*(r)    *(1.0-r-s);
+			n[4][j] =  4.0*(r)*(s)          ;
+			n[5][j] =  4.0    *(s)*(1.0-r-s);
+			dndxi[0][j].resize(2); dndxi[0][j][0] = -3.0+4.0*r+4.0*s; dndxi[0][j][1] = -3.0+4.0*r+4.0*s;
+			dndxi[1][j].resize(2); dndxi[1][j][0] = -1.0+4.0*r      ; dndxi[1][j][1] =  0.0            ;
+			dndxi[2][j].resize(2); dndxi[2][j][0] =  0.0            ; dndxi[2][j][1] = -1.0      +4.0*s;
+			dndxi[3][j].resize(2); dndxi[3][j][0] =  4.0-8.0*r-4.0*s; dndxi[3][j][1] = -    4.0*r      ;
+			dndxi[4][j].resize(2); dndxi[4][j][0] =            4.0*s; dndxi[4][j][1] =      4.0*r      ;
+			dndxi[5][j].resize(2); dndxi[5][j][0] = -          4.0*s; dndxi[5][j][1] =  4.0-4.0*r-8.0*s;
+			d2ndxi2[0][j].resize(2); d2ndxi2[0][j][0] =  4.0; d2ndxi2[0][j][1] =  4.0; d2ndxi2[0][j][2] =  4.0;
+			d2ndxi2[1][j].resize(2); d2ndxi2[1][j][0] =  4.0; d2ndxi2[1][j][1] =  0.0; d2ndxi2[1][j][2] =  0.0;
+			d2ndxi2[2][j].resize(2); d2ndxi2[2][j][0] =  0.0; d2ndxi2[2][j][1] =  0.0; d2ndxi2[2][j][2] =  4.0;
+			d2ndxi2[3][j].resize(2); d2ndxi2[3][j][0] = -8.0; d2ndxi2[3][j][1] = -4.0; d2ndxi2[3][j][2] =  0.0;
+			d2ndxi2[4][j].resize(2); d2ndxi2[4][j][0] =  0.0; d2ndxi2[4][j][1] =  4.0; d2ndxi2[4][j][2] =  0.0;
+			d2ndxi2[5][j].resize(2); d2ndxi2[5][j][0] =  0.0; d2ndxi2[5][j][1] = -4.0; d2ndxi2[5][j][2] = -8.0;
 			break;
 		case M_ELEMENT_QUAD4:
 			/**
@@ -546,18 +549,18 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{3}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0\ ,\quad -\frac{1}{4}\ ,\quad 0 \right]\\
 			 * \f}
 			 */
-			n[0][j] = 0.25*(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0                );
-			n[1][j] = 0.25*(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                );
-			n[2][j] = 0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y);
-			n[3][j] = 0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                )*(1.0+points->at(j).y);
-			dndxi[0][j] = MCVec2( -0.25*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0-points->at(j).x)*(1.0                ) );
-			dndxi[1][j] = MCVec2(  0.25*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0                )*(1.0+points->at(j).x) );
-			dndxi[2][j] = MCVec2(  0.25*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0                )*(1.0+points->at(j).x) );
-			dndxi[3][j] = MCVec2( -0.25*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0-points->at(j).x)*(1.0                ) );
-			d2ndxi2[0][j] = MCVec3( 0.0,  0.25, 0.0 );
-			d2ndxi2[1][j] = MCVec3( 0.0, -0.25, 0.0 );
-			d2ndxi2[2][j] = MCVec3( 0.0,  0.25, 0.0 );
-			d2ndxi2[3][j] = MCVec3( 0.0, -0.25, 0.0 );
+			n[0][j] = 0.25*(1.0-r)        *(1.0-s)        ;
+			n[1][j] = 0.25        *(1.0+r)*(1.0-s)        ;
+			n[2][j] = 0.25        *(1.0+r)        *(1.0+s);
+			n[3][j] = 0.25*(1.0-r)                *(1.0+s);
+			dndxi[0][j].resize(2); dndxi[0][j][0] = -0.25*(1.0-s)        ; dndxi[0][j][1] = -0.25*(1.0-r)        ;
+			dndxi[1][j].resize(2); dndxi[1][j][0] =  0.25*(1.0-s)        ; dndxi[1][j][1] = -0.25        *(1.0+r);
+			dndxi[2][j].resize(2); dndxi[2][j][0] =  0.25        *(1.0+s); dndxi[2][j][1] =  0.25        *(1.0+r);
+			dndxi[3][j].resize(2); dndxi[3][j][0] = -0.25        *(1.0+s); dndxi[3][j][1] =  0.25*(1.0-r)        ;
+			d2ndxi2[0][j].resize(3); d2ndxi2[0][j][0] = 0.0; d2ndxi2[0][j][1] =  0.25; d2ndxi2[0][j][2] =  0.0;
+			d2ndxi2[1][j].resize(3); d2ndxi2[1][j][0] = 0.0; d2ndxi2[1][j][1] = -0.25; d2ndxi2[1][j][2] =  0.0;
+			d2ndxi2[2][j].resize(3); d2ndxi2[2][j][0] = 0.0; d2ndxi2[2][j][1] =  0.25; d2ndxi2[2][j][2] =  0.0;
+			d2ndxi2[3][j].resize(3); d2ndxi2[3][j][0] = 0.0; d2ndxi2[3][j][1] = -0.25; d2ndxi2[3][j][2] =  0.0;
 			break;
 		case M_ELEMENT_QUAD8:
 			/**
@@ -595,30 +598,30 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{7}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}}             (1-s) (1+s) \ ,\quad             (1-2r)             s       \ ,\quad             (1-r)r      \right]\\
 			 * \f}
 			 */
-			n[0][j] =    -0.25*(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0                )*(1.0+points->at(j).x+points->at(j).y);
-			n[1][j] =    -0.25*(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                )*(1.0-points->at(j).x+points->at(j).y);
-			n[2][j] =    -0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y)*(1.0-points->at(j).x-points->at(j).y);
-			n[3][j] =    -0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                )*(1.0+points->at(j).y)*(1.0+points->at(j).x-points->at(j).y);
-			n[4][j] =     0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0                );
-			n[5][j] =     0.5 *(1.0                )*(1.0+points->at(j).x)*(1.0-points->at(j).y)*(1.0+points->at(j).y);
-			n[6][j] =     0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                )*(1.0+points->at(j).y);
-			n[7][j] =     0.5 *(1.0-points->at(j).x)*(1.0                )*(1.0-points->at(j).y)*(1.0+points->at(j).y);
-			dndxi[0][j] = MCVec2(  0.25*(1.0-points->at(j).y)*(1.0                )*(1.0                                )*(1.0            )*(points->at(j).y+2.0*points->at(j).x),  0.25*(1.0-points->at(j).x)*(1.0                )*(1.0                                )*(1.0            )*(points->at(j).x+2.0*points->at(j).y) );
-			dndxi[1][j] = MCVec2( -0.25*(1.0-points->at(j).y)*(1.0                )*(points->at(j).y-2.0*points->at(j).x)*(1.0            )*(1.0                                ), -0.25*(1.0                )*(1.0+points->at(j).x)*(points->at(j).x-2.0*points->at(j).y)*(1.0            )*(1.0                                ) );
-			dndxi[2][j] = MCVec2(  0.25*(1.0                )*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(points->at(j).y+2.0*points->at(j).x),  0.25*(1.0                )*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(points->at(j).x+2.0*points->at(j).y) );
-			dndxi[3][j] = MCVec2( -0.25*(1.0                )*(1.0+points->at(j).y)*(points->at(j).y-2.0*points->at(j).x)*(1.0            )*(1.0                                ), -0.25*(1.0-points->at(j).x)*(1.0                )*(points->at(j).x-2.0*points->at(j).y)*(1.0            )*(1.0                                ) );
-			dndxi[4][j] = MCVec2( -     (1.0-points->at(j).y)*(1.0                )*(1.0                                )*(points->at(j).x)*(1.0                                ), -0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(1.0                                ) );
-			dndxi[5][j] = MCVec2(  0.5 *(1.0-points->at(j).y)*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(1.0                                ), -     (1.0                )*(1.0+points->at(j).x)*(1.0                                )*(points->at(j).y)*(1.0                                ) );
-			dndxi[6][j] = MCVec2( -     (1.0                )*(1.0+points->at(j).y)*(1.0                                )*(points->at(j).x)*(1.0                                ),  0.5 *(1.0-points->at(j).x)*(1.0+points->at(j).x)*(1.0                                )*(1.0            )*(1.0                                ) );
-			dndxi[7][j] = MCVec2( -0.5 *(1.0-points->at(j).y)*(1.0+points->at(j).y)*(1.0                                )*(1.0            )*(1.0                                ), -     (1.0-points->at(j).x)*(1.0                )*(1.0                                )*(points->at(j).y)*(1.0                                ) );
-			d2ndxi2[0][j] = MCVec3(  0.5*(1.0-points->at(j).y)*(1.0                ),  0.25*(1.0-2.0*points->at(j).x-2.0*points->at(j).y),  0.5*(1.0-points->at(j).x)*(1.0                ) );
-			d2ndxi2[1][j] = MCVec3(  0.5*(1.0-points->at(j).y)*(1.0                ), -0.25*(1.0+2.0*points->at(j).x-2.0*points->at(j).y),  0.5*(1.0                )*(1.0+points->at(j).x) );
-			d2ndxi2[2][j] = MCVec3(  0.5*(1.0                )*(1.0+points->at(j).y),  0.25*(1.0+2.0*points->at(j).x+2.0*points->at(j).y),  0.5*(1.0                )*(1.0+points->at(j).x) );
-			d2ndxi2[3][j] = MCVec3(  0.5*(1.0                )*(1.0+points->at(j).y), -0.25*(1.0-2.0*points->at(j).x+2.0*points->at(j).y),  0.5*(1.0-points->at(j).x)*(1.0                ) );
-			d2ndxi2[4][j] = MCVec3( -    (1.0-points->at(j).y)*(1.0                ),       (        points->at(j).x                    ),  0.0                                             );
-			d2ndxi2[5][j] = MCVec3(  0.0                                            , -     (                            points->at(j).y), -    (1.0                )*(1.0+points->at(j).x) );
-			d2ndxi2[6][j] = MCVec3( -    (1.0                )*(1.0+points->at(j).y), -     (        points->at(j).x                    ),  0.0                                             );
-			d2ndxi2[7][j] = MCVec3(  0.0                                            ,       (                            points->at(j).y), -    (1.0-points->at(j).x)*(1.0                ) );
+			n[0][j] =    -0.25*(1.0-r)*(1.0  )*(1.0-s)*(1.0  )*(1.0+r+s);
+			n[1][j] =    -0.25*(1.0  )*(1.0+r)*(1.0-s)*(1.0  )*(1.0-r+s);
+			n[2][j] =    -0.25*(1.0  )*(1.0+r)*(1.0  )*(1.0+s)*(1.0-r-s);
+			n[3][j] =    -0.25*(1.0-r)*(1.0  )*(1.0  )*(1.0+s)*(1.0+r-s);
+			n[4][j] =     0.5 *(1.0-r)*(1.0+r)*(1.0-s)*(1.0  );
+			n[5][j] =     0.5 *(1.0  )*(1.0+r)*(1.0-s)*(1.0+s);
+			n[6][j] =     0.5 *(1.0-r)*(1.0+r)*(1.0  )*(1.0+s);
+			n[7][j] =     0.5 *(1.0-r)*(1.0  )*(1.0-s)*(1.0+s);
+			dndxi[0][j].resize(2); dndxi[0][j][0] =  0.25*(1.0-s)                      *(s+2.0*r); dndxi[0][j][1] =  0.25*(1.0-r)                      *(r+2.0*s);
+			dndxi[1][j].resize(2); dndxi[1][j][0] = -0.25*(1.0-s)        *(s-2.0*r)              ; dndxi[1][j][1] = -0.25        *(1.0+r)*(r-2.0*s)              ;
+			dndxi[2][j].resize(2); dndxi[2][j][0] =  0.25        *(1.0+s)*(1.0    )    *(s+2.0*r); dndxi[2][j][1] =  0.25        *(1.0+r)              *(r+2.0*s);
+			dndxi[3][j].resize(2); dndxi[3][j][0] = -0.25        *(1.0+s)*(s-2.0*r)              ; dndxi[3][j][1] = -0.25*(1.0-r)        *(r-2.0*s)              ;
+			dndxi[4][j].resize(2); dndxi[4][j][0] = -     (1.0-s)                  *(r)          ; dndxi[4][j][1] = -0.5 *(1.0-r)*(1.0+r)                        ;
+			dndxi[5][j].resize(2); dndxi[5][j][0] =  0.5 *(1.0-s)*(1.0+s)                        ; dndxi[5][j][1] = -             (1.0+r)          *(s)          ;
+			dndxi[6][j].resize(2); dndxi[6][j][0] = -             (1.0+s)          *(r)          ; dndxi[6][j][1] =  0.5 *(1.0-r)*(1.0+r)                        ;
+			dndxi[7][j].resize(2); dndxi[7][j][0] = -0.5 *(1.0-s)*(1.0+s)                        ; dndxi[7][j][1] = -     (1.0-r)                  *(s)          ;
+			d2ndxi2[0][j].resize(3); d2ndxi2[0][j][0] =  0.5*(1.0-s)        ; d2ndxi2[0][j][1] =  0.25*(1.0-2.0*r-2.0*s); d2ndxi2[0][j][2] =  0.5*(1.0-r)        ;
+			d2ndxi2[1][j].resize(3); d2ndxi2[1][j][0] =  0.5*(1.0-s)        ; d2ndxi2[1][j][1] = -0.25*(1.0+2.0*r-2.0*s); d2ndxi2[1][j][2] =  0.5        *(1.0+r);
+			d2ndxi2[2][j].resize(3); d2ndxi2[2][j][0] =  0.5        *(1.0+s); d2ndxi2[2][j][1] =  0.25*(1.0+2.0*r+2.0*s); d2ndxi2[2][j][2] =  0.5        *(1.0+r);
+			d2ndxi2[3][j].resize(3); d2ndxi2[3][j][0] =  0.5        *(1.0+s); d2ndxi2[3][j][1] = -0.25*(1.0-2.0*r+2.0*s); d2ndxi2[3][j][2] =  0.5*(1.0-r)        ;
+			d2ndxi2[4][j].resize(3); d2ndxi2[4][j][0] = -    (1.0-s)        ; d2ndxi2[4][j][1] =       (        r      ); d2ndxi2[4][j][2] =  0.0                ;
+			d2ndxi2[5][j].resize(3); d2ndxi2[5][j][0] =  0.0                ; d2ndxi2[5][j][1] = -     (              s); d2ndxi2[5][j][2] = -            (1.0+r);
+			d2ndxi2[6][j].resize(3); d2ndxi2[6][j][0] = -            (1.0+s); d2ndxi2[6][j][1] = -     (        r      ); d2ndxi2[6][j][2] =  0.0                ;
+			d2ndxi2[7][j].resize(3); d2ndxi2[7][j][0] =  0.0                ; d2ndxi2[7][j][1] =       (              s); d2ndxi2[7][j][2] = -    (1.0-r)        ;
 			break;
 		case M_ELEMENT_QUAD9:
 			/**
@@ -659,33 +662,277 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial s\partial r}\ ,\ \frac{\partial^2}{\partial s^2}\right]\varphi_{8}(r,s) &=&  \left[\vphantom{\frac{\partial}{\partial}} -2          (1-s) (1+s) \ ,\quad  4                r            s       \ ,\quad -2          (1-r) (1+r) \right]\\
 			 * \f}
 			 */
-			n[0][j] =  0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
-			n[1][j] = -0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
-			n[2][j] =  0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
-			n[3][j] = -0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
-			n[4][j] = -0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                );
-			n[5][j] =  0.5 *(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
-			n[6][j] =  0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y);
-			n[7][j] = -0.5 *(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
-			n[8][j] =       (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y);
-			dndxi[0][j] = MCVec2(  0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),  0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
-			dndxi[1][j] = MCVec2( -0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
-			dndxi[2][j] = MCVec2(  0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y),  0.25*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
-			dndxi[3][j] = MCVec2( -0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y), -0.25*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
-			dndxi[4][j] = MCVec2(       (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ) );
-			dndxi[5][j] = MCVec2(  0.5 *(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -     (1.0                )*(points->at(j).x)*(1.0+points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
-			dndxi[6][j] = MCVec2( -     (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                )*(points->at(j).y)*(1.0+points->at(j).y),  0.5 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y) );
-			dndxi[7][j] = MCVec2( -0.5 *(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),       (1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
-			dndxi[8][j] = MCVec2( -2.0 *(1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -2.0 *(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ) );
-			d2ndxi2[0][j] = MCVec3(	-0.5*(1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),  0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ), -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
-			d2ndxi2[1][j] = MCVec3(	-0.5*(1.0-points->at(j).y)*(points->at(j).y)*(1.0                ), -0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ),  0.5*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
-			d2ndxi2[2][j] = MCVec3(	 0.5*(1.0                )*(points->at(j).y)*(1.0+points->at(j).y),	 0.25*(1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y),  0.5*(1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
-			d2ndxi2[3][j] = MCVec3(  0.5*(1.0                )*(points->at(j).y)*(1.0+points->at(j).y),	-0.25*(1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y), -0.5*(1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
-			d2ndxi2[4][j] = MCVec3(	     (1.0-points->at(j).y)*(points->at(j).y)*(1.0                ),       (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0-2.0*points->at(j).y)*(1.0            )*(1.0                    ),      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
-			d2ndxi2[5][j] = MCVec3(	     (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y), -     (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).x) * (1.0                    )*(points->at(j).y)*(1.0                    ), -    (1.0                )*(points->at(j).x)*(1.0+points->at(j).x) );
-			d2ndxi2[6][j] = MCVec3(	-    (1.0                )*(points->at(j).y)*(1.0+points->at(j).y), -     (1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                    )*(1.0            )*(1.0+2.0*points->at(j).y),      (1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
-			d2ndxi2[7][j] = MCVec3(	     (1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),       (1.0-2.0*points->at(j).x)*(1.0            )*(1.0                    ) * (1.0                    )*(points->at(j).y)*(1.0                    ),      (1.0-points->at(j).x)*(points->at(j).x)*(1.0                ) );
-			d2ndxi2[8][j] = MCVec3(	-2.0*(1.0-points->at(j).y)*(1.0            )*(1.0+points->at(j).y),  4.0 *(1.0                    )*(points->at(j).x)*(1.0                    ) * (1.0                    )*(points->at(j).y)*(1.0                    ), -2.0*(1.0-points->at(j).x)*(1.0            )*(1.0+points->at(j).x) );
+			n[0][j] =  0.25*(1.0-r)*(r)        *(1.0-s)*(s)        ;
+			n[1][j] = -0.25        *(r)*(1.0+r)*(1.0-s)*(s)        ;
+			n[2][j] =  0.25        *(r)*(1.0+r)*(1.0  )*(s)*(1.0+s);
+			n[3][j] = -0.25*(1.0-r)*(r)        *(1.0  )*(s)*(1.0+s);
+			n[4][j] = -0.5 *(1.0-r)    *(1.0+r)*(1.0-s)*(s)        ;
+			n[5][j] =  0.5         *(r)*(1.0+r)*(1.0-s)    *(1.0+s);
+			n[6][j] =  0.5 *(1.0-r)    *(1.0+r)*(1.0  )*(s)*(1.0+s);
+			n[7][j] = -0.5 *(1.0-r)*(r)        *(1.0-s)    *(1.0+s);
+			n[8][j] =       (1.0-r)    *(1.0+r)*(1.0-s)    *(1.0+s);
+			dndxi[0][j].resize(2); dndxi[0][j][0] =  0.25*(1.0-2.0*r)                *(1.0-s)*(s)        ; dndxi[0][j][1] =   0.25*(1.0-r)*(r)        *(1.0-2.0*s)                ;
+			dndxi[1][j].resize(2); dndxi[1][j][0] = -0.25                *(1.0+2.0*r)*(1.0-s)*(s)        ; dndxi[1][j][1] =  -0.25        *(r)*(1.0+r)*(1.0-2.0*s)                ;
+			dndxi[2][j].resize(2); dndxi[2][j][0] =  0.25                *(1.0+2.0*r)        *(s)*(1.0+s); dndxi[2][j][1] =   0.25        *(r)*(1.0+r)                *(1.0+2.0*s);
+			dndxi[3][j].resize(2); dndxi[3][j][0] = -0.25*(1.0-2.0*r)                        *(s)*(1.0+s); dndxi[3][j][1] =  -0.25*(1.0-r)*(r)                        *(1.0+2.0*s);
+			dndxi[4][j].resize(2); dndxi[4][j][0] =                   (r)            *(1.0-s)*(s)        ; dndxi[4][j][1] =  -0.5 *(1.0-r)    *(1.0+r)*(1.0-2.0*s)                ;
+			dndxi[5][j].resize(2); dndxi[5][j][0] =  0.5                 *(1.0+2.0*r)*(1.0-s)    *(1.0+s); dndxi[5][j][1] =  -             (r)*(1.0+r)            *(s)            ;
+			dndxi[6][j].resize(2); dndxi[6][j][0] = -                 (r)                    *(s)*(1.0+s); dndxi[6][j][1] =   0.5 *(1.0-r)    *(1.0+r)                *(1.0+2.0*s);
+			dndxi[7][j].resize(2); dndxi[7][j][0] = -0.5 *(1.0-2.0*r)                *(1.0-s)    *(1.0+s); dndxi[7][j][1] =        (1.0-r)*(r)                    *(s)            ;
+			dndxi[8][j].resize(2); dndxi[8][j][0] = -2.0             *(r)            *(1.0-s)    *(1.0+s); dndxi[8][j][1] =  -2.0 *(1.0-r)    *(1.0+r)            *(s)            ;
+			d2ndxi2[0][j].resize(3); d2ndxi2[0][j][0] = -0.5*(1.0-s)*(s)        ; d2ndxi2[0][j][1] =  0.25*(1.0-2.0*r)                *(1.0-2.0*s)                ; d2ndxi2[0][j][2] = -0.5*(1.0-r)*(r)        ;
+			d2ndxi2[1][j].resize(3); d2ndxi2[1][j][0] = -0.5*(1.0-s)*(s)        ; d2ndxi2[1][j][1] = -0.25                *(1.0+2.0*r)*(1.0-2.0*s)                ; d2ndxi2[1][j][2] =  0.5        *(r)*(1.0+r);
+			d2ndxi2[2][j].resize(3); d2ndxi2[2][j][0] =  0.5        *(s)*(1.0+s); d2ndxi2[2][j][1] =  0.25                *(1.0+2.0*r)                *(1.0+2.0*s); d2ndxi2[2][j][2] =  0.5        *(r)*(1.0+r);
+			d2ndxi2[3][j].resize(3); d2ndxi2[3][j][0] =  0.5        *(s)*(1.0+s); d2ndxi2[3][j][1] = -0.25*(1.0-2.0*r)                                *(1.0+2.0*s); d2ndxi2[3][j][2] = -0.5*(1.0-r)*(r)        ;
+			d2ndxi2[4][j].resize(3); d2ndxi2[4][j][0] =      (1.0-s)*(s)        ; d2ndxi2[4][j][1] =                   (r)            *(1.0-2.0*s)                ; d2ndxi2[4][j][2] =      (1.0-r)    *(1.0+r);
+			d2ndxi2[5][j].resize(3); d2ndxi2[5][j][0] =      (1.0-s)    *(1.0+s); d2ndxi2[5][j][1] = -                     (1.0+2.0*r)            *(s)            ; d2ndxi2[5][j][2] = -            (r)*(1.0+r);
+			d2ndxi2[6][j].resize(3); d2ndxi2[6][j][0] = -            (s)*(1.0+s); d2ndxi2[6][j][1] = -                 (r)                            *(1.0+2.0*s); d2ndxi2[6][j][2] =      (1.0-r)    *(1.0+r);
+			d2ndxi2[7][j].resize(3); d2ndxi2[7][j][0] =      (1.0-s)    *(1.0+s); d2ndxi2[7][j][1] =       (1.0-2.0*r)                            *(s)            ; d2ndxi2[7][j][2] =      (1.0-r)*(r)        ;
+			d2ndxi2[8][j].resize(3); d2ndxi2[8][j][0] = -2.0*(1.0-s)    *(1.0+s); d2ndxi2[8][j][1] =  4.0             *(r)                        *(s)            ; d2ndxi2[8][j][2] = -2.0*(1.0-r)    *(1.0+r);
+			break;
+		case M_ELEMENT_TETRA4:
+			/**
+			 * TETRA4 - shape functions
+			 * \f{eqnarray*}{
+			 * \varphi_{0}(r,s,t) &=&  1-r-s-t\\
+			 * \varphi_{1}(r,s,t) &=&    r    \\
+			 * \varphi_{2}(r,s,t) &=&      s  \\
+			 * \varphi_{3}(r,s,t) &=&        t\\
+			 * \f}
+			 * TETRA4 - first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{0}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -1 \ ,\quad -1 \ ,\quad -1 \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{1}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  1 \ ,\quad  0 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{2}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  1 \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{3}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  1 \right]\\
+			 * \f}
+			 * TETRA4 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{0}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{1}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{2}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0\ ,\quad 0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{3}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}} 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0 \ ,\quad 0\ ,\quad 0 \right]\\
+			 * \f}
+			 */
+			n[0][j] =  1.0-r-s-t;
+			n[1][j] =      r    ;
+			n[2][j] =        s  ;
+			n[3][j] =          t;
+			dndxi[0][j].resize(3); dndxi[0][j][0] = -1.0; dndxi[0][j][1] = -1.0; dndxi[0][j][2] = -1.0;
+			dndxi[1][j].resize(3); dndxi[1][j][0] =  1.0; dndxi[1][j][1] =  0.0; dndxi[1][j][2] =  0.0;
+			dndxi[2][j].resize(3); dndxi[2][j][0] =  0.0; dndxi[2][j][1] =  1.0; dndxi[2][j][2] =  0.0;
+			dndxi[3][j].resize(3); dndxi[3][j][0] =  0.0; dndxi[3][j][1] =  0.0; dndxi[3][j][2] =  1.0;
+			d2ndxi2[0][j].resize(6); d2ndxi2[0][j][0] = 0.0; d2ndxi2[0][j][1] = 0.0; d2ndxi2[0][j][2] = 0.0; d2ndxi2[0][j][3] = 0.0; d2ndxi2[0][j][4] = 0.0; d2ndxi2[0][j][5] = 0.0;
+			d2ndxi2[1][j].resize(6); d2ndxi2[1][j][0] = 0.0; d2ndxi2[1][j][1] = 0.0; d2ndxi2[1][j][2] = 0.0; d2ndxi2[1][j][3] = 0.0; d2ndxi2[1][j][4] = 0.0; d2ndxi2[1][j][5] = 0.0;
+			d2ndxi2[2][j].resize(6); d2ndxi2[2][j][0] = 0.0; d2ndxi2[2][j][1] = 0.0; d2ndxi2[2][j][2] = 0.0; d2ndxi2[2][j][3] = 0.0; d2ndxi2[2][j][4] = 0.0; d2ndxi2[2][j][5] = 0.0;
+			d2ndxi2[3][j].resize(6); d2ndxi2[3][j][0] = 0.0; d2ndxi2[3][j][1] = 0.0; d2ndxi2[3][j][2] = 0.0; d2ndxi2[3][j][3] = 0.0; d2ndxi2[3][j][4] = 0.0; d2ndxi2[3][j][5] = 0.0;
+			break;
+		case M_ELEMENT_TETRA10:
+			/**
+			 * TETRA10 - shape functions
+			 * \f{eqnarray*}{
+			 * \varphi_{0}(r,s,t) &=& - (1-(r+s+t))   (1-2(1-(r+s+t)))                  \\
+			 * \varphi_{1}(r,s,t) &=& -            r                  (1-2r)            \\
+			 * \varphi_{2}(r,s,t) &=& -             s                       (1-2s)      \\
+			 * \varphi_{3}(r,s,t) &=& -              t                            (1-2t)\\
+			 * \varphi_{4}(r,s,t) &=&  4(1-(r+s+t))r              \\
+			 * \varphi_{5}(r,s,t) &=&  4           rs             \\
+			 * \varphi_{6}(r,s,t) &=&  4(1-(r+s+t)) s             \\
+			 * \varphi_{7}(r,s,t) &=&  4(1-(r+s+t))  t            \\
+			 * \varphi_{8}(r,s,t) &=&  4           r t            \\
+			 * \varphi_{9}(r,s,t) &=&  4            st            \\
+			 * \f}
+			 * TETRA10 - first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{0}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -3+4r+4s+4t \ ,\quad -3+4r+4s+4t \ ,\quad -3+4r+4s+4t \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{1}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -1+4r       \ ,\quad  0          \ ,\quad  0          \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{2}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0          \ ,\quad -1   +4s    \ ,\quad  0          \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{3}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0          \ ,\quad  0          \ ,\quad -1      +4t \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{4}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  4-8r-4s-4t \ ,\quad   -4r       \ ,\quad   -4r       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{5}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}       4s    \ ,\quad    4r       \ ,\quad  0          \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{6}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}      -4s    \ ,\quad  4-4r-8s-4t \ ,\quad      -4s    \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{7}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}         -4t \ ,\quad         -4t \ ,\quad  4-4r-4s-8t \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{8}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}          4t \ ,\quad  0          \ ,\quad    4r       \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{9}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0          \ ,\quad          4t \ ,\quad       4s    \right]\\
+			 * \f}
+			 * TETRA10 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{0}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  4 \ ,\quad  4 \ ,\quad  4 \ ,\quad  4 \ ,\quad  4\ ,\quad  4 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{1}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  4 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{2}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  4 \ ,\quad  0\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{3}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0\ ,\quad  4 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{4}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}} -8 \ ,\quad -4 \ ,\quad -4 \ ,\quad  0 \ ,\quad  4\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{5}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  4 \ ,\quad  4 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{6}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad -4 \ ,\quad  0 \ ,\quad -8 \ ,\quad -4\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{7}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad -4 \ ,\quad  0 \ ,\quad -4\ ,\quad -8 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{8}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  4 \ ,\quad  0 \ ,\quad  0\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{9}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  0 \ ,\quad  4\ ,\quad  0 \right]\\
+			 * \f}
+			 */
+			n[0][j] = -    (1.0-(r+s+t))      *(1.0-2.0*(1.0-(r+s+t)));
+			n[1][j] = -                  r    *(1.0-2.0*      r      );
+			n[2][j] = -                    s  *(1.0-2.0*        s    );
+			n[3][j] = -                      t*(1.0-2.0*          t  );
+			n[4][j] =  4.0*(1.0-(r+s+t))*r                            ;
+			n[5][j] =  4.0              *r*s                          ;
+			n[6][j] =  4.0*(1.0-(r+s+t))  *s                          ;
+			n[7][j] =  4.0*(1.0-(r+s+t))    *t                        ;
+			n[8][j] =  4.0              *r  *t                        ;
+			n[9][j] =  4.0                *s*t                        ;
+			dndxi[0][j].resize(3); dndxi[0][j][0] = -3.0+4.0*r+4.0*s+4.0*t; dndxi[0][j][1] = -3.0+4.0*r+4.0*s+4.0*t; dndxi[0][j][2] = -3.0+4.0*r+4.0*s+4.0*t;
+			dndxi[1][j].resize(3); dndxi[1][j][0] = -1.0+4.0*r            ; dndxi[1][j][1] =  0.0                  ; dndxi[1][j][2] =  0.0                  ;
+			dndxi[2][j].resize(3); dndxi[2][j][0] =  0.0                  ; dndxi[2][j][1] = -1.0      +4.0*s      ; dndxi[2][j][2] =  0.0                  ;
+			dndxi[3][j].resize(3); dndxi[3][j][0] =  0.0                  ; dndxi[3][j][1] =  0.0                  ; dndxi[3][j][2] = -1.0            +4.0*t;
+			dndxi[4][j].resize(3); dndxi[4][j][0] =  4.0-8.0*r-4.0*s-4.0*t; dndxi[4][j][1] =     -4.0*r            ; dndxi[4][j][2] =     -4.0*r            ;
+			dndxi[5][j].resize(3); dndxi[5][j][0] =            4.0*s      ; dndxi[5][j][1] =      4.0*r            ; dndxi[5][j][2] =  0.0                  ;
+			dndxi[6][j].resize(3); dndxi[6][j][0] =           -4.0*s      ; dndxi[6][j][1] =  4.0-4.0*r-8.0*s-4.0*t; dndxi[6][j][2] =           -4.0*s      ;
+			dndxi[7][j].resize(3); dndxi[7][j][0] =                 -4.0*t; dndxi[7][j][1] =                 -4.0*t; dndxi[7][j][2] =  4.0-4.0*r-4.0*s-8.0*t;
+			dndxi[8][j].resize(3); dndxi[8][j][0] =                  4.0*t; dndxi[8][j][1] =  0.0                  ; dndxi[8][j][2] =      4.0*r            ;
+			dndxi[9][j].resize(3); dndxi[9][j][0] =  0.0                  ; dndxi[9][j][1] =                  4.0*t; dndxi[9][j][2] =            4.0*s      ;
+			d2ndxi2[0][j].resize(6); d2ndxi2[0][j][0] =  4.0; d2ndxi2[0][j][1] =  4.0; d2ndxi2[0][j][2] =  4.0; d2ndxi2[0][j][3] =  4.0; d2ndxi2[0][j][4] =  4.0; d2ndxi2[0][j][5] =  4.0;
+			d2ndxi2[1][j].resize(6); d2ndxi2[1][j][0] =  4.0; d2ndxi2[1][j][1] =  0.0; d2ndxi2[1][j][2] =  0.0; d2ndxi2[1][j][3] =  0.0; d2ndxi2[1][j][4] =  0.0; d2ndxi2[1][j][5] =  0.0;
+			d2ndxi2[2][j].resize(6); d2ndxi2[2][j][0] =  0.0; d2ndxi2[2][j][1] =  0.0; d2ndxi2[2][j][2] =  0.0; d2ndxi2[2][j][3] =  4.0; d2ndxi2[2][j][4] =  0.0; d2ndxi2[2][j][5] =  0.0;
+			d2ndxi2[3][j].resize(6); d2ndxi2[3][j][0] =  0.0; d2ndxi2[3][j][1] =  0.0; d2ndxi2[3][j][2] =  0.0; d2ndxi2[3][j][3] =  0.0; d2ndxi2[3][j][4] =  0.0; d2ndxi2[3][j][5] =  4.0;
+			d2ndxi2[4][j].resize(6); d2ndxi2[4][j][0] = -8.0; d2ndxi2[4][j][1] = -4.0; d2ndxi2[4][j][2] = -4.0; d2ndxi2[4][j][3] =  0.0; d2ndxi2[4][j][4] =  0.0; d2ndxi2[4][j][5] =  0.0;
+			d2ndxi2[5][j].resize(6); d2ndxi2[5][j][0] =  0.0; d2ndxi2[5][j][1] =  4.0; d2ndxi2[5][j][2] =  0.0; d2ndxi2[5][j][3] =  0.0; d2ndxi2[5][j][4] =  0.0; d2ndxi2[5][j][5] =  0.0;
+			d2ndxi2[6][j].resize(6); d2ndxi2[6][j][0] =  0.0; d2ndxi2[6][j][1] = -4.0; d2ndxi2[6][j][2] =  0.0; d2ndxi2[6][j][3] = -8.0; d2ndxi2[6][j][4] = -4.0; d2ndxi2[6][j][5] =  0.0;
+			d2ndxi2[7][j].resize(6); d2ndxi2[7][j][0] =  0.0; d2ndxi2[7][j][1] =  0.0; d2ndxi2[7][j][2] = -4.0; d2ndxi2[7][j][3] =  0.0; d2ndxi2[7][j][4] = -4.0; d2ndxi2[7][j][5] = -8.0;
+			d2ndxi2[8][j].resize(6); d2ndxi2[8][j][0] =  0.0; d2ndxi2[8][j][1] =  0.0; d2ndxi2[8][j][2] =  4.0; d2ndxi2[8][j][3] =  0.0; d2ndxi2[8][j][4] =  0.0; d2ndxi2[8][j][5] =  0.0;
+			d2ndxi2[9][j].resize(6); d2ndxi2[9][j][0] =  0.0; d2ndxi2[9][j][1] =  0.0; d2ndxi2[9][j][2] =  0.0; d2ndxi2[9][j][3] =  0.0; d2ndxi2[9][j][4] =  4.0; d2ndxi2[9][j][5] =  0.0;
+			break;
+		case M_ELEMENT_PENTA6:
+			/**
+			 * PENTA6 - shape functions
+			 * \f{eqnarray*}{
+			 * \varphi_{0}(r,s,t) &=&  \frac{1}{2}(1-(r+s))  (1-t)\\
+			 * \varphi_{1}(r,s,t) &=&  \frac{1}{2}         r (1-t)\\
+			 * \varphi_{2}(r,s,t) &=&  \frac{1}{2}          s(1-t)\\
+			 * \varphi_{3}(r,s,t) &=&  \frac{1}{2}(1-(r+s))  (1+t)\\
+			 * \varphi_{4}(r,s,t) &=&  \frac{1}{2}         r (1+t)\\
+			 * \varphi_{5}(r,s,t) &=&  \frac{1}{2}          s(1+t)\\
+			 * \f}
+			 * PENTA6 - first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{0}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-t) \ ,\quad -\frac{1}{2}(1-t) \ ,\quad  \frac{1}{2}(r+s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{1}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}(1-t) \ ,\quad  0                \ ,\quad -\frac{1}{2} r    \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{2}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0                \ ,\quad  \frac{1}{2}(1-t) \ ,\quad -\frac{1}{2}   s  \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{3}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1+t) \ ,\quad -\frac{1}{2}(1+t) \ ,\quad -\frac{1}{2}(r+s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{4}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}(1+t) \ ,\quad  0                \ ,\quad  \frac{1}{2} r    \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{5}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0                \ ,\quad  \frac{1}{2}(1+t) \ ,\quad  \frac{1}{2}   s  \right]\\
+			 * \f}
+			 * PENTA6 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{0}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  \frac{1}{2} \ ,\quad  0 \ ,\quad  \frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{1}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad -\frac{1}{2} \ ,\quad  0 \ ,\quad  0          \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{2}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0           \ ,\quad  0 \ ,\quad -\frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{3}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad -\frac{1}{2} \ ,\quad  0 \ ,\quad -\frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{4}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  \frac{1}{2} \ ,\quad  0 \ ,\quad  0          \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{5}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0           \ ,\quad  0 \ ,\quad  \frac{1}{2}\ ,\quad  0 \right]\\
+			 * \f}
+			 */
+			n[0][j] =  0.5*(1.0-(r+s))    *(1-t)      ;
+			n[1][j] =  0.5            *r  *(1-t)      ;
+			n[2][j] =  0.5              *s*(1-t)      ;
+			n[3][j] =  0.5*(1.0-(r+s))          *(1+t);
+			n[4][j] =  0.5            *r        *(1+t);
+			n[5][j] =  0.5              *s      *(1+t);
+			dndxi[0][j].resize(3); dndxi[0][j][0] = -0.5*(1.0-t)        ; dndxi[0][j][1] = -0.5*(1.0-t)        ; dndxi[0][j][2] =  0.5*(r+s)    ;
+			dndxi[1][j].resize(3); dndxi[1][j][0] =  0.5*(1.0-t)        ; dndxi[1][j][1] =  0.0                ; dndxi[1][j][2] = -0.5      *r  ;
+			dndxi[2][j].resize(3); dndxi[2][j][0] =  0.0                ; dndxi[2][j][1] =  0.5*(1.0-t)        ; dndxi[2][j][2] = -0.5        *s;
+			dndxi[3][j].resize(3); dndxi[3][j][0] = -0.5        *(1.0+t); dndxi[3][j][1] = -0.5        *(1.0+t); dndxi[3][j][2] = -0.5*(r+s)    ;
+			dndxi[4][j].resize(3); dndxi[4][j][0] = -0.5        *(1.0+t); dndxi[4][j][1] =  0.0                ; dndxi[4][j][2] =  0.5      *r  ;
+			dndxi[5][j].resize(3); dndxi[5][j][0] = -0.5        *(1.0+t); dndxi[5][j][1] =  0.5        *(1.0+t); dndxi[5][j][2] =  0.5        *s;
+			d2ndxi2[0][j].resize(6); d2ndxi2[0][j][0] =  0.0; d2ndxi2[0][j][1] =  0.0; d2ndxi2[0][j][2] =  0.5; d2ndxi2[0][j][3] =  0.0; d2ndxi2[0][j][4] =  0.5; d2ndxi2[0][j][5] =  0.0;
+			d2ndxi2[1][j].resize(6); d2ndxi2[1][j][0] =  0.0; d2ndxi2[1][j][1] =  0.0; d2ndxi2[1][j][2] = -0.5; d2ndxi2[1][j][3] =  0.0; d2ndxi2[1][j][4] =  0.0; d2ndxi2[1][j][5] =  0.0;
+			d2ndxi2[2][j].resize(6); d2ndxi2[2][j][0] =  0.0; d2ndxi2[2][j][1] =  0.0; d2ndxi2[2][j][2] =  0.0; d2ndxi2[2][j][3] =  0.0; d2ndxi2[2][j][4] = -0.5; d2ndxi2[2][j][5] =  0.0;
+			d2ndxi2[3][j].resize(6); d2ndxi2[3][j][0] =  0.0; d2ndxi2[3][j][1] =  0.0; d2ndxi2[3][j][2] = -0.5; d2ndxi2[3][j][3] =  0.0; d2ndxi2[3][j][4] = -0.5; d2ndxi2[3][j][5] =  0.0;
+			d2ndxi2[4][j].resize(6); d2ndxi2[4][j][0] =  0.0; d2ndxi2[4][j][1] =  0.0; d2ndxi2[4][j][2] =  0.5; d2ndxi2[4][j][3] =  0.0; d2ndxi2[4][j][4] =  0.0; d2ndxi2[2][j][5] =  0.0;
+			d2ndxi2[5][j].resize(6); d2ndxi2[5][j][0] =  0.0; d2ndxi2[5][j][1] =  0.0; d2ndxi2[5][j][2] =  0.0; d2ndxi2[5][j][3] =  0.0; d2ndxi2[5][j][4] =  0.5; d2ndxi2[3][j][5] =  0.0;
+			break;
+		case M_ELEMENT_PENTA15:
+			/**
+			 * PENTA15 - shape functions
+			 * \f{eqnarray*}{
+			 * \varphi_{ 0}(r,s,t) &=& -\frac{1}{2}(1-(r+s))  (1-t)     (  2r+2s+t)\\
+			 * \varphi_{ 1}(r,s,t) &=& -\frac{1}{2}         r (1-t)     (2-2r   +t)\\
+			 * \varphi_{ 2}(r,s,t) &=& -\frac{1}{2}          s(1-t)     (2   -2s+t)\\
+			 * \varphi_{ 3}(r,s,t) &=& -\frac{1}{2}(1-(r+s))       (1+t)(  2r+2s-t)\\
+			 * \varphi_{ 4}(r,s,t) &=& -\frac{1}{2}         r      (1+t)(2-2r   -t)\\
+			 * \varphi_{ 5}(r,s,t) &=& -\frac{1}{2}          s     (1+t)(2   -2s-t)\\
+			 * \varphi_{ 6}(r,s,t) &=&  2          (1-(r+s))r (1-t)                \\
+			 * \varphi_{ 7}(r,s,t) &=&  2                   rs(1-t)                \\
+			 * \varphi_{ 8}(r,s,t) &=&  2          (1-(r+s)) s(1-t)                \\
+			 * \varphi_{ 9}(r,s,t) &=&  2          (1-(r+s))r      (1+t)           \\
+			 * \varphi_{10}(r,s,t) &=&  2                   rs     (1+t)           \\
+			 * \varphi_{11}(r,s,t) &=&  2          (1-(r+s)) s     (1+t)           \\
+			 * \varphi_{12}(r,s,t) &=&  2          (1-(r+s))  (1-t)(1+t)           \\
+			 * \varphi_{13}(r,s,t) &=&  2                   r (1-t)(1+t)           \\
+			 * \varphi_{14}(r,s,t) &=&  2                    s(1-t)(1+t)           \\
+			 * \f}
+			 * PENTA15 - first derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{0}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1-t) \ ,\quad -\frac{1}{2}(1-t) \ ,\quad  \frac{1}{2}(r+s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{1}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}(1-t) \ ,\quad  0                \ ,\quad -\frac{1}{2} r    \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{2}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0                \ ,\quad  \frac{1}{2}(1-t) \ ,\quad -\frac{1}{2}   s  \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{3}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}} -\frac{1}{2}(1+t) \ ,\quad -\frac{1}{2}(1+t) \ ,\quad -\frac{1}{2}(r+s) \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{4}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  \frac{1}{2}(1+t) \ ,\quad  0                \ ,\quad  \frac{1}{2} r    \right]\\
+			 * \left[\frac{\partial}{\partial r}\ ,\ \frac{\partial}{\partial s}\ ,\ \frac{\partial}{\partial t}\right]\varphi_{5}(r,s,t) &=& \left[\vphantom{\frac{\partial}{\partial}}  0                \ ,\quad  \frac{1}{2}(1+t) \ ,\quad  \frac{1}{2}   s  \right]\\
+			 * \f}
+			 * PENTA15 - second derivative of shape functions
+			 * \f{eqnarray*}{
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{0}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  \frac{1}{2} \ ,\quad  0 \ ,\quad  \frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{1}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad -\frac{1}{2} \ ,\quad  0 \ ,\quad  0          \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{2}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0           \ ,\quad  0 \ ,\quad -\frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{3}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad -\frac{1}{2} \ ,\quad  0 \ ,\quad -\frac{1}{2}\ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{4}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  \frac{1}{2} \ ,\quad  0 \ ,\quad  0          \ ,\quad  0 \right]\\
+			 * \left[\frac{\partial^2}{\partial r^2}\ ,\ \frac{\partial^2}{\partial r\partial s}\ ,\ \frac{\partial^2}{\partial r\partial t}\ ,\ \frac{\partial^2}{\partial s^2}\ ,\ \frac{\partial^2}{\partial s\partial t}\ ,\ \frac{\partial^2}{\partial t^2}\right]\varphi_{5}(r,s,t) &=&  \left[\vphantom{\frac{\partial}{\partial}}  0 \ ,\quad  0 \ ,\quad  0           \ ,\quad  0 \ ,\quad  \frac{1}{2}\ ,\quad  0 \right]\\
+			 * \f}
+			 */
+			n[ 0][j] = -0.5*(1.0-(r+s))    *(1-t)      *(    2.0*r+2.0*s+t);
+			n[ 1][j] = -0.5            *r  *(1-t)      *(2.0-2.0*r      +t);
+			n[ 2][j] = -0.5              *s*(1-t)      *(2.0      -2.0*s+t);
+			n[ 3][j] = -0.5*(1.0-(r+s))          *(1+t)*(    2.0*r+2.0*s-t);
+			n[ 4][j] = -0.5            *r        *(1+t)*(2.0-2.0*r      -t);
+			n[ 5][j] = -0.5              *s      *(1+t)*(2.0      -2.0*s-t);
+			n[ 6][j] =  2.0*(1.0-(r+s))*r  *(1-t)                          ;
+			n[ 7][j] =  2.0            *r*s*(1-t)                          ;
+			n[ 8][j] =  2.0*(1.0-(r+s))  *s*(1-t)                          ;
+			n[ 9][j] =  2.0*(1.0-(r+s))*r        *(1+t)                    ;
+			n[10][j] =  2.0            *r*s      *(1+t)                    ;
+			n[11][j] =  2.0*(1.0-(r+s))  *s      *(1+t)                    ;
+			n[12][j] =      (1.0-(r+s))    *(1-t)*(1+t)                    ;
+			n[13][j] =                  r  *(1-t)*(1+t)                    ;
+			n[14][j] =                    s*(1-t)*(1+t)                    ;
+			dndxi[ 0][j].resize(3); dndxi[ 0][j][0] = -0.5*(1.0-t)        *(2.0-4.0*r-4.0*s-t); dndxi[ 0][j][1] = -0.5*(1.0-t)        *(2.0-4.0*r-4.0*s-t); dndxi[ 0][j][2] = -0.5*(1.0-(r+s))    *(1.0-2.0*(r+s+t));
+			dndxi[ 1][j].resize(3); dndxi[ 1][j][0] = -0.5*(1.0-t)        *(2.0-4.0*r      +t); dndxi[ 1][j][1] =  0.0                                    ; dndxi[ 1][j][2] =  0.5            *r  *(1.0-2.0*(r  -t));
+			dndxi[ 2][j].resize(3); dndxi[ 2][j][0] =  0.0                                    ; dndxi[ 2][j][1] = -0.5*(1.0-t)        *(2.0      -4.0*s+t); dndxi[ 2][j][2] =  0.5              *s*(1.0-2.0*(  s-t));
+			dndxi[ 3][j].resize(3); dndxi[ 3][j][0] = -0.5        *(1.0+t)*(2.0-4.0*r-4.0*s+t); dndxi[ 3][j][1] = -0.5        *(1.0+t)*(2.0-4.0*r-4.0*s+t); dndxi[ 3][j][2] =  0.5*(1.0-(r+s))    *(1.0-2.0*(r+s-t));
+			dndxi[ 4][j].resize(3); dndxi[ 4][j][0] = -0.5        *(1.0+t)*(2.0-4.0*r      -t); dndxi[ 4][j][1] =  0.0                                    ; dndxi[ 4][j][2] = -0.5      *r        *(1.0-2.0*(r  +t));
+			dndxi[ 5][j].resize(3); dndxi[ 5][j][0] =  0.0                                    ; dndxi[ 5][j][1] = -0.5        *(1.0+t)*(2.0      -4.0*s-t); dndxi[ 5][j][2] = -0.5        *s      *(1.0-2.0*(  s+t));
+			dndxi[ 6][j].resize(3); dndxi[ 6][j][0] =  2.0*(1.0-t)        *(1.0-2.0*r-    s  ); dndxi[ 6][j][1] = -2.0*(1.0-t)        *(        r        ); dndxi[ 6][j][2] = -2.0*(1.0-(r+s))*r                    ;
+			dndxi[ 7][j].resize(3); dndxi[ 7][j][0] =  2.0*(1.0-t)        *(              s  ); dndxi[ 7][j][1] =  2.0*(1.0-t)        *(        r        ); dndxi[ 7][j][2] = -2.0            *r*s                  ;
+			dndxi[ 8][j].resize(3); dndxi[ 8][j][0] = -2.0*(1.0-t)        *(              s  ); dndxi[ 8][j][1] =  2.0*(1.0-t)        *(1.0    -r-2.0*s  ); dndxi[ 8][j][2] = -2.0*(1.0-(r+s))  *s                  ;
+			dndxi[ 9][j].resize(3); dndxi[ 9][j][0] =  2.0        *(1.0+t)*(1.0-2.0*r    -s  ); dndxi[ 9][j][1] = -2.0        *(1.0+t)*(        r        ); dndxi[ 9][j][2] =  2.0*(1.0-(r+s))*r                    ;
+			dndxi[10][j].resize(3); dndxi[10][j][0] =  2.0        *(1.0+t)*(              s  ); dndxi[10][j][1] =  2.0        *(1.0+t)*(        r        ); dndxi[10][j][2] =  2.0            *r*s                  ;
+			dndxi[11][j].resize(3); dndxi[11][j][0] = -2.0        *(1.0+t)*(              s  ); dndxi[11][j][1] =  2.0        *(1.0+t)*(1.0    -r-2.0*s  ); dndxi[11][j][2] =  2.0*(1.0-(r+s))  *s                  ;
+			dndxi[12][j].resize(3); dndxi[12][j][0] = -    (1.0-t)*(1.0+t)                    ; dndxi[12][j][1] = -    (1.0-t)*(1.0+t)                    ; dndxi[12][j][2] = -2.0*(1.0-(r+s))    *t                ;
+			dndxi[13][j].resize(3); dndxi[13][j][0] =      (1.0-t)*(1.0+t)                    ; dndxi[13][j][1] =  0.0                                    ; dndxi[13][j][2] = -2.0            *r  *t                ;
+			dndxi[14][j].resize(3); dndxi[14][j][0] =  0.0                                    ; dndxi[14][j][1] =      (1.0-t)*(1.0+t)                    ; dndxi[14][j][2] = -2.0              *s*t                ;
+			d2ndxi2[ 0][j].resize(6); d2ndxi2[ 0][j][0] =  2.0*(1.0-t)        ; d2ndxi2[ 0][j][1] =  2.0*(1.0-t)        ; d2ndxi2[ 0][j][2] =  1.5-2.0*r-2.0*s-t; d2ndxi2[ 0][j][3] =  2.0*(1.0-t)        ; d2ndxi2[ 0][j][4] =  1.5-2.0*r-2.0*s-t; d2ndxi2[ 0][j][5] =  1.0-    r-    s;
+			d2ndxi2[ 1][j].resize(6); d2ndxi2[ 1][j][0] =  2.0*(1.0-t)        ; d2ndxi2[ 1][j][1] =  0.0                ; d2ndxi2[ 1][j][2] =  0.5-2.0*r      +t; d2ndxi2[ 1][j][3] =  0.0                ; d2ndxi2[ 1][j][4] =  0.0              ; d2ndxi2[ 1][j][5] =          r      ;
+			d2ndxi2[ 2][j].resize(6); d2ndxi2[ 2][j][0] =  0.0                ; d2ndxi2[ 2][j][1] =  0.0                ; d2ndxi2[ 2][j][2] =  0.0              ; d2ndxi2[ 2][j][3] =  2.0*(1.0-t)        ; d2ndxi2[ 2][j][4] =  0.5      -2.0*s+t; d2ndxi2[ 2][j][5] =                s;
+			d2ndxi2[ 3][j].resize(6); d2ndxi2[ 3][j][0] =  2.0        *(1.0+t); d2ndxi2[ 3][j][1] =  2.0        *(1.0+t); d2ndxi2[ 3][j][2] = -1.5+2.0*r+2.0*s-t; d2ndxi2[ 3][j][3] =  2.0        *(1.0+t); d2ndxi2[ 3][j][4] = -1.5+2.0*r+2.0*s-t; d2ndxi2[ 3][j][5] =  1.0-    r-    s;
+			d2ndxi2[ 4][j].resize(6); d2ndxi2[ 4][j][0] =  2.0        *(1.0+t); d2ndxi2[ 4][j][1] =  0.0                ; d2ndxi2[ 4][j][2] = -0.5+2.0*r      +t; d2ndxi2[ 4][j][3] =  0.0                ; d2ndxi2[ 4][j][4] =  0.0              ; d2ndxi2[ 4][j][5] =          r      ;
+			d2ndxi2[ 5][j].resize(6); d2ndxi2[ 5][j][0] =  0.0                ; d2ndxi2[ 5][j][1] =  0.0                ; d2ndxi2[ 5][j][2] =  0.0              ; d2ndxi2[ 5][j][3] =  2.0        *(1.0+t); d2ndxi2[ 5][j][4] = -0.5      +2.0*s+t; d2ndxi2[ 5][j][5] =                s;
+			d2ndxi2[ 6][j].resize(6); d2ndxi2[ 6][j][0] = -4.0*(1.0-t)        ; d2ndxi2[ 6][j][1] = -2.0*(1.0-t)        ; d2ndxi2[ 6][j][2] = -2.0+4.0*r+2.0*s  ; d2ndxi2[ 6][j][3] =  0.0                ; d2ndxi2[ 6][j][4] =      2.0*r        ; d2ndxi2[ 6][j][5] =  0.0            ;
+			d2ndxi2[ 7][j].resize(6); d2ndxi2[ 7][j][0] =  0.0                ; d2ndxi2[ 7][j][1] =  2.0*(1.0-t)        ; d2ndxi2[ 7][j][2] =           -2.0*s  ; d2ndxi2[ 7][j][3] =  0.0                ; d2ndxi2[ 7][j][4] = -    2.0*r        ; d2ndxi2[ 7][j][5] =  0.0            ;
+			d2ndxi2[ 8][j].resize(6); d2ndxi2[ 8][j][0] =  0.0                ; d2ndxi2[ 8][j][1] = -2.0*(1.0-t)        ; d2ndxi2[ 8][j][2] =            2.0*s  ; d2ndxi2[ 8][j][3] = -4.0*(1.0-t)        ; d2ndxi2[ 8][j][4] = -2.0+2.0*r+4.0*s  ; d2ndxi2[ 8][j][5] =  0.0            ;
+			d2ndxi2[ 9][j].resize(6); d2ndxi2[ 9][j][0] = -4.0        *(1.0+t); d2ndxi2[ 9][j][1] = -2.0        *(1.0+t); d2ndxi2[ 9][j][2] =  2.0-4.0*r-2.0*s  ; d2ndxi2[ 9][j][3] =  0.0                ; d2ndxi2[ 9][j][4] = -    2.0*r        ; d2ndxi2[ 9][j][5] =  0.0            ;
+			d2ndxi2[10][j].resize(6); d2ndxi2[10][j][0] =  0.0                ; d2ndxi2[10][j][1] =  2.0        *(1.0+t); d2ndxi2[10][j][2] =            2.0*s  ; d2ndxi2[10][j][3] =  0.0                ; d2ndxi2[10][j][4] =      2.0*r        ; d2ndxi2[10][j][5] =  0.0            ;
+			d2ndxi2[11][j].resize(6); d2ndxi2[11][j][0] =  0.0                ; d2ndxi2[11][j][1] = -2.0        *(1.0+t); d2ndxi2[11][j][2] =           -2.0*s  ; d2ndxi2[11][j][3] = -4.0        *(1.0+t); d2ndxi2[11][j][4] =  2.0-2.0*r-4.0*s  ; d2ndxi2[11][j][5] =  0.0            ;
+			d2ndxi2[12][j].resize(6); d2ndxi2[12][j][0] =  0.0                ; d2ndxi2[12][j][1] =  0.0                ; d2ndxi2[12][j][2] =              2.0*t; d2ndxi2[12][j][3] =  0.0                ; d2ndxi2[12][j][4] =              2.0*t; d2ndxi2[12][j][5] = -2.0+2.0*r+2.0*s;
+			d2ndxi2[13][j].resize(6); d2ndxi2[13][j][0] =  0.0                ; d2ndxi2[13][j][1] =  0.0                ; d2ndxi2[13][j][2] =             -2.0*t; d2ndxi2[13][j][3] =  0.0                ; d2ndxi2[13][j][4] =  0.0              ; d2ndxi2[13][j][5] = -    2.0*r      ;
+			d2ndxi2[14][j].resize(6); d2ndxi2[14][j][0] =  0.0                ; d2ndxi2[14][j][1] =  0.0                ; d2ndxi2[14][j][2] =  0.0              ; d2ndxi2[14][j][3] =  0.0                ; d2ndxi2[14][j][4] =             -2.0*t; d2ndxi2[14][j][5] = -          2.0*s;
 			break;
 		default: //M_ELEMENT_UNKNOWN
 			break;
@@ -697,7 +944,7 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			sum_xi1 = MCVec3();
 			for (unsigned int i=0; i<shape_functions_count; i++)
 			{
-				sum_xi1 += (element->get_node(i)->get_coordinates())*(dndxi[i][j].x);
+				sum_xi1 += (element->get_node(i)->get_coordinates())*(dndxi[i][j][0]);
 			}
 			normals[j].x =  sum_xi1.y;   normals[j].y = -sum_xi1.x;    normals[j].z = 0.;    normals[j].normalize();
 			j_w[j] = sum_xi1.length();
@@ -711,8 +958,8 @@ void FEPrimalBase::init_reference(Element * element, const std::vector<MCVec2> *
 			sum_xi1 = MCVec3();  sum_xi2 = MCVec3();
 			for (unsigned int i=0; i<shape_functions_count; i++)
 			{
-				sum_xi1 += (element->get_node(i)->get_coordinates())*(dndxi[i][j].x);
-				sum_xi2 += (element->get_node(i)->get_coordinates())*(dndxi[i][j].y);
+				sum_xi1 += (element->get_node(i)->get_coordinates())*(dndxi[i][j][0]);
+				sum_xi2 += (element->get_node(i)->get_coordinates())*(dndxi[i][j][1]);
 			}
 			normals[j] = cross_prod(sum_xi1,sum_xi2);
 			j_w[j] = normals[j].length();

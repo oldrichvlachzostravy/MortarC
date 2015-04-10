@@ -6,6 +6,7 @@
  */
 
 #include "Assembler.h"
+#include "mex.h"
 
 Assembler::Assembler(Boundary *in_slave, Boundary *in_master): fe_slave(4), fe_master(4), slave(in_slave), master(in_master) {}
 
@@ -284,8 +285,8 @@ void Assembler::assemble_newton(
 		}
 	}
 	// create I^{k}_{\mathscr{I}}, T^{k}_{\mathscr{A}}, F^{k}_{\mathscr{A}}matrices
-	int cnt_i = 0;
-	int cnt_a = 0;
+	int cnt_i = 1;
+	int cnt_a = 1;
 	for (std::map<int,bool>::iterator it = Ak.begin(); it != Ak.end(); it++) {
 		int j = it->first;
 		Node *s_j = slave->get_node(j);

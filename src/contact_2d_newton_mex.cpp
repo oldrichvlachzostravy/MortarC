@@ -259,7 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int c = delta_z_i->get_columns();
 	for (int i = 0; i < c; i++) {
 		zk_values[ int((*delta_z_i)[0 * c + i]) ] = MCVec2( (*delta_z_v)[0 * c + i], (*delta_z_v)[1 * c + i]);
-		zk_indices[int((*delta_z_i)[0 * c + i]) ] = int((*delta_z_i)[0 * c + i]);
+		zk_indices[int((*delta_z_i)[0 * c + i]) ] = i+1;
 	}
 	c = delta_d->get_columns();
 	for (int i = 0; i < c; i++) {
@@ -328,7 +328,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     std::map<int,std::map<int,double> > fa;
     std::map<int,std::map<int,double> > sma;
     std::map<int,std::map<int,double> > ga;
-    mexprint_sparse_matrix( d, "D");
+    //mexprint_sparse_matrix( d, "D");
     assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values, dk);
 	/* ****************************** */
 	/* * CHECK FOR OUTPUT ARGUMENTS * */

@@ -14,6 +14,6 @@ typedef unsigned int uint;
 
 #define MIN_SLAVE_COVER_RATIO         0.9
 #define TOLERATED_SLAVE_COVER_RATIO   0.99
-#define CN                            1.0
+#define CN                            210000.0
 
 #endif /* SYSTEMINCLUDES_H_ */

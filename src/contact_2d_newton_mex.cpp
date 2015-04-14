@@ -263,7 +263,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	c = delta_d->get_columns();
 	for (int i = 0; i < c; i++) {
-		dk[ i ] = MCVec2( (*delta_d)[0 * c + i], (*delta_d)[1 * c + i]);
+		dk[ i+1 ] = MCVec2( (*delta_d)[0 * c + i], (*delta_d)[1 * c + i]);
 	}
 //	std::cout << "coordinates0" << std::endl;
 //	denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
@@ -320,7 +320,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     assembler.assemble_d_m(mappings, d, m);
     assembler.assemble_supports_normals(supports, normals);
 
-	mexPrintf("I WAS SUCCESSFULLY HERE\n");
+	//mexPrintf("I WAS SUCCESSFULLY HERE\n");
 
     std::map<int,std::map<int,double> > cc;
     std::map<int,std::map<int,double> > ii;

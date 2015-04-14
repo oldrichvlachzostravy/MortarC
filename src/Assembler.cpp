@@ -122,6 +122,7 @@ void Assembler::assemble_newton(
 	std::map<int,bool> Ak;
 	std::map<int,std::map<int,std::map<int,double> > > dD;
 	std::map<int,std::map<int,std::map<int,double> > > dM;
+	int active_cnt = 1;
 	for (std::map<int,Node*>::iterator it = slave->get_nodes().begin(); it != slave->get_nodes().end(); it++) {
 		int jj = it->first;
 		// compute gap from (50)
@@ -144,10 +145,10 @@ void Assembler::assemble_newton(
 		if ( tmp_it != m.end() ) {
 			for (std::map<int,double>::const_iterator it_m = tmp_it->second.begin(); it_m != tmp_it->second.end(); it_m++) {
 				int ll = it_m->first/2;
-				MCVec2 x_k = MCVec2(
+				MCVec2 x_l = MCVec2(
 						master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
 						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
-				tmp += x_k*it_m->second;
+				tmp += x_l*it_m->second;
 			}
 		} else{
 			fprintf(stderr, "ERROR on 143 row in Assembler.cpp: m[%d] does not exists\n",2*jj);
@@ -156,15 +157,20 @@ void Assembler::assemble_newton(
 		MCVec2 ttmp = zk_values.at(jj);
         double zn_j = ttmp.scalar_product_with(n_j);
         double  g_j = n_j.scalar_product_with(tmp);
+        //mexPrintf("  x[jj=%d] = [ %f, %f]\n",jj, n_j.x, n_j.y);
         // compute A_k from (66)
 		if (zn_j - CN*g_j > 0 ) {
 			Ak[jj] = true;
-			ga[jj][1] = g_j;
+			ga[active_cnt][1] = g_j;
+			active_cnt++;
+			mexPrintf("Ak[jj=%d]= TRUE\n",jj);
 		}
 		else {
 			Ak[jj] = false;
+			mexPrintf("Ak[jj=%d] = F\n",jj);
 		}
 	}
+	mexPrintf("contact_2d_newton: assemble_newton -->  Ak  ... done\n");
 	// obtain matrix $P$ [PGW09 (A12)]
 	std::map<int,std::map<int,double> > p; //!!! tt = rot90(p)
 	// iterate over slave elements
@@ -284,13 +290,14 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
+	mexPrintf("contact_2d_newton: assemble_newton -->  P   ... done\n");
 	// create I^{k}_{\mathscr{I}}, T^{k}_{\mathscr{A}}, F^{k}_{\mathscr{A}}matrices
 	int cnt_i = 1;
 	int cnt_a = 1;
 	for (std::map<int,bool>::iterator it = Ak.begin(); it != Ak.end(); it++) {
 		int j = it->first;
 		Node *s_j = slave->get_node(j);
-		if ( ~(it->second)) {
+		if ( it->second == false ) {
 			ii[2*cnt_i-1][2*zk_indices.at(j)-1] = 1.0;
 			ii[2*cnt_i  ][2*zk_indices.at(j)  ] = 1.0;
 			cnt_i++;
@@ -313,6 +320,7 @@ void Assembler::assemble_newton(
 			cnt_a++;
 		}
 	}
+	mexPrintf("contact_2d_newton: assemble_newton -->  TA  ... done\n");
 	// **** $\Delta D z^k$ contribution ****
 	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
 		fe_slave.init_all(*it, NULL, true);
@@ -347,6 +355,7 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
+	mexPrintf("contact_2d_newton: assemble_newton -->  deltaD  ... done\n");
 	// **** ITERATE OVER ALL SEGMENTS TO OBTAIN ****
 	// **** matrices $D$ and $M$                ****
 	// **** $\Delta M z^k$ contribution         ****
@@ -688,21 +697,26 @@ void Assembler::assemble_newton(
     	}
 
     }
+    mexPrintf("contact_2d_newton: assemble_newton -->  deltaM  ... done\n");
     int cnt = 1;
     for (std::map<int,Node*>::iterator it = slave->get_nodes().begin(); it != slave->get_nodes().end(); it++)
     {
     	int jj  = it->first;
     	if (Ak[jj]) {
+    		//mexPrintf("   SMA (cnt=%d)\n",cnt);
     		MCVec2 n = MCVec2(slave->get_node(jj)->get_normal().x, slave->get_node(jj)->get_normal().y);
     		// (A36)  first row  left part (with D)
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj-1).begin(); it_d != d.at(2*jj-1).end(); it_d++) {
     			int kk_ = it_d->first;
     			sma[cnt][kk_] -= n.x*it_d->second;
+    			//mexPrintf("                d(%d,%d) = %f\n", 2*jj-1, kk_, it_d->second);
+
     		}
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj  ).begin(); it_d != d.at(2*jj  ).end(); it_d++) {
     			int kk_ = it_d->first;
     			sma[cnt][kk_] -= n.y*it_d->second;
     		}
+    		//mexPrintf("            (A36) row 1,D ... check\n",cnt);
     		// (A36)  first row right part (with M)
     		for (std::map<int,double>::const_iterator it_m = m.at(2*jj-1).begin(); it_m != m.at(2*jj-1).end(); it_m++) {
     			int ll_ = it_m->first;
@@ -712,33 +726,43 @@ void Assembler::assemble_newton(
     			int ll_ = it_m->first;
     			sma[cnt][ll_] += n.y*it_m->second;
     		}
+    		//mexPrintf("            (A36) row 1,M ... check\n",cnt);
     		// (A36) second row both parts
     		MCVec2 tmp(0.0, 0.0);
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj-1).begin(); it_d != d.at(2*jj-1).end(); it_d++) {
-    			int kk = (it_d->first-1)/2;
+    			//mexPrintf("            (A36) row 2:\n",cnt);
+    			//mexPrintf("                jj           = %d\n", jj);
+    			int kk = (it_d->first+1)/2;
+    			//mexPrintf("                kk           = %d\n", kk);
+    			//mexPrintf("                it_d->second = %f\n", it_d->second);
+    			//mexPrintf("                get_coordinates().x = %f\n", slave->get_node(kk)->get_coordinates().x);
+    			//mexPrintf("                dk.at(kk).x         = %f\n", dk.at(kk).x);
     			tmp.x -= it_d->second*( slave->get_node(kk)->get_coordinates().x + dk.at(kk).x);
     		}
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj  ).begin(); it_d != d.at(2*jj  ).end(); it_d++) {
     			int kk = (it_d->first  )/2;
     			tmp.y -= it_d->second*( slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
     		}
+    		//mexPrintf("            (A36) row 2,D ... check\n",cnt);
     		for (std::map<int,double>::const_iterator it_m = m.at(2*jj-1).begin(); it_m != m.at(2*jj-1).end(); it_m++) {
-    			int ll = (it_m->first-1)/2;
+    			int ll = (it_m->first+1)/2;
     			tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().x + dk.at(ll).x);
     		}
     		for (std::map<int,double>::const_iterator it_m = m.at(2*jj  ).begin(); it_m != m.at(2*jj  ).end(); it_m++) {
     			int ll = (it_m->first  )/2;
     			tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
     		}
+    		//mexPrintf("            (A36) row 2,M ... check\n",cnt);
     		for (std::map<int,double>::iterator it_p = p[2*jj-1].begin(); it_p != p[2*jj-1].end(); it_p++) {
     			sma[cnt][it_p->first] += it_p->second * tmp.x;
     		}
     		for (std::map<int,double>::iterator it_p = p[2*jj  ].begin(); it_p != p[2*jj  ].end(); it_p++) {
     			sma[cnt][it_p->first] += it_p->second * tmp.y;
     		}
+    		//mexPrintf("            (A36) row 2,..... check\n",cnt);
     		// (A36)  third row  left part (with D)
     		for (std::map<int,std::map<int,double> >::iterator it_dD = dD[2*jj-1].begin(); it_dD != dD[2*jj-1].end(); it_dD++) {
-    			int kk = (it_dD->first-1)/2;
+    			int kk = (it_dD->first+1)/2;
     			MCVec2 x_k = MCVec2(
     					slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
 						slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
@@ -757,12 +781,13 @@ void Assembler::assemble_newton(
     				sma[cnt][ddd] -= n.y * it_dD_in->second * x_k.y;
     			}
     		}
+    		//mexPrintf("            (A36) row 3,D ... check\n",cnt);
     		// (A36)  third row right part (with M)
     		for (std::map<int,std::map<int,double> >::iterator it_dM = dM[2*jj-1].begin(); it_dM != dM[2*jj-1].end(); it_dM++) {
-    			int ll = (it_dM->first-1)/2;
+    			int ll = (it_dM->first+1)/2;
     			MCVec2 x_k = MCVec2(
-    					slave->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-						slave->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    					master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
+						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
     			for (std::map<int,double>::iterator it_dM_in = it_dM->second.begin(); it_dM_in != it_dM->second.end(); it_dM_in++) {
     				int ddd = it_dM_in->first;
     				sma[cnt][ddd] += n.x * it_dM_in->second * x_k.x;
@@ -771,14 +796,16 @@ void Assembler::assemble_newton(
     		for (std::map<int,std::map<int,double> >::iterator it_dM = dM[2*jj  ].begin(); it_dM != dM[2*jj  ].end(); it_dM++) {
     			int ll = (it_dM->first  )/2;
     			MCVec2 x_l = MCVec2(
-    					slave->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-						slave->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    					master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
+						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
     			for (std::map<int,double>::iterator it_dM_in = it_dM->second.begin(); it_dM_in != it_dM->second.end(); it_dM_in++) {
     				int ddd = it_dM_in->first;
     				sma[cnt][ddd] += n.x * it_dM_in->second * x_l.x;
     			}
     		}
+    		//mexPrintf("            (A36) row 3,M ... check\n",cnt);
+    		cnt++;
     	}
-    	cnt++;
     }
+    //mexPrintf("contact_2d_newton: assemble_newton -->  SMA  ... done\n");
 }

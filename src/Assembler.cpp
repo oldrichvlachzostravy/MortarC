@@ -132,9 +132,10 @@ void Assembler::assemble_newton(
 		if ( tmp_it != d.end() ) {
 			for (std::map<int,double>::const_iterator it_d = tmp_it->second.begin(); it_d != tmp_it->second.end(); it_d++) {
 				int kk = it_d->first/2;
-				MCVec2 x_k = MCVec2(
-						slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
-						slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+				//MCVec2 x_k = MCVec2(
+				//		slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
+				//		slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+				MCVec2 x_k = MCVec2( slave->get_node(kk)->get_coordinates().x, slave->get_node(kk)->get_coordinates().y);
 				tmp -= x_k*it_d->second;
 			}
 		} else{
@@ -145,9 +146,10 @@ void Assembler::assemble_newton(
 		if ( tmp_it != m.end() ) {
 			for (std::map<int,double>::const_iterator it_m = tmp_it->second.begin(); it_m != tmp_it->second.end(); it_m++) {
 				int ll = it_m->first/2;
-				MCVec2 x_l = MCVec2(
-						master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+				//MCVec2 x_l = MCVec2(
+				//		master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
+				//		master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+				MCVec2 x_l = MCVec2( master->get_node(ll)->get_coordinates().x, master->get_node(ll)->get_coordinates().y);
 				tmp += x_l*it_m->second;
 			}
 		} else{
@@ -329,10 +331,11 @@ void Assembler::assemble_newton(
 			MCVec2 dndxix(0.0, 0.0);
 			for (int k = 0; k < (*it)->get_node_count(); k++) {
 				int jj = (*it)->get_node(k)->get_id();
-				dndxix += MCVec2(
-					(*it)->get_node(k)->get_coordinates().x + dk.at(jj).x,
-					(*it)->get_node(k)->get_coordinates().y + dk.at(jj).y
-				  ) * fe_slave.get_dndxi()[k][gp][0];
+				//dndxix += MCVec2(
+				//	(*it)->get_node(k)->get_coordinates().x + dk.at(jj).x,
+				//	(*it)->get_node(k)->get_coordinates().y + dk.at(jj).y
+				//) * fe_slave.get_dndxi()[k][gp][0];
+				dndxix += MCVec2( (*it)->get_node(k)->get_coordinates().x, (*it)->get_node(k)->get_coordinates().y ) * fe_slave.get_dndxi()[k][gp][0];
 			}
 			double norm_dndxix = dndxix.length();
 			dndxix /= norm_dndxix;
@@ -447,16 +450,23 @@ void Assembler::assemble_newton(
     					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0);
     					for (int l = 0; l < element_master->get_node_count(); l++) {
     						int j_m = element_master->get_node(l)->get_id();
-    						tmp_A += fe_master.get_dndxi()[l][i][0] * (element_master->get_node(l)->get_coordinates().x + dk.at(j_m).x);
-    						tmp_B += fe_master.get_dndxi()[l][i][0] * (element_master->get_node(l)->get_coordinates().y + dk.at(j_m).y);
-    						tmp_C += fe_master.get_n()[l][i]        * (element_master->get_node(l)->get_coordinates().x + dk.at(j_m).x);
-    						tmp_D += fe_master.get_n()[l][i]        * (element_master->get_node(l)->get_coordinates().y + dk.at(j_m).y);
+    						//tmp_A += fe_master.get_dndxi()[l][i][0] * (element_master->get_node(l)->get_coordinates().x + dk.at(j_m).x);
+    						//tmp_B += fe_master.get_dndxi()[l][i][0] * (element_master->get_node(l)->get_coordinates().y + dk.at(j_m).y);
+    						//tmp_C += fe_master.get_n()[l][i]        * (element_master->get_node(l)->get_coordinates().x + dk.at(j_m).x);
+    						//tmp_D += fe_master.get_n()[l][i]        * (element_master->get_node(l)->get_coordinates().y + dk.at(j_m).y);
+    						tmp_A += fe_master.get_dndxi()[l][i][0] * element_master->get_node(l)->get_coordinates().x;
+    						tmp_B += fe_master.get_dndxi()[l][i][0] * element_master->get_node(l)->get_coordinates().y;
+    						tmp_C += fe_master.get_n()[l][i]        * element_master->get_node(l)->get_coordinates().x;
+    						tmp_D += fe_master.get_n()[l][i]        * element_master->get_node(l)->get_coordinates().y;
     					}
     					int j_s = element_slave->get_node(i)->get_id();
     					MCVec2 n_i = MCVec2(element_slave->get_node(i)->get_normal().x, element_slave->get_node(i)->get_normal().y);
+    					//MCVec2 x_i = MCVec2(
+    					//		element_slave->get_node(i)->get_coordinates().x + dk.at(j_s).x,
+						//		element_slave->get_node(i)->get_coordinates().y + dk.at(j_s).y);
     					MCVec2 x_i = MCVec2(
-    							element_slave->get_node(i)->get_coordinates().x + dk.at(j_s).x,
-								element_slave->get_node(i)->get_coordinates().y + dk.at(j_s).y);
+    							element_slave->get_node(i)->get_coordinates().x,
+								element_slave->get_node(i)->get_coordinates().y);
     					double denom = -( tmp_A * element_slave->get_node(i)->get_normal().y - tmp_B *element_slave->get_node(i)->get_normal().x );
     					for (int l = 0; l < element_master->get_node_count(); l++) {
     						int j_m = element_master->get_node(l)->get_id();
@@ -481,19 +491,26 @@ void Assembler::assemble_newton(
     					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0), tmp_E(0.0), tmp_F(0.0), tmp_G(0.0), tmp_H(0.0);
     					for (int k = 0; k < element_slave->get_node_count(); k++) {
     						int j_s = element_slave->get_node(k)->get_id();
-    						tmp_A += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_coordinates().x + dk.at(j_s).x);
-    						tmp_B += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_normal().y);
-    						tmp_C += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_coordinates().y + dk.at(j_s).y);
-    						tmp_D += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_normal().x);
-    						tmp_E += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_coordinates().x + dk.at(j_s).x);
-    						tmp_F += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_normal().y);
-    						tmp_G += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_coordinates().y + dk.at(j_s).y);
-    						tmp_H += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_normal().x);
+    						//tmp_A += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_coordinates().x + dk.at(j_s).x);
+    						tmp_A += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_coordinates().x;
+    						tmp_B += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_normal().y;
+    						//tmp_C += fe_slave.get_dndxi()[k][i][0] * (element_slave->get_node(k)->get_coordinates().y + dk.at(j_s).y);
+    						tmp_C += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_coordinates().y;
+    						tmp_D += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_normal().x;
+    						//tmp_E += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_coordinates().x + dk.at(j_s).x);
+    						tmp_E += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_coordinates().x;
+    						tmp_F += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_normal().y;
+    						//tmp_G += fe_slave.get_n()[k][i]        * (element_slave->get_node(k)->get_coordinates().y + dk.at(j_s).y);
+    						tmp_G += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_coordinates().y;
+    						tmp_H += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_normal().x;
     					}
     					int j_m_  = element_master->get_node(i)->get_id();
+    					//MCVec2 x_i = MCVec2(
+    					//		element_master->get_node(i)->get_coordinates().x + dk.at(j_m_).x,
+						//		element_master->get_node(i)->get_coordinates().y + dk.at(j_m_).y);
     					MCVec2 x_i = MCVec2(
-    							element_master->get_node(i)->get_coordinates().x + dk.at(j_m_).x,
-								element_master->get_node(i)->get_coordinates().y + dk.at(j_m_).y);
+    							element_master->get_node(i)->get_coordinates().x,
+								element_master->get_node(i)->get_coordinates().y);
     					double denom = - tmp_A*tmp_B + tmp_C*tmp_D - (tmp_E - x_i.x)*tmp_F + (tmp_G - x_i.y)*tmp_H;
     					// from (A30)
     					for (int k = 0; k < element_slave->get_node_count(); k++) {
@@ -657,9 +674,12 @@ void Assembler::assemble_newton(
 						for (int l = 0; l < element_slave->get_node_count(); l++) {
 							int ll = element_slave->get_node(l)->get_id();
 							// constant (no \Delta) sum in (A24)
+							//J_tmp += MCVec2(
+							//		fe_slave.get_dndxi()[l][segment_gp][0] * ( element_slave->get_node(k)->get_coordinates().x + dk.at(ll).x ),
+							//		fe_slave.get_dndxi()[l][segment_gp][0] * ( element_slave->get_node(k)->get_coordinates().x + dk.at(ll).y ));
 							J_tmp += MCVec2(
-									fe_slave.get_dndxi()[l][segment_gp][0] * ( element_slave->get_node(k)->get_coordinates().x + dk.at(ll).x ),
-									fe_slave.get_dndxi()[l][segment_gp][0] * ( element_slave->get_node(k)->get_coordinates().x + dk.at(ll).y ));
+									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(k)->get_coordinates().x,
+									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(k)->get_coordinates().x);
 						}
 						J_tmp = J_tmp * 1/fe_slave.j_w[segment_gp];
 						for (int j = 0; j < element_slave->get_node_count(); j++) {
@@ -669,9 +689,12 @@ void Assembler::assemble_newton(
 								int ll = element_slave->get_node(l)->get_id();
 								//  first part in (A24) into fourth part of (A22)
 								for (std::map<int,double>::iterator deltaxi_it = deltaxi[0][segment_gp+2].begin(); deltaxi_it != deltaxi[0][segment_gp+2].end(); deltaxi_it++) {
+									//const MCVec2 x(
+									//		element_slave->get_node(l)->get_coordinates().x + dk.at(ll).x,
+									//		element_slave->get_node(l)->get_coordinates().y + dk.at(ll).y);
 									const MCVec2 x(
-											element_slave->get_node(l)->get_coordinates().x + dk.at(ll).x,
-											element_slave->get_node(l)->get_coordinates().y + dk.at(ll).y);
+											element_slave->get_node(l)->get_coordinates().x,
+											element_slave->get_node(l)->get_coordinates().y);
 									double tmp = J_tmp.scalar_product_with(x) * ttmp * fe_slave.get_d2ndxi2()[l][segment_gp][0] * deltaxi_it->second;
 									cc[        2*kk-1][deltaxi_it->first] -= tmp * zk_values.at(jj).x;
 									cc[        2*kk  ][deltaxi_it->first] -= tmp * zk_values.at(jj).y;
@@ -740,20 +763,24 @@ void Assembler::assemble_newton(
     			//mexPrintf("                it_d->second = %f\n", it_d->second);
     			//mexPrintf("                get_coordinates().x = %f\n", slave->get_node(kk)->get_coordinates().x);
     			//mexPrintf("                dk.at(kk).x         = %f\n", dk.at(kk).x);
-    			tmp.x -= it_d->second*( slave->get_node(kk)->get_coordinates().x + dk.at(kk).x);
+    			//tmp.x -= it_d->second*( slave->get_node(kk)->get_coordinates().x + dk.at(kk).x);
+    			tmp.x -= it_d->second * slave->get_node(kk)->get_coordinates().x;
     		}
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj  ).begin(); it_d != d.at(2*jj  ).end(); it_d++) {
     			int kk = (it_d->first  )/2;
-    			tmp.y -= it_d->second*( slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			//tmp.y -= it_d->second*( slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			tmp.y -= it_d->second * slave->get_node(kk)->get_coordinates().y;
     		}
     		//mexPrintf("            (A36) row 2,D ... check\n",cnt);
     		for (std::map<int,double>::const_iterator it_m = m.at(2*jj-1).begin(); it_m != m.at(2*jj-1).end(); it_m++) {
     			int ll = (it_m->first+1)/2;
-    			tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().x + dk.at(ll).x);
+    			//tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().x + dk.at(ll).x);
+    			tmp.x += it_m->second * master->get_node(ll)->get_coordinates().x;
     		}
     		for (std::map<int,double>::const_iterator it_m = m.at(2*jj  ).begin(); it_m != m.at(2*jj  ).end(); it_m++) {
     			int ll = (it_m->first  )/2;
-    			tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			//tmp.x += it_m->second*(master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			tmp.x += it_m->second * master->get_node(ll)->get_coordinates().y;
     		}
     		//mexPrintf("            (A36) row 2,M ... check\n",cnt);
     		for (std::map<int,double>::iterator it_p = p[2*jj-1].begin(); it_p != p[2*jj-1].end(); it_p++) {
@@ -769,9 +796,10 @@ void Assembler::assemble_newton(
     		// (A36)  third row  left part (with D)
     		for (std::map<int,std::map<int,double> >::iterator it_dD = dD[2*jj-1].begin(); it_dD != dD[2*jj-1].end(); it_dD++) {
     			int kk = (it_dD->first+1)/2;
-    			MCVec2 x_k = MCVec2(
-    					slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
-						slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			//MCVec2 x_k = MCVec2(
+    			//		slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
+				//		slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			MCVec2 x_k = MCVec2( slave->get_node(kk)->get_coordinates().x, slave->get_node(kk)->get_coordinates().y);
     			for (std::map<int,double>::iterator it_dD_in = it_dD->second.begin(); it_dD_in != it_dD->second.end(); it_dD_in++) {
     				int ddd = it_dD_in->first;
     				sma[cnt][ddd] -= n.x * it_dD_in->second * x_k.x;
@@ -779,9 +807,10 @@ void Assembler::assemble_newton(
     		}
     		for (std::map<int,std::map<int,double> >::iterator it_dD = dD[2*jj  ].begin(); it_dD != dD[2*jj  ].end(); it_dD++) {
     			int kk = (it_dD->first  )/2;
-    			MCVec2 x_k = MCVec2(
-    					slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
-						slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			//MCVec2 x_k = MCVec2(
+    			//		slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
+				//		slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
+    			MCVec2 x_k = MCVec2( slave->get_node(kk)->get_coordinates().x, slave->get_node(kk)->get_coordinates().y);
     			for (std::map<int,double>::iterator it_dD_in = it_dD->second.begin(); it_dD_in != it_dD->second.end(); it_dD_in++) {
     				int ddd = it_dD_in->first;
     				sma[cnt][ddd] -= n.y * it_dD_in->second * x_k.y;
@@ -791,9 +820,10 @@ void Assembler::assemble_newton(
     		// (A36)  third row right part (with M)
     		for (std::map<int,std::map<int,double> >::iterator it_dM = dM[2*jj-1].begin(); it_dM != dM[2*jj-1].end(); it_dM++) {
     			int ll = (it_dM->first+1)/2;
-    			MCVec2 x_k = MCVec2(
-    					master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			//MCVec2 x_k = MCVec2(
+    			//		master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
+				//		master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			MCVec2 x_k = MCVec2( master->get_node(ll)->get_coordinates().x, master->get_node(ll)->get_coordinates().y);
     			for (std::map<int,double>::iterator it_dM_in = it_dM->second.begin(); it_dM_in != it_dM->second.end(); it_dM_in++) {
     				int ddd = it_dM_in->first;
     				sma[cnt][ddd] += n.x * it_dM_in->second * x_k.x;
@@ -801,9 +831,10 @@ void Assembler::assemble_newton(
     		}
     		for (std::map<int,std::map<int,double> >::iterator it_dM = dM[2*jj  ].begin(); it_dM != dM[2*jj  ].end(); it_dM++) {
     			int ll = (it_dM->first  )/2;
-    			MCVec2 x_l = MCVec2(
-    					master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-						master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			//MCVec2 x_l = MCVec2(
+    			//		master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
+				//		master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
+    			MCVec2 x_l = MCVec2( master->get_node(ll)->get_coordinates().x, master->get_node(ll)->get_coordinates().y);
     			for (std::map<int,double>::iterator it_dM_in = it_dM->second.begin(); it_dM_in != it_dM->second.end(); it_dM_in++) {
     				int ddd = it_dM_in->first;
     				sma[cnt][ddd] += n.x * it_dM_in->second * x_l.x;

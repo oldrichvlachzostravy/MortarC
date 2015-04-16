@@ -52,6 +52,7 @@
 #define	  DELTAD     prhs[5]
 #define	  DELTAZI    prhs[6]
 #define	  DELTAZV    prhs[7]
+#define   DEBUGVAL   prhs[8]
 /* Output Arguments */
 #define	  D          plhs[0]
 #define	  M          plhs[1]
@@ -79,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 	int i, tmpint1, tmpint2;
 	mwSignedIndex master_els_nrows, master_els_ncols, slave_els_nrows, slave_els_ncols, coordinates0_nrows, coordinates0_ncols, delta_z_cols;
-	double *master_els_ptr, *slave_els_ptr, *coordinates0_ptr, *friction_ptr, *deltad_ptr, *deltaz_i_ptr, *deltaz_v_ptr;
+	double *master_els_ptr, *slave_els_ptr, *coordinates0_ptr, *friction_ptr, *deltad_ptr, *deltaz_i_ptr, *deltaz_v_ptr, *debugval_ptr;
 	char *problem_name, *example_root;
 	//double friction_a, friction_b;
 	mxArray *fem_ptr, *tmp_mxArray_ptr, *tmp1_mxArray_ptr;
@@ -91,7 +92,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char const_string_problem_name[] = "problem_name";
 	char const_string_example_root[] = "example_root";
 
-	DenseMatrix<double> *friction, *coordinates, *delta_d, *delta_z_v;
+	DenseMatrix<double> *friction, *coordinates, *delta_d, *delta_z_v, *debugval;
 	DenseMatrix<int> *master_els, *slave_els, *delta_z_i;
 	Boundary *master, *slave;
 	int master_els_type, slave_els_type;
@@ -100,8 +101,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* * CHECK FOR INPUT ARGUMENTS * */
 	/* ***************************** */
 
-	if ( nrhs != 8 ) /* Check the number of arguments */
-		mexErrMsgTxt("contact_2d_newton_mex: 8 input arguments needed, check the syntax");
+	if ( nrhs != 9 ) /* Check the number of arguments */
+		mexErrMsgTxt("contact_2d_newton_mex: 9 input arguments needed, check the syntax");
 	else if( nlhs > 10 )
 		mexErrMsgTxt("contact_2d_newton_mex: Too many output arguments");
 
@@ -169,6 +170,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		deltaz_v_ptr = mxGetPr(DELTAZV);
 	} else{
 		mexErrMsgTxt("contact_2d_newton_mex: 8th input argument ( delta_z_v ) should be 2x. mxDOUBLE_CLASS");
+	}
+
+	/* DEBUGVAL */
+	if ( mxGetM(DEBUGVAL)==1 && mxGetN(DEBUGVAL)== 1 && mxGetClassID(DEBUGVAL)==mxDOUBLE_CLASS ) {
+		debugval_ptr = mxGetPr(DEBUGVAL);
+	} else{
+		mexErrMsgTxt("contact_2d_newton_mex: 9th input argument ( debugval ) should be 1x1 mxDOUBLE_CLASS");
 	}
 
 	/* coordinates0 */
@@ -249,6 +257,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	delta_d     = copyDenseMatrixFromMXArray<double>( 2, coordinates0_ncols, deltad_ptr);
 	delta_z_i   = copyDenseMatrixFromMXArray<int>(    1, coordinates0_ncols, deltaz_i_ptr);
 	delta_z_v   = copyDenseMatrixFromMXArray<double>( 2, coordinates0_ncols, deltaz_v_ptr);
+	debugval    = copyDenseMatrixFromMXArray<double>( 1, 1, debugval_ptr);
 	master_els_type = Element::get_element_type(master_els); // get element type from element matrices
 	slave_els_type  = Element::get_element_type(slave_els);
 
@@ -264,6 +273,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	c = delta_d->get_columns();
 	for (int i = 0; i < c; i++) {
 		dk[ i+1 ] = MCVec2( (*delta_d)[0 * c + i], (*delta_d)[1 * c + i]);
+		(*coordinates)[        i] += (*delta_d)[0 * c + i];
+		(*coordinates)[1 * c + i] += (*delta_d)[1 * c + i];
 	}
 //	std::cout << "coordinates0" << std::endl;
 //	denseMatrixPrint<double>( coordinates->get_rows(), coordinates->get_columns(), coordinates);
@@ -292,19 +303,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (DEBUG_OUTPUTS)
 	{
+    	boundary_mapper.dump_as_matlab_script_to_file("boundary_mapper_dump.m");
+    	//print_sparse_matrix( d, "D");
+    	//print_sparse_matrix( m, "M");
+    	//print_sparse_matrix( supports, "SUPPORTS");
+    	//print_sparse_matrix( normals, "NORMALS");
     	//mexPrintf("contact_2d_newton_mex: boundary_mapper.execute, mappings.compute_mapping  ...  done\n");
 	}
 	if (DEBUG_OUTPUTS)
 	{
 		//mexPrintf("done\n");
 		std::ostringstream tmp_ostringstream;
-		tmp_ostringstream << example_root << problem_name << "_" << i;
+		tmp_ostringstream << example_root << problem_name;
 		std::string tmp_string = tmp_ostringstream.str();
 		mappings.write_ensight_gold_slave_master_mapping(boundary_mapper, tmp_string.c_str(), i);
 		mappings.write_ensight_gold_normals(boundary_mapper, tmp_string.c_str(), i);
 		mappings.write_mapping(master, tmp_string.c_str(), i);
+		//mexPrintf("PATH TO MAP: %s\n", tmp_string.c_str());
+		mappings.dump_as_matlab_script_append_to_file( "boundary_mapper_dump.m", master);
 		//mexPrintf("contact_3d_mex: construct mapping  ... done\n");
 	}
+
+
 	FEPrimalBase fe_slave(3);
 	FEPrimalBase fe_master(3);
 
@@ -317,45 +337,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// three columns sparse matrix NORMALS
 	std::map<int,std::map<int,double> > normals;
 
-    Assembler assembler(slave, master);
-    assembler.assemble_d_m(mappings, d, m);
-    assembler.assemble_supports_normals(supports, normals);
+	Assembler assembler(slave, master);
+	assembler.assemble_d_m(mappings, d, m);
+	assembler.assemble_supports_normals(supports, normals);
+
 
 	//mexPrintf("I WAS SUCCESSFULLY HERE\n");
 
-    std::map<int,std::map<int,double> > cc;
-    std::map<int,std::map<int,double> > ii;
-    std::map<int,std::map<int,double> > ta;
-    std::map<int,std::map<int,double> > fa;
-    std::map<int,std::map<int,double> > sma;
-    std::map<int,std::map<int,double> > ga;
-    //mexprint_sparse_matrix( d, "D");
-    assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values, dk);
+	std::map<int,std::map<int,double> > cc;
+	std::map<int,std::map<int,double> > ii;
+	std::map<int,std::map<int,double> > ta;
+	std::map<int,std::map<int,double> > fa;
+	std::map<int,std::map<int,double> > sma;
+	std::map<int,std::map<int,double> > ga;
+	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values, dk);
 	/* ****************************** */
 	/* * CHECK FOR OUTPUT ARGUMENTS * */
 	/* ****************************** */
 	// write to Matlab matrices
 
-    if (DEBUG_OUTPUTS)
-    {
-    	boundary_mapper.dump_as_matlab_script_to_file("boundary_mapper_dump.m");
-    	//print_sparse_matrix( d, "D");
-    	//print_sparse_matrix( m, "M");
-    	//print_sparse_matrix( supports, "SUPPORTS");
-    	//print_sparse_matrix( normals, "NORMALS");
-    }
-
-
-	if ( nlhs > 0 ) create_matlab_sparse_matrix(D,d);
-	if ( nlhs > 1 ) create_matlab_sparse_matrix(M,m);
-	if ( nlhs > 2 ) create_matlab_sparse_matrix(SUPPORTS, supports);
-	if ( nlhs > 3 ) create_matlab_sparse_matrix(NORMALS, normals);
 	if ( nlhs > 4 ) create_matlab_sparse_matrix(CC, cc);
 	if ( nlhs > 5 ) create_matlab_sparse_matrix(II, ii);
 	if ( nlhs > 6 ) create_matlab_sparse_matrix(TA, ta);
 	if ( nlhs > 7 ) create_matlab_sparse_matrix(FA, fa);
 	if ( nlhs > 8 ) create_matlab_sparse_matrix(SMA,sma);
 	if ( nlhs > 9 ) create_matlab_sparse_matrix(GA, ga);
+
+	if ( nlhs > 0 ) create_matlab_sparse_matrix(D,d);
+	if ( nlhs > 1 ) create_matlab_sparse_matrix(M,m);
+	if ( nlhs > 2 ) create_matlab_sparse_matrix(SUPPORTS, supports);
+	if ( nlhs > 3 ) create_matlab_sparse_matrix(NORMALS, normals);
 
 	/**
 	 *  Construction of dual shape functions (tria3 - not needed, tria6, quad4, quad8, quad9 - TODO)

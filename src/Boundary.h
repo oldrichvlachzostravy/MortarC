@@ -26,7 +26,7 @@
 template <class T> class Mapping;
 //class BoundingVolumeTree;
 
-#define NORMAL_LENGHT 30
+#define NORMAL_LENGHT 3000
 #ifndef ENSIGHT_GOLD_DOUBLE_WIDTH
 #define ENSIGHT_GOLD_DOUBLE_WIDTH 12
 #endif

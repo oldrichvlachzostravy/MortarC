@@ -163,14 +163,14 @@ void Assembler::assemble_newton(
 			Ak[jj] = true;
 			ga[active_cnt][1] = g_j;
 			active_cnt++;
-			mexPrintf("Ak[jj=%d]= TRUE\n",jj);
+			//mexPrintf("Ak[jj=%d]= TRUE\n",jj);
 		}
 		else {
 			Ak[jj] = false;
-			mexPrintf("Ak[jj=%d] = F\n",jj);
+			//mexPrintf("Ak[jj=%d] = F\n",jj);
 		}
 	}
-	mexPrintf("contact_2d_newton: assemble_newton -->  Ak  ... done\n");
+	//mexPrintf("contact_2d_newton: assemble_newton -->  Ak  ... done\n");
 	// obtain matrix $P$ [PGW09 (A12)]
 	std::map<int,std::map<int,double> > p; //!!! tt = rot90(p)
 	// iterate over slave elements
@@ -290,7 +290,7 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
-	mexPrintf("contact_2d_newton: assemble_newton -->  P   ... done\n");
+	//mexPrintf("contact_2d_newton: assemble_newton -->  P   ... done\n");
 	// create I^{k}_{\mathscr{I}}, T^{k}_{\mathscr{A}}, F^{k}_{\mathscr{A}}matrices
 	int cnt_i = 1;
 	int cnt_a = 1;
@@ -320,7 +320,7 @@ void Assembler::assemble_newton(
 			cnt_a++;
 		}
 	}
-	mexPrintf("contact_2d_newton: assemble_newton -->  TA  ... done\n");
+	//mexPrintf("contact_2d_newton: assemble_newton -->  TA  ... done\n");
 	// **** $\Delta D z^k$ contribution ****
 	for(std::vector<Element* >::iterator it = slave->get_elements().begin(); it != slave->get_elements().end(); it++) {
 		fe_slave.init_all(*it, NULL, true);
@@ -355,7 +355,7 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
-	mexPrintf("contact_2d_newton: assemble_newton -->  deltaD  ... done\n");
+	//mexPrintf("contact_2d_newton: assemble_newton -->  deltaD  ... done\n");
 	// **** ITERATE OVER ALL SEGMENTS TO OBTAIN ****
 	// **** matrices $D$ and $M$                ****
 	// **** $\Delta M z^k$ contribution         ****
@@ -697,7 +697,7 @@ void Assembler::assemble_newton(
     	}
 
     }
-    mexPrintf("contact_2d_newton: assemble_newton -->  deltaM  ... done\n");
+    //mexPrintf("contact_2d_newton: assemble_newton -->  deltaM  ... done\n");
     int cnt = 1;
     for (std::map<int,Node*>::iterator it = slave->get_nodes().begin(); it != slave->get_nodes().end(); it++)
     {
@@ -727,6 +727,9 @@ void Assembler::assemble_newton(
     			sma[cnt][ll_] += n.y*it_m->second;
     		}
     		//mexPrintf("            (A36) row 1,M ... check\n",cnt);
+
+
+
     		// (A36) second row both parts
     		MCVec2 tmp(0.0, 0.0);
     		for (std::map<int,double>::const_iterator it_d = d.at(2*jj-1).begin(); it_d != d.at(2*jj-1).end(); it_d++) {
@@ -760,6 +763,9 @@ void Assembler::assemble_newton(
     			sma[cnt][it_p->first] += it_p->second * tmp.y;
     		}
     		//mexPrintf("            (A36) row 2,..... check\n",cnt);
+
+
+
     		// (A36)  third row  left part (with D)
     		for (std::map<int,std::map<int,double> >::iterator it_dD = dD[2*jj-1].begin(); it_dD != dD[2*jj-1].end(); it_dD++) {
     			int kk = (it_dD->first+1)/2;

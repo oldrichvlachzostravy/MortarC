@@ -274,13 +274,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	std::cout << "slave_els" << std::endl;
 //	denseMatrixPrint<int>( slave_els->get_rows(), slave_els->get_columns(), slave_els);
 
-	std::cout << "Boundary" << std::endl;
 	master = new Boundary(master_els, coordinates, master_els_type);
 	slave  = new Boundary( slave_els, coordinates,  slave_els_type);
 
     if (DEBUG_OUTPUTS)
 	{
-		mexPrintf("contact_2d_newton_mex: reading boundaries  ... done\n");
+		//mexPrintf("contact_2d_newton_mex: reading boundaries  ... done\n");
 	}
 
     /// Make slave -> master mapping
@@ -291,8 +290,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     Mappings<SegmentLine> mappings;
     mappings.compute_mapping(slave, master);
 
-    mexPrintf("contact_2d_newton_mex: boundary_mapper.execute, mappings.compute_mapping  ...  done\n");
-
+    if (DEBUG_OUTPUTS)
+	{
+    	//mexPrintf("contact_2d_newton_mex: boundary_mapper.execute, mappings.compute_mapping  ...  done\n");
+	}
 	if (DEBUG_OUTPUTS)
 	{
 		//mexPrintf("done\n");
@@ -334,7 +335,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* * CHECK FOR OUTPUT ARGUMENTS * */
 	/* ****************************** */
 	// write to Matlab matrices
-    mexPrintf("contact_2d_newton_mex: assembler.assemble_ ... done\n");
 
     if (DEBUG_OUTPUTS)
     {

@@ -219,7 +219,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		tmpint2 = mxGetString(tmp1_mxArray_ptr, problem_name, tmpint1);
 		if (tmpint2 != 0)
 			mexErrMsgTxt("contact_2d_newton_mex: Not enough space. The string fem.options.general.problem_name is too long.\n");
-		mexPrintf("contact_2d_newton_mex: fem.options.general.problem_name is %s\n",problem_name);
+		//mexPrintf("contact_2d_newton_mex: fem.options.general.problem_name is %s\n",problem_name);
 	}
 	else
 	{
@@ -264,7 +264,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// transfer delta_d, delta_z_i, delta_z_v ---> zk_indices, zk_values, dk
 	std::map<int,int>    zk_indices;
 	std::map<int,MCVec2> zk_values;
-	std::map<int,MCVec2> dk;
+	//std::map<int,MCVec2> dk;
 	int c = delta_z_i->get_columns();
 	for (int i = 0; i < c; i++) {
 		zk_values[ int((*delta_z_i)[0 * c + i]) ] = MCVec2( (*delta_z_v)[0 * c + i], (*delta_z_v)[1 * c + i]);
@@ -272,8 +272,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	c = delta_d->get_columns();
 	for (int i = 0; i < c; i++) {
-		dk[ i+1 ] = MCVec2( (*delta_d)[0 * c + i], (*delta_d)[1 * c + i]);
-		(*coordinates)[        i] += (*delta_d)[0 * c + i];
+		//dk[ i+1 ] = MCVec2( (*delta_d)[      + i], (*delta_d)[1 * c + i]);
+		(*coordinates)[        i] += (*delta_d)[        i];
 		(*coordinates)[1 * c + i] += (*delta_d)[1 * c + i];
 	}
 //	std::cout << "coordinates0" << std::endl;
@@ -350,7 +350,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	std::map<int,std::map<int,double> > fa;
 	std::map<int,std::map<int,double> > sma;
 	std::map<int,std::map<int,double> > ga;
-	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values, dk);
+	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values);
 	/* ****************************** */
 	/* * CHECK FOR OUTPUT ARGUMENTS * */
 	/* ****************************** */

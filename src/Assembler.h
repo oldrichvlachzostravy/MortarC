@@ -52,7 +52,6 @@ public:
 			const std::map<int,std::map<int,double> > &,
 			const std::map<int,std::map<int,double> > &,
 			const std::map<int,int> &,
-			const std::map<int,MCVec2> &,
 			const std::map<int,MCVec2> &);
 	template <typename T> void init_all_fe_in_segment(
 			FEPrimalBase &segment_fe,

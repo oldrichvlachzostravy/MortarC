@@ -247,6 +247,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	coordinates = copyDenseMatrixFromMXArray<double>( coordinates0_nrows, coordinates0_ncols, coordinates0_ptr);
 	master_els  = copyDenseMatrixFromMXArray<int>( master_els_nrows, master_els_ncols, master_els_ptr);
 	slave_els   = copyDenseMatrixFromMXArray<int>( slave_els_nrows, slave_els_ncols, slave_els_ptr);
+
 	// switch slave orientation
 //	for (int iii = 0; iii < slave_els->get_columns(); iii++){
 //		double tmp = (*slave_els)[6*slave_els->get_columns() + iii];
@@ -265,11 +266,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	std::map<int,int>    zk_indices;
 	std::map<int,MCVec2> zk_values;
 	//std::map<int,MCVec2> dk;
+
 	int c = delta_z_i->get_columns();
 	for (int i = 0; i < c; i++) {
 		zk_values[ int((*delta_z_i)[0 * c + i]) ] = MCVec2( (*delta_z_v)[0 * c + i], (*delta_z_v)[1 * c + i]);
 		zk_indices[int((*delta_z_i)[0 * c + i]) ] = i+1;
 	}
+
 	c = delta_d->get_columns();
 	for (int i = 0; i < c; i++) {
 		//dk[ i+1 ] = MCVec2( (*delta_d)[      + i], (*delta_d)[1 * c + i]);
@@ -297,8 +300,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     BoundaryMapper boundary_mapper;
     boundary_mapper.set_slave(slave);
     boundary_mapper.set_master(master);
-    boundary_mapper.execute();
-    Mappings<SegmentLine> mappings;
+	boundary_mapper.execute();
+
+
+	Mappings<SegmentLine> mappings;
     mappings.compute_mapping(slave, master);
 
     if (DEBUG_OUTPUTS)
@@ -341,8 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	assembler.assemble_d_m(mappings, d, m);
 	assembler.assemble_supports_normals(supports, normals);
 
-
-	//mexPrintf("I WAS SUCCESSFULLY HERE\n");
+    //mexPrintf("I WAS SUCCESSFULLY HERE\n");
 
 	std::map<int,std::map<int,double> > cc;
 	std::map<int,std::map<int,double> > ii;
@@ -355,7 +359,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* * CHECK FOR OUTPUT ARGUMENTS * */
 	/* ****************************** */
 	// write to Matlab matrices
-
 	if ( nlhs > 4 ) create_matlab_sparse_matrix(CC, cc);
 	if ( nlhs > 5 ) create_matlab_sparse_matrix(II, ii);
 	if ( nlhs > 6 ) create_matlab_sparse_matrix(TA, ta);
@@ -364,9 +367,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if ( nlhs > 9 ) create_matlab_sparse_matrix(GA, ga);
 
 	if ( nlhs > 0 ) create_matlab_sparse_matrix(D,d);
-	if ( nlhs > 1 ) create_matlab_sparse_matrix(M,m);
-	if ( nlhs > 2 ) create_matlab_sparse_matrix(SUPPORTS, supports);
-	if ( nlhs > 3 ) create_matlab_sparse_matrix(NORMALS, normals);
+    if ( nlhs > 1 ) create_matlab_sparse_matrix(M,m);
+    if ( nlhs > 2 ) create_matlab_sparse_matrix(SUPPORTS, supports);
+    if ( nlhs > 3 ) create_matlab_sparse_matrix(NORMALS, normals);
 
 	/**
 	 *  Construction of dual shape functions (tria3 - not needed, tria6, quad4, quad8, quad9 - TODO)

@@ -131,9 +131,6 @@ void Assembler::assemble_newton(
 		if ( tmp_it != d.end() ) {
 			for (std::map<int,double>::const_iterator it_d = tmp_it->second.begin(); it_d != tmp_it->second.end(); it_d++) {
 				int kk = it_d->first/2;
-				//MCVec2 x_k = MCVec2(
-				//		slave->get_node(kk)->get_coordinates().x + dk.at(kk).x,
-				//		slave->get_node(kk)->get_coordinates().y + dk.at(kk).y);
 				MCVec2 x_k = MCVec2( slave->get_node(kk)->get_coordinates().x, slave->get_node(kk)->get_coordinates().y);
 				tmp -= x_k*it_d->second;
 			}
@@ -145,9 +142,6 @@ void Assembler::assemble_newton(
 		if ( tmp_it != m.end() ) {
 			for (std::map<int,double>::const_iterator it_m = tmp_it->second.begin(); it_m != tmp_it->second.end(); it_m++) {
 				int ll = it_m->first/2;
-				//MCVec2 x_l = MCVec2(
-				//		master->get_node(ll)->get_coordinates().x + dk.at(ll).x,
-				//		master->get_node(ll)->get_coordinates().y + dk.at(ll).y);
 				MCVec2 x_l = MCVec2( master->get_node(ll)->get_coordinates().x, master->get_node(ll)->get_coordinates().y);
 				tmp += x_l*it_m->second;
 			}
@@ -158,20 +152,16 @@ void Assembler::assemble_newton(
 		MCVec2 ttmp = zk_values.at(jj);
         double zn_j = ttmp.scalar_product_with(n_j);
         double  g_j = n_j.scalar_product_with(tmp);
-        //mexPrintf("  x[jj=%d] = [ %f, %f]\n",jj, n_j.x, n_j.y);
         // compute A_k from (66)
 		if (zn_j - CN*g_j > 0 ) {
 			Ak[jj] = true;
 			ga[active_cnt][1] = g_j;
 			active_cnt++;
-			//mexPrintf("Ak[jj=%d]= TRUE\n",jj);
 		}
 		else {
 			Ak[jj] = false;
-			//mexPrintf("Ak[jj=%d] = F\n",jj);
 		}
 	}
-	//mexPrintf("contact_2d_newton: assemble_newton -->  Ak  ... done\n");
 	// obtain matrix $P$ [PGW09 (A12)]
 	std::map<int,std::map<int,double> > p; //!!! tt = rot90(p)
 	// iterate over slave elements
@@ -211,10 +201,10 @@ void Assembler::assemble_newton(
 			double norm_nh  = l_he[0];
 			double norm_nh3 = norm_nh*norm_nh*norm_nh;
 			MCVec2 n_h      = n_he[0];
-			w_.value(0,0) = 1/norm_nh + (n_h.x *n_h.x)/norm_nh3;
-			w_.value(0,1) =       0.0 + (n_h.x *n_h.y)/norm_nh3;
-			w_.value(1,0) =       0.0 + (n_h.y *n_h.x)/norm_nh3;
-			w_.value(1,1) = 1/norm_nh + (n_h.y *n_h.y)/norm_nh3;
+			w_.value(0,0) = 1/norm_nh - (n_h.x *n_h.x)/norm_nh3;
+			w_.value(0,1) =       0.0 - (n_h.x *n_h.y)/norm_nh3;
+			w_.value(1,0) =       0.0 - (n_h.y *n_h.x)/norm_nh3;
+			w_.value(1,1) = 1/norm_nh - (n_h.y *n_h.y)/norm_nh3;
 			std::vector< MCVec2 > tmp;
 			tmp.push_back( MCVec2(it->second->get_coordinates()));
 			std::vector<MCVec2> tmp1  = fe_slave.get_reference_coordinates( ep[0], &tmp);
@@ -248,10 +238,10 @@ void Assembler::assemble_newton(
 			double norm_nh3 = norm_nh*norm_nh*norm_nh;
 			// w_ will be the matrix $\frac{1}{\|\hat{\underline{n}}_j\|}\underline{\underline{I}}_2-\frac{1}{\|\hat{\underline{n}}_j\|^3}\underline{\underline{W}}$
 			// i.e. inside [ ] brackets in (A12) [PGW2009]
-			w_.value(0,0) = 1/norm_nh + (n_h.x *n_h.x)/norm_nh3;
-			w_.value(0,1) =       0.0 + (n_h.x *n_h.y)/norm_nh3;
-			w_.value(1,0) =       0.0 + (n_h.y *n_h.x)/norm_nh3;
-			w_.value(1,1) = 1/norm_nh + (n_h.y *n_h.y)/norm_nh3;
+			w_.value(0,0) = 1/norm_nh - (n_h.x *n_h.x)/norm_nh3;
+			w_.value(0,1) =       0.0 - (n_h.x *n_h.y)/norm_nh3;
+			w_.value(1,0) =       0.0 - (n_h.y *n_h.x)/norm_nh3;
+			w_.value(1,1) = 1/norm_nh - (n_h.y *n_h.y)/norm_nh3;
 			std::vector< MCVec2 > tmp;
 			tmp.push_back( MCVec2(it->second->get_coordinates()));
 			std::vector<MCVec2> tmp1  = fe_slave.get_reference_coordinates( ep[0], &tmp);
@@ -291,7 +281,6 @@ void Assembler::assemble_newton(
 			}
 		}
 	}
-	//mexPrintf("contact_2d_newton: assemble_newton -->  P   ... done\n");
 	// create I^{k}_{\mathscr{I}}, T^{k}_{\mathscr{A}}, F^{k}_{\mathscr{A}}matrices
 	int cnt_i = 1;
 	int cnt_a = 1;
@@ -329,11 +318,6 @@ void Assembler::assemble_newton(
 		for (unsigned int gp = 0; gp < fe_slave.computation_refpoints.size(); gp++) {     // (A20)
 			MCVec2 dndxix(0.0, 0.0);
 			for (int k = 0; k < (*it)->get_node_count(); k++) {
-				int jj = (*it)->get_node(k)->get_id();
-				//dndxix += MCVec2(
-				//	(*it)->get_node(k)->get_coordinates().x + dk.at(jj).x,
-				//	(*it)->get_node(k)->get_coordinates().y + dk.at(jj).y
-				//) * fe_slave.get_dndxi()[k][gp][0];
 				dndxix += MCVec2( (*it)->get_node(k)->get_coordinates().x, (*it)->get_node(k)->get_coordinates().y ) * fe_slave.get_dndxi()[k][gp][0];
 			}
 			double norm_dndxix = dndxix.length();
@@ -448,7 +432,6 @@ void Assembler::assemble_newton(
     					//  assemble deltaxi[m][i]
     					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0);
     					for (int l = 0; l < element_master->get_node_count(); l++) {
-    						int j_m = element_master->get_node(l)->get_id();
     						tmp_A += fe_master.get_dndxi()[l][i][0] * element_master->get_node(l)->get_coordinates().x;
     						tmp_B += fe_master.get_dndxi()[l][i][0] * element_master->get_node(l)->get_coordinates().y;
     						tmp_C += fe_master.get_n()[l][i]        * element_master->get_node(l)->get_coordinates().x;
@@ -482,7 +465,6 @@ void Assembler::assemble_newton(
     					//  assemble deltaxi[s][i]
     					double tmp_A(0.0), tmp_B(0.0), tmp_C(0.0), tmp_D(0.0), tmp_E(0.0), tmp_F(0.0), tmp_G(0.0), tmp_H(0.0);
     					for (int k = 0; k < element_slave->get_node_count(); k++) {
-    						int j_s = element_slave->get_node(k)->get_id();
     						tmp_A += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_coordinates().x;
     						tmp_B += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_normal().y;
     						tmp_C += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_coordinates().y;
@@ -492,7 +474,6 @@ void Assembler::assemble_newton(
     						tmp_G += fe_slave.get_n()[k][i]        * element_slave->get_node(k)->get_coordinates().y;
     						tmp_H += fe_slave.get_dndxi()[k][i][0] * element_slave->get_node(k)->get_normal().x;
     					}
-    					int j_m_  = element_master->get_node(i)->get_id();
     					MCVec2 x_i = MCVec2(
     							element_master->get_node(i)->get_coordinates().x,
 								element_master->get_node(i)->get_coordinates().y);
@@ -563,39 +544,6 @@ void Assembler::assemble_newton(
 				// compute D and M !!! here we utilize the fact, that #slave gp == #master gp
 				for (unsigned int segment_gp = 0; segment_gp < segment_slave_fe.computation_refpoints.size(); segment_gp++)
 				{
-//					for (int i = 0; i < element_slave->get_node_count(); i++)
-//					{
-//						// column index                           row index
-//						//d[element_slave->get_node(i)->get_id()][element_slave->get_node(i)->get_id()] +=
-//						//      segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[i][segment_gp] * psi_slave[i][segment_gp];
-//						//d[element_slave->get_node(i)->get_id()][element_slave->get_node(i)->get_id()] +=
-//						//      segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[i][segment_gp];
-//						//      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
-//						//         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
-//						//if (element_master->get_node_count() == 0) mexPrintf("  !!!!!!!!!! \n");
-//						for (int j = 0; j < element_master->get_node_count(); j++)
-//						{
-//							int jj  = element_slave->get_node(j)->get_id();
-//							//                          if (element_slave->get_node(i)->get_id() == 8565) //if (element_slave->get_id() == 58397)
-//							//                          {
-//							//                              mexPrintf("  gp:%2d  i:%d  j:%d    d[(j)][(i)]:%5f  m[(j)][(i)]:%5f  slave_elid:%d  master_elid: %d\n",
-//							//                                      segment_gp, i, j,
-//							//                                      segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[j][segment_gp] * psi_slave[i][segment_gp],
-//							//                                      segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * psi_slave[i][segment_gp],
-//							//                                      element_slave->get_id(), element_master->get_id());
-//							//                          }
-//							// column index                           row index
-//							d[jj][element_slave->get_node(i)->get_id()] +=
-//									segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_slave[j][segment_gp] * psi_slave[i][segment_gp];
-//							//      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
-//							//         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_j(vartheta(gp))         Psi_i(vartheta(gp))
-//							// column index                           row index
-//							m[jj][element_slave->get_node(i)->get_id()] +=
-//									segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] * n_master[j][segment_gp] * psi_slave[i][segment_gp];
-//							//      \--------------|---------------/   \-----------|----------/   \----------|---------/   \-----------|----------/
-//							//         ||J_{vartheta}(gp) w(gp)||    ||J_{theta}(vartheta(gp))||     N_i(vartheta(gp))         Psi_i(vartheta(gp))
-//						}
-//					}
 					for (int k = 0; k < element_master->get_node_count(); k++) {
 						// (A22)
 						// ***  first part of (A22)
@@ -605,7 +553,7 @@ void Assembler::assemble_newton(
 							for (int j = 0; j < element_slave->get_node_count(); j++) {
 								int jj = element_slave->get_node(j)->get_id();
 								double tmp = segment_slave_fe.j_w[segment_gp] * fe_slave.j_w[segment_gp] *
-										dpsidxi_slave[j][segment_gp] * fe_master.get_dndxi()[k][segment_gp][0] * deltaxi_it->second;
+										dpsidxi_slave[j][segment_gp] * n_master[k][segment_gp] * deltaxi_it->second;
 								cc[        2*kk-1][deltaxi_it->first] -= tmp * zk_values.at(jj).x;
 								cc[        2*kk  ][deltaxi_it->first] -= tmp * zk_values.at(jj).y;
 								dM[2*jj-1][2*kk-1][deltaxi_it->first] += tmp;
@@ -656,16 +604,16 @@ void Assembler::assemble_newton(
                         //  fourth part of (A22)
 						MCVec2 J_tmp = 0.0;
 						for (int l = 0; l < element_slave->get_node_count(); l++) {
-							int ll = element_slave->get_node(l)->get_id();
 							// constant (no \Delta) sum in (A24)
 							J_tmp += MCVec2(
-									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(k)->get_coordinates().x,
-									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(k)->get_coordinates().x);
+									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(l)->get_coordinates().x,
+									fe_slave.get_dndxi()[l][segment_gp][0] * element_slave->get_node(l)->get_coordinates().y);
 						}
-						J_tmp = J_tmp * 1/fe_slave.j_w[segment_gp];
+						J_tmp = J_tmp * (1.0/fe_slave.j_w[segment_gp]);
 						for (int j = 0; j < element_slave->get_node_count(); j++) {
 							int jj = element_slave->get_node(j)->get_id();
-							double ttmp = segment_slave_fe.j_w[segment_gp] * psi_slave[j][segment_gp] * n_master[k][segment_gp];
+							double ttmp = segment_slave_fe.j_w[segment_gp] *
+									psi_slave[j][segment_gp] * n_master[k][segment_gp];
 							for (int l = 0; l < element_slave->get_node_count(); l++) {
 								int ll = element_slave->get_node(l)->get_id();
 								//  first part in (A24) into fourth part of (A22)

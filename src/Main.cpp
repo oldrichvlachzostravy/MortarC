@@ -99,13 +99,15 @@ int main(int argc, char** argv)
 	string example_root = "/home/olda/workspace/MortarC/matrix/test2d/";
 	string problem_name = "herz2d";
 #endif
-	string coordinates_filename   =   "coordinates.ascii";
-	string master_els_filename    =    "master_els.ascii";
-	string slave_els_filename     =     "slave_els.ascii";
-	string friction_filename      =      "friction.ascii";
+	string coordinates_filename     =     "coordinates.ascii";
+	string master_els_filename      =      "master_els.ascii";
+	string slave_els_filename       =       "slave_els.ascii";
+	string friction_filename        =        "friction.ascii";
 #ifdef NEWTON
-	string multipliers_filename   =   "multipliers.ascii";
-	string displacements_filename = "displacements.ascii";
+	string multipliers_ind_filename = "multipliers_ind.ascii";
+	string multipliers_val_filename = "multipliers_val.ascii";
+	string        debugval_filename =        "debugval.ascii";
+	string   displacements_filename =   "displacements.ascii";
 #endif
 	string boundary_mapper_dump_filename = path + "boundary_mapper_dump.m";
 	string ensight_gold_slave_master_mapping_filename = path + "slave_master_mapping";
@@ -155,19 +157,43 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 #ifdef NEWTON
-    multipliers   = load_matlab_ascii_matrix<double>((path +   multipliers_filename).c_str());
-    displacements = load_matlab_ascii_matrix<double>((path + displacements_filename).c_str());
-    std::map<int,int>    zk_indices;
-	std::map<int,MCVec2> zk_values;
-	std::map<int,MCVec2> dk;
-	int c = multipliers->get_columns();
-	for (int i = 0; i < c; i++) {
-		zk_values[ int((*multipliers)[0 * c + i]) ] = MCVec2( (*multipliers)[2 * c + i], (*multipliers)[3 * c + i]);
-		zk_indices[int((*multipliers)[0 * c + i]) ] = int((*multipliers)[1 * c + i]);
+	DenseMatrix<double> *delta_d, *delta_z_v;
+	DenseMatrix<int> *delta_z_i, *debugval;
+	delta_d   = load_matlab_ascii_matrix<double>((path +   displacements_filename).c_str());
+	delta_z_i = load_matlab_ascii_matrix<int>(   (path + multipliers_ind_filename).c_str());
+	delta_z_v = load_matlab_ascii_matrix<double>((path + multipliers_val_filename).c_str());
+	debugval  = load_matlab_ascii_matrix<int>(   (path +        debugval_filename).c_str());
+	if(!delta_d) {
+		fprintf(stderr, "Can not load delta_d matrix\n");
+		exit(1);
 	}
-	c = displacements->get_columns();
+	if(!delta_z_i) {
+		fprintf(stderr, "Can not load delta_z_i matrix\n");
+		exit(1);
+	}
+	if(!delta_z_v) {
+		fprintf(stderr, "Can not load delta_z_v matrix\n");
+		exit(1);
+	}
+	if(!debugval) {
+		fprintf(stderr, "Can not load debugval matrix\n");
+		exit(1);
+	}
+	std::map<int,int>    zk_indices;
+	std::map<int,MCVec2> zk_values;
+	//std::map<int,MCVec2> dk;
+
+	int c = delta_z_i->get_columns();
 	for (int i = 0; i < c; i++) {
-		dk[ i ] = MCVec2( (*displacements)[0 * c + i], (*displacements)[1 * c + i]);
+		zk_values[ int((*delta_z_i)[0 * c + i]) ] = MCVec2( (*delta_z_v)[0 * c + i], (*delta_z_v)[1 * c + i]);
+		zk_indices[int((*delta_z_i)[0 * c + i]) ] = i+1;
+	}
+
+	c = delta_d->get_columns();
+	for (int i = 0; i < c; i++) {
+		//dk[ i+1 ] = MCVec2( (*delta_d)[      + i], (*delta_d)[1 * c + i]);
+		(*coordinates)[        i] += (*delta_d)[        i];
+		(*coordinates)[1 * c + i] += (*delta_d)[1 * c + i];
 	}
 #endif
 	//std::cout << "coordinates0" << std::endl;
@@ -250,8 +276,9 @@ int main(int argc, char** argv)
 	std::map<int,std::map<int,double> > ta;
 	std::map<int,std::map<int,double> > fa;
 	std::map<int,std::map<int,double> > sma;
+	std::map<int,std::map<int,double> > ga;
 	try{
-		assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, d, m, zk_indices, zk_values, dk);
+		assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values);
 	}
 	catch (const std::out_of_range& oor) {
 		std::cerr << "Out of Range error: " << oor.what() << '\n';

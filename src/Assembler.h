@@ -9,6 +9,9 @@
 #define ASSEMBLER_H_
 
 #include <math.h>
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
 
 #include "SystemIncludes.h"
 #include "Mapping.h"
@@ -59,13 +62,15 @@ public:
 			Element * element,
 			const T *bary_coords,
 			bool in_gauss_points = true);
+	void matlab_dump_2d_normals_symbolic(
+			const char*);
 
 private:
 	double de[9*9];
 	double me[9*9];
 	FEPrimalBase fe_slave;
 	FEPrimalBase fe_master;
-	Boundary *master, *slave;
+	Boundary *slave, *master;
 };
 
 

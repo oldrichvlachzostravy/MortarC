@@ -87,6 +87,67 @@ void Mappings<SegmentLine>::mortar_segmentation(Element *element, std::map<int, 
 			SegmentLine segment_line;
 			segment_line.m[0] = result_master[0].x;  segment_line.m[1] = result_master[1].x;
 			segment_line.s[0] =  result_slave[0].x;  segment_line.s[1] =  result_slave[1].x;
+//			std::cout << "S:" << element->get_id() << "   M:" << e->get_id() << "   " <<
+//					"xiS=[" << segment_line.s[0] << "," << segment_line.s[1] << "]  " <<
+//					"xiM=[" << segment_line.m[0] << "," << segment_line.m[1] << "]  " << std::endl;
+//			for (int j = 0; j < 2; j++) {
+//				if ( (segment_line.s[j] == 1.0)||(segment_line.s[j] == -1.0) ) {
+//					// according to (44) change segment_line.m[j]
+//					double xi_k = segment_line.m[j];
+//					FEPrimalBase fe_master(3);
+//					fe_master.init_all(e);
+//					std::vector<MCVec2> master_ref_points(1);
+//					for (int k = 0; k < 15; k++) {
+//						master_ref_points[0] = xi_k;
+//						fe_master.init_reference(e, &master_ref_points);
+//						double tmpB = -(element->get_node(j)->get_coordinates().x * element->get_node(j)->get_normal().y - element->get_node(j)->get_coordinates().y * element->get_node(j)->get_normal().x);
+//						double tmpA = 0.0;
+//						for (int l = 0; l < e->get_node_count(); l++) {
+//							tmpB +=  fe_master.get_n()[l][0] * //xl_x_nj[l];
+//									e->get_node(l)->get_coordinates().x * element->get_node(j)->get_normal().y - e->get_node(l)->get_coordinates().y * element->get_node(j)->get_normal().x;
+//							tmpA +=  fe_master.get_dndxi()[l][0][0] * //xl_x_nj[l];
+//									e->get_node(l)->get_coordinates().x * element->get_node(j)->get_normal().y - e->get_node(l)->get_coordinates().y * element->get_node(j)->get_normal().x;
+//						}
+//						xi_k += - tmpB/tmpA;
+//					}
+//					if (xi_k < -1.0) xi_k = -1.0;
+//					if (xi_k >  1.0) xi_k =  1.0;
+//					segment_line.m[j] = xi_k;
+//				}
+//				if ( (segment_line.m[j] == 1.0)||(segment_line.m[j] == -1.0) ) {
+//					// according to (45) change segment_line.s[i]
+//					double xi_k = segment_line.s[j];
+//					FEPrimalBase fe_slave(3);
+//					fe_slave.init_all(e);
+//					std::vector<MCVec2> slave_ref_points(1);
+//					for (int k = 0; k < 15; k++) {
+//						slave_ref_points[0] = xi_k;
+//						fe_slave.init_reference(element, &slave_ref_points);
+//						MCVec2 tmpvA = MCVec2( 0.0, 0.0);
+//						MCVec2 tmpvB = MCVec2( 0.0, 0.0);
+//						MCVec2 tmpvC = MCVec2( 0.0, 0.0);
+//						MCVec2 tmpvD = MCVec2( 0.0, 0.0);
+//						MCVec2 x_l = MCVec2(e->get_node(j)->get_coordinates().x,e->get_node(j)->get_coordinates().y);
+//						for (int j = 0; j < element->get_node_count(); j++) {
+//							tmpvA += MCVec2(element->get_node(j)->get_coordinates().x,element->get_node(j)->get_coordinates().y) * fe_slave.get_dndxi()[j][0][0];
+//							tmpvB += MCVec2(element->get_node(j)->get_coordinates().x,element->get_node(j)->get_coordinates().y) * fe_slave.get_n()[j][0];
+//							tmpvC += MCVec2(element->get_node(j)->get_normal().x,element->get_node(j)->get_normal().y) * fe_slave.get_dndxi()[j][0][0];
+//							tmpvC += MCVec2(element->get_node(j)->get_normal().x,element->get_node(j)->get_normal().y) * fe_slave.get_n()[j][0];
+//						}
+//						double tmpA = tmpvA.x*tmpvC.y - tmpvA.y*tmpvC.x;
+//						double tmpB = -( (tmpvB.x-x_l.x)*tmpvD.y - (tmpvB.y-x_l.y)*tmpvD.x );
+//						xi_k += -tmpB/tmpA;
+//					}
+//					if (xi_k < -1.0) xi_k = -1.0;
+//					if (xi_k >  1.0) xi_k =  1.0;
+//					segment_line.s[j] = xi_k;
+//				}
+//
+//			}
+//			std::cout << "S:" << element->get_id() << "   M:" << e->get_id() << "   " <<
+//								"xiS=[" << segment_line.s[0] << "," << segment_line.s[1] << "]  " <<
+//								"xiM=[" << segment_line.m[0] << "," << segment_line.m[1] << "]  " << std::endl;
+//			std::cout << std::endl;
 			mappings.rbegin()->add_segments_for_master(e, segment_line);
 		}
 		delete polygon;

@@ -427,3 +427,18 @@ int Boundary::write_supports_ensight_gold( std::ofstream * nvecfile_ptr)
 	else return 0;
 }
 
+void Boundary::matlab_dump_normals(const char* file_name, double length)
+{
+	std::ofstream ofs(file_name, std::ofstream::out);
+	if (ofs.is_open()) {
+		ofs << "% dump normals" << std::endl;
+		for (int i = 0; i < this->nodes.size(); i++) {
+//			ofs << "line( ";
+//			std::ostringstream strs_x, strs_y, strs_z;
+//			strs_x <<
+//					mappings[i].get_element_slave()->get_nodes()[0]->get_coordinates().x * 0.5*(1-seg_it->s[0]) +
+//					mappings[i].get_element_slave()->get_nodes()[1]->get_coordinates().x * 0.5*(1+seg_it->s[0]);
+//			ofs << "[" << strs_x.str() << "], [" << strs_y.str() << "], [" << strs_z.str() << "], 'Color', 'red', 'LineWidth', 2);" << std::endl;
+		}
+	}
+}

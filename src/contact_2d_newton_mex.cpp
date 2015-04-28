@@ -306,8 +306,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	Mappings<SegmentLine> mappings;
     mappings.compute_mapping(slave, master);
 
-    if (DEBUG_OUTPUTS)
-	{
+    if (DEBUG_OUTPUTS) {
     	boundary_mapper.dump_as_matlab_script_to_file("boundary_mapper_dump.m");
     	//print_sparse_matrix( d, "D");
     	//print_sparse_matrix( m, "M");
@@ -315,8 +314,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     	//print_sparse_matrix( normals, "NORMALS");
     	//mexPrintf("contact_2d_newton_mex: boundary_mapper.execute, mappings.compute_mapping  ...  done\n");
 	}
-	if (DEBUG_OUTPUTS)
-	{
+	if (DEBUG_OUTPUTS) {
 		//mexPrintf("done\n");
 		std::ostringstream tmp_ostringstream;
 		tmp_ostringstream << example_root << problem_name;
@@ -346,6 +344,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	assembler.assemble_d_m(mappings, d, m);
 	assembler.assemble_supports_normals(supports, normals);
 
+	if (DEBUG_OUTPUTS)	{
+
+	}
+
+	if (coordinates0_ncols == 7) {
+		//assembler.matlab_dump_2d_normals_symbolic("assembler_dump_2d_normals_symbolic.m");
+	}
+
+
     //mexPrintf("I WAS SUCCESSFULLY HERE\n");
 
 	std::map<int,std::map<int,double> > cc;
@@ -354,11 +361,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	std::map<int,std::map<int,double> > fa;
 	std::map<int,std::map<int,double> > sma;
 	std::map<int,std::map<int,double> > ga;
+
 	assembler.assemble_newton( mappings, cc, ii, ta, fa, sma, ga, d, m, zk_indices, zk_values);
 	/* ****************************** */
 	/* * CHECK FOR OUTPUT ARGUMENTS * */
 	/* ****************************** */
 	// write to Matlab matrices
+
 	if ( nlhs > 4 ) create_matlab_sparse_matrix(CC, cc);
 	if ( nlhs > 5 ) create_matlab_sparse_matrix(II, ii);
 	if ( nlhs > 6 ) create_matlab_sparse_matrix(TA, ta);

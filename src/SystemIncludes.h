@@ -15,5 +15,6 @@ typedef unsigned int uint;
 #define MIN_SLAVE_COVER_RATIO         0.9
 #define TOLERATED_SLAVE_COVER_RATIO   0.99
 #define CN                            100.0
+#define BARYTOL                       1.0E-14
 
 #endif /* SYSTEMINCLUDES_H_ */

@@ -58,6 +58,7 @@ class Boundary
 		std::vector<Element*> & get_elements();
 		std::map<int, Node* > & get_nodes();
 		Node* get_node(int);
+		void matlab_dump_normals(const char*, double);
 
 	protected:
 		Node* get_unique_node_or_create_new(int, DenseMatrix<double>*);
